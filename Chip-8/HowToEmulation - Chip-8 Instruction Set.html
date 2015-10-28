@@ -1,0 +1,249 @@
+
+<!-- saved from url=(0090)http://www.multigesture.net/wp-content/uploads/mirror/goldroad/chip8_instruction_set.shtml -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><title>HowToEmulation - Chip-8 Instruction Set</title>
+
+<meta content="MSHTML 5.50.4134.100" name="GENERATOR"></head>
+<body>
+<p>
+</p><hr>
+<h1>Chip 8 instruction set </h1>
+<p>(all values in Hexadecimal unless stated)
+</p><hr>
+<p>The Chip-8 instruction set runs in 4k of memory (addresses 000 - FFF).
+Programs start at 200, memory before that containing the chip-8 interpreter on a
+real 1802 based machine. The screen is 64 x 32 (128 x 64 on superchip) and is
+monochrome. Their is a sound buzzer
+</p><p>There are 16 primary registers, called V0 - VF. VF is used for carries and
+borrows and shouldn't really be used as a general purpose register. There is a
+12 bit index register called I. There is a program counter and stack pointer,
+but neither of these are accessible from program code.
+</p><p>There are 2 counters, the sound timer and the delay timer. Both count down at
+about 60Hz (on Chip8 they count down in threes using the PC's 18.2Hz Clock).
+When the sound timer is non-zero the buzzer sounds.
+</p><p>This is the Chip-8 Instruction set as I understand it....
+</p><p>
+NNN is an address<br>
+KK is an 8 bit constant <br>
+X and Y are two 4 bit constants<br>
+<table border="1" cellpadding="2">
+<tbody>
+<tr>
+<td>Code </td>
+<td>Assembler </td>
+<td>Description </td>
+<td>Notes </td></tr>
+<tr>
+<td>00CN </td>
+<td>scdown N </td>
+<td>scroll the screen down N lines </td>
+<td>SuperChip only</td></tr>
+<tr>
+<td>00E0 </td>
+<td>cls </td>
+<td>clear the screen </td>
+<td></td></tr>
+<tr>
+<td>00EE </td>
+<td>rts </td>
+<td>return from subroutine call </td>
+<td></td></tr>
+<tr>
+<td>00FB </td>
+<td>scright </td>
+<td>scroll screen 4 pixels right </td>
+<td>SuperChip only</td></tr>
+<tr>
+<td>00FC </td>
+<td>scleft </td>
+<td>scroll screen&nbsp;4 pixels left </td>
+<td>SuperChip only</td></tr>
+<tr>
+<td>00FE </td>
+<td>low </td>
+<td>disable extended screen mode </td>
+<td>SuperChip only </td></tr>
+<tr>
+<td>00FF </td>
+<td>high </td>
+<td>enable extended screen mode (128 x 64) </td>
+<td>SuperChip only&nbsp; </td></tr>
+<tr>
+<td>1NNN </td>
+<td>jmp nnn </td>
+<td>jump to address NNN </td>
+<td></td></tr>
+<tr>
+<td>2NNN </td>
+<td>jsr nnn </td>
+<td>jump to subroutine at address NNN </td>
+<td>16 levels maximum </td></tr>
+<tr>
+<td>3XRR </td>
+<td>skeq vx,rr </td>
+<td>skip next istruction if register VX == constant RR</td>
+<td></td></tr>
+<tr>
+<td>4XRR </td>
+<td>skne vx,rr </td>
+<td>skip next intruction if register VX != constant RR </td>
+<td></td></tr>
+<tr>
+<td>5XY0 </td>
+<td>skeq vx,vy </td>
+<td>skip next instruction if register VX == register VY </td>
+<td></td></tr>
+<tr>
+<td>6XRR </td>
+<td>mov vx,rr </td>
+<td>move constant RR to register VX </td>
+<td></td></tr>
+<tr>
+<td>7XRR </td>
+<td>add vx,rr </td>
+<td>add constant RR to register VX </td>
+<td>No carry generated </td></tr>
+<tr>
+<td>8XY0 </td>
+<td>mov vx,vy </td>
+<td>move register VY into VX </td>
+<td></td></tr>
+<tr>
+<td>8XY1 </td>
+<td>or vx,vy </td>
+<td>or register VY with register VX, store result into register VX </td>
+<td></td></tr>
+<tr>
+<td>8XY2 </td>
+<td>and vx,vy </td>
+<td>and register VY with register VX, store result into register VX </td>
+<td></td></tr>
+<tr>
+<td>8XY3 </td>
+<td>xor vx,vy </td>
+<td>exclusive or register VY with register VX, store result into register VX </td>
+<td></td></tr>
+<tr>
+<td>8XY4 </td>
+<td>add vx,vy </td>
+<td>add register VY to VX, store result in register VX, carry stored in register VF </td>
+<td></td></tr>
+<tr>
+<td>8XY5 </td>
+<td>sub vx,vy </td>
+<td>subtract register VY from VX, borrow stored in register VF </td>
+<td>register VF set to 1 if borrows </td></tr>
+<tr>
+<td>8X06 </td>
+<td>shr vx </td>
+<td>shift register VX right, bit 0 goes into register VF </td>
+<td></td></tr>
+<tr>
+<td>8XY7 </td>
+<td>rsb vx,vy </td>
+<td>subtract register VX from register VY, result stored in register VX </td>
+<td>register F set to 1 if borrows </td></tr>
+<tr>
+<td>8X0E </td>
+<td>shl vx </td>
+<td>shift register VX left, bit 7 stored into register VF </td>
+<td></td></tr>
+<tr>
+<td>9XY0 </td>
+<td>skne vx,vy </td>
+<td>skip next instruction if register VX != register VY </td>
+<td></td></tr>
+<tr>
+<td>ANNN </td>
+<td>mvi nnn </td>
+<td>Load index register (I) with constant NNN </td>
+<td></td></tr>
+<tr>
+<td>BNNN </td>
+<td>jmi nnn </td>
+<td>Jump to address NNN + register V0 </td>
+<td></td></tr>
+<tr>
+<td>CXKK </td>
+<td>rand vx,kk &nbsp;&nbsp; </td>
+<td>register VX = random number AND KK </td>
+<td></td></tr>
+<tr>
+<td>DXYN </td>
+<td>sprite vx,vy,n </td>
+<td>Draw sprite at screen location (register VX,register VY) height N </td>
+<td>Sprites stored in memory at location in index register (I), maximum
+8bits wide. Wraps around the screen. If when drawn, clears a pixel,
+register VF is set to 1 otherwise it is zero. All drawing is XOR drawing
+(e.g. it toggles the screen pixels)</td></tr>
+<tr>
+<td>dry0 </td>
+<td>xsprite rx,ry </td>
+<td>Draws extended sprite at screen location rx,ry </td>
+<td>Superchip only: As above,but sprite is always 16 x&nbsp;16.</td></tr>
+<tr>
+<td>ek9e </td>
+<td>skpr k </td>
+<td>skip if key (register rk) pressed </td>
+<td>The key is a key number, see the chip-8 documentation </td></tr>
+<tr>
+<td>eka1 </td>
+<td>skup k </td>
+<td>skip if key (register rk) not pressed </td>
+<td></td></tr>
+<tr>
+<td>fr07 </td>
+<td>gdelay vr </td>
+<td>get delay timer into&nbsp;vr </td>
+<td></td></tr>
+<tr>
+<td>fr0a </td>
+<td>key vr </td>
+<td>wait for for keypress,put key in register vr </td>
+<td></td></tr>
+<tr>
+<td>fr15 </td>
+<td>sdelay vr </td>
+<td>set the delay timer to vr </td>
+<td></td></tr>
+<tr>
+<td>fr18 </td>
+<td>ssound vr </td>
+<td>set the sound timer to vr </td>
+<td></td></tr>
+<tr>
+<td>fr1e </td>
+<td>adi vr </td>
+<td>add register vr to the index register </td>
+<td></td></tr>
+<tr>
+<td>fr29 </td>
+<td>font vr </td>
+<td>point I to the sprite for hexadecimal character in vr </td>
+<td>Sprite is 5 bytes high </td></tr>
+<tr>
+<td>fr30 </td>
+<td>xfont vr </td>
+<td>point I to the sprite for hexadecimal character in vr </td>
+<td>Superchip only: Sprite is 10 bytes high. </td></tr>
+<tr>
+<td>fr33 </td>
+<td>bcd vr </td>
+<td>store the bcd representation of register vr at location I,I+1,I+2 </td>
+<td>Doesn't change I </td></tr>
+<tr>
+<td>fr55 </td>
+<td>str v0-vr </td>
+<td>store registers v0-vr at location I onwards </td>
+<td>I&nbsp;is incremented to point to&nbsp;the next location on. e.g.
+I&nbsp;= I + r + 1 </td></tr>
+<tr>
+<td>fx65 </td>
+<td>ldr v0-vr </td>
+<td>load registers v0-vr from location I onwards </td>
+<td>as above. </td></tr></tbody></table>
+</p><p>
+</p><hr>
+<p><a href="http://www.multigesture.net/wp-content/uploads/mirror/goldroad/chip8.shtml">Back To: Chip8 Main Page</a> </p>
+<script type="text/javascript">//<![CDATA[
+(function(){var d=encodeURIComponent,f=window,g=document,h="documentElement",k="length",l="prototype",m="body",p="&",s="&ci=",t=",",u="?",v="Content-Type",w="Microsoft.XMLHTTP",x="Msxml2.XMLHTTP",y="POST",z="application/x-www-form-urlencoded",A="img",B="input",C="load",D="oh=",E="on",F="pagespeed_url_hash",G="url=";f.pagespeed=f.pagespeed||{};var H=f.pagespeed,I=function(a,b,c){this.c=a;this.e=b;this.d=c;this.b=this.f();this.a={}};I[l].f=function(){return{height:f.innerHeight||g[h].clientHeight||g[m].clientHeight,width:f.innerWidth||g[h].clientWidth||g[m].clientWidth}};I[l].g=function(a){a=a.getBoundingClientRect();return{top:a.top+(void 0!==f.pageYOffset?f.pageYOffset:(g[h]||g[m].parentNode||g[m]).scrollTop),left:a.left+(void 0!==f.pageXOffset?f.pageXOffset:(g[h]||g[m].parentNode||g[m]).scrollLeft)}};I[l].h=function(a){if(0>=a.offsetWidth&&0>=a.offsetHeight)return!1;a=this.g(a);var b=a.top.toString()+t+a.left.toString();if(this.a.hasOwnProperty(b))return!1;this.a[b]=!0;return a.top<=this.b.height&&a.left<=this.b.width};I[l].i=function(a){var b;if(f.XMLHttpRequest)b=new XMLHttpRequest;else if(f.ActiveXObject)try{b=new ActiveXObject(x)}catch(c){try{b=new ActiveXObject(w)}catch(e){}}if(!b)return!1;b.open(y,this.c+(-1==this.c.indexOf(u)?u:p)+G+d(this.e));b.setRequestHeader(v,z);b.send(a);return!0};I[l].k=function(){for(var a=[A,B],b=[],c={},e=0;e<a[k];++e)for(var q=g.getElementsByTagName(a[e]),n=0;n<q[k];++n){var r=q[n].getAttribute(F);r&&(q[n].getBoundingClientRect&&this.h(q[n]))&&!(r in c)&&(b.push(r),c[r]=!0)}if(0!=b[k]){a=D+this.d;a+=s+d(b[0]);for(e=1;e<b[k];++e){c=t+d(b[e]);if(131072<a[k]+c[k])break;a+=c}H.criticalImagesBeaconData=a;this.i(a)}};H.j=function(a,b,c){if(a.addEventListener)a.addEventListener(b,c,!1);else if(a.attachEvent)a.attachEvent(E+b,c);else{var e=a[E+b];a[E+b]=function(){c.call(this);e&&e.call(this)}}};H.l=function(a,b,c){var e=new I(a,b,c);H.j(f,C,function(){f.setTimeout(function(){e.k()},0)})};H.criticalImagesBeaconInit=H.l;})();pagespeed.criticalImagesBeaconInit('/mod_pagespeed_beacon','http://www.multigesture.net/wp-content/uploads/mirror/goldroad/chip8_instruction_set.shtml','MQVZ2syRJU');
+//]]></script></body></html>

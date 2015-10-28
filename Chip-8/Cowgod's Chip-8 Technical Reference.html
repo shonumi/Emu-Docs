@@ -1,0 +1,1200 @@
+
+<!-- saved from url=(0048)http://devernay.free.fr/hacks/chip8/C8TECH10.HTM -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+		<title>Cowgod's Chip-8 Technical Reference</title>
+	</head>
+	<body bgcolor="#FFFFFF" text="#000000" link="#0000FF" alink="#00007F" vlink="#7F7F7F">
+		<center>
+		Cowgod's<br>
+		<font size="7"><strong><tt>Chip-8</tt></strong></font><br>
+		Technical Reference v1.0<br>
+		</center>
+		<br>
+		<font size="4"><strong><em><u>
+		<a name="0.0">0.0</a> - Table of Contents&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+		</u></em></strong></font>
+		<br>
+		<tt><font size="3">
+		<strong><a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">0.0</a> - Table of Contents</strong><br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.1">0.1</a> - Using This Document<br>
+		<br>
+		<strong><a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#1.0">1.0</a> - About Chip-8</strong><br>
+		<br>
+		<strong><a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.0">2.0</a> - Chip-8 Specifications</strong><br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.1">2.1</a> - Memory<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#memmap">Diagram</a> - Memory Map<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.2">2.2</a> - Registers<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.3">2.3</a> - Keyboard<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#keyboard">Diagram</a> - Keyboard Layout<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.4">2.4</a> - Display<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#dispcoords">Diagram</a> - Display Coordinates<br>	
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#font">Listing</a> - The Chip-8 Hexadecimal Font<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.5">2.5</a> - Timers &amp; Sound<br>	
+		<br>
+		<strong><a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3.0">3.0</a> - Chip-8 Instructions</strong><br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3.1">3.1</a> - Standard Chip-8 Instructions<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00E0">00E0</a> - CLS<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00EE">00EE</a> - RET<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0nnn">0<em>nnn</em></a> - SYS <em>addr</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#1nnn">1<em>nnn</em></a> - JP <em>addr</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2nnn">2<em>nnn</em></a> - CALL <em>addr</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3xkk">3<em>xkk</em></a> - SE V<em>x</em>, <em>byte</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#4xkk">4<em>xkk</em></a> - SNE V<em>x</em>, <em>byte</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#5xy0">5<em>xy</em>0</a> - SE V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#6xkk">6<em>xkk</em></a> - LD V<em>x</em>, <em>byte</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#7xkk">7<em>xkk</em></a> - ADD V<em>x</em>, <em>byte</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy0">8<em>xy</em>0</a> - LD V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy1">8<em>xy</em>1</a> - OR V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy2">8<em>xy</em>2</a> - AND V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy3">8<em>xy</em>3</a> - XOR V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy4">8<em>xy</em>4</a> - ADD V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy5">8<em>xy</em>5</a> - SUB V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy6">8<em>xy</em>6</a> - SHR V<em>x</em> {, V<em>y</em>}<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7">8<em>xy</em>7</a> - SUBN V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xyE">8<em>xy</em>E</a> - SHL V<em>x</em> {, V<em>y</em>}<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#9xy0">9<em>xy</em>0</a> - SNE V<em>x</em>, V<em>y</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Annn">A<em>nnn</em></a> - LD I, <em>addr</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Bnnn">B<em>nnn</em></a> - JP V0, <em>addr</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Cxkk">C<em>xkk</em></a> - RND V<em>x</em>, <em>byte</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Dxyn">D<em>xyn</em></a> - DRW V<em>x</em>, V<em>y</em>, <em>nibble</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Ex9E">E<em>x</em>9E</a> - SKP V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#ExA1">E<em>x</em>A1</a> - SKNP V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx07">F<em>x</em>07</a> - LD V<em>x</em>, DT<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx0A">F<em>x</em>0A</a> - LD V<em>x</em>, K<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx15">F<em>x</em>15</a> - LD DT, V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx18">F<em>x</em>18</a> - LD ST, V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx1E">F<em>x</em>1E</a> - ADD I, V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx29">F<em>x</em>29</a> - LD F, V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx33">F<em>x</em>33</a> - LD B, V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx55">F<em>x</em>55</a> - LD [I], V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx65">F<em>x</em>65</a> - LD V<em>x</em>, [I]<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3.2">3.2</a> - Super Chip-48 Instructions<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00Cn">00C<em>n</em></a> - SCD <em>nibble</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00FB">00FB</a> - SCR<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00FC">00FC</a> - SCL<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00FD">00FD</a> - EXIT<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00FE">00FE</a> - LOW<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00FF">00FF</a> - HIGH<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Dxy0">D<em>xy</em>0</a> - DRW V<em>x</em>, V<em>y</em>, 0<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx30">F<em>x</em>30</a> - LD HF, V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx75">F<em>x</em>75</a> - LD R, V<em>x</em><br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx85">F<em>x</em>85</a> - LD V<em>x</em>, R<br>
+
+		<br>
+		<strong><a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#4.0">4.0</a> - Interpreters</strong><br>
+
+		<br>
+		<strong><a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#5.0">5.0</a> - Credits</strong><br>
+
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="3"><strong><em><u>
+		<a name="0.1">0.1</a> - Using This Document&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		While creating this document, I took every effort to try to make it easy to read, as
+		well as easy to find what you're looking for.<br>
+		<br>
+		In most cases, where a hexadecimal value is given, it is followed by the equivalent
+		decimal value in parenthesis. For example, "0x200 (512)."<br>
+		<br>
+		In most cases, when a word or letter is italicized, it is referring to a variable
+		value, for example, if I write "V<em>x</em>," the <em>x</em> reffers to a 4-bit
+		value.<br>
+		<br>		
+		The most important thing to remember as you read this document is that every <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a>
+		link will take you back to the Table Of Contents. Also, links that you have not yet visited
+		will appear in <font color="#0000FF">blue</font>, while links you have used will be
+		<font color="#7F7F7F">gray</font>.<br>
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="4"><strong><em><u>
+		<a name="1.0">1.0</a> - About Chip-8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		Whenever I mention to someone that I'm writing a Chip-8 interpreter, the response
+		is always the same: "What's a Chip-8?"<br>
+		<br>
+		Chip-8 is a simple, interpreted, programming language which was first used on some
+		do-it-yourself computer systems in the late 1970s and early 1980s. The COSMAC VIP,
+		DREAM 6800, and ETI 660 computers are a few examples. These computers typically
+		were designed to use a television as a display, had between 1 and 4K of RAM, and
+		used a 16-key hexadecimal keypad for input. The interpreter took up only
+		512 bytes of memory, and programs, which were entered into the computer in
+		hexadecimal, were even smaller.<br>
+		<br>
+		In the early 1990s, the Chip-8 language was revived by a man named Andreas
+		Gustafsson. He created a Chip-8 interpreter for the HP48 graphing calculator, 
+		called Chip-48. The HP48 was lacking a way to easily make fast games at the time,
+		and Chip-8 was the answer. Chip-48 later begat Super Chip-48, a modification of
+		Chip-48 which allowed higher resolution graphics, as well as other graphical
+		enhancements.<br>
+		<br>
+		Chip-48 inspired a whole new crop of Chip-8 interpreters for various platforms,
+		including MS-DOS, Windows 3.1, Amiga, HP48, MSX, Adam, and ColecoVision. I became
+		involved with Chip-8 after stumbling upon Paul Robson's interpreter on the 
+		World Wide Web. Shortly after that, I began writing my own Chip-8 interpreter.<br>
+		<br>
+		This document is a compilation of all the different sources of information I used
+		while programming my interpreter.<br>
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="4"><strong><em><u>
+		<a name="2.0">2.0</a> - Chip-8 Specifications&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		This section describes the Chip-8 memory, registers, display, keyboard, and timers.<br>
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="3"><strong><em><u>
+		<a name="2.1">2.1</a> - Memory&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		The Chip-8 language is capable of accessing up to 4KB (4,096 bytes) of RAM, from 
+		location 0x000 (0) to 0xFFF (4095). The first 512 bytes, from 0x000 to 0x1FF, are
+		where the original interpreter was located, and should not be used by programs.<br>
+		<br>
+		Most Chip-8 programs start at location 0x200 (512), but some begin at 0x600 (1536).
+		Programs beginning at 0x600 are intended for the ETI 660 computer.<br>
+		<br>
+		<a name="memmap"><strong>Memory</strong></a><strong> Map:</strong><br>
+		+---------------+= 0xFFF (4095) End of Chip-8 RAM<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;0x200 to 0xFFF|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Chip-8&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;Program / Data|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Space&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		+-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;-+= 0x600 (1536) Start of ETI 660 Chip-8 programs<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+		+---------------+= 0x200 (512) Start of most Chip-8 programs<br>
+		|&nbsp;0x000 to 0x1FF|<br>
+		|&nbsp;Reserved for&nbsp;&nbsp;|<br>
+		|&nbsp;&nbsp;interpreter&nbsp;&nbsp;|<br>
+		+---------------+= 0x000 (0) Start of Chip-8 RAM<br>
+
+
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="3"><strong><em><u>
+		<a name="2.2">2.2</a> - Registers&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		Chip-8 has 16 general purpose 8-bit registers, usually referred to as
+		V<em>x</em>, where <em>x</em> is a hexadecimal digit (0 through F). There is also
+		a 16-bit register called I. This register is generally used to store 
+		memory addresses, so only the lowest (rightmost) 12 bits are usually used.<br>
+		<br>
+		The VF register should not be used by any program, as it is used as a flag by
+		some instructions. See section 3.0, <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3.0">Instructions</a>
+		for details.<br>		
+		<br>
+		Chip-8 also has two special purpose 8-bit registers, for the delay and sound timers.
+		When these registers are non-zero, they are automatically decremented at a rate 
+		of 60Hz. See the section 2.5, <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.5">Timers &amp; Sound</a>, for more
+		information on these.<br>
+		<br>
+		There are also some "pseudo-registers" which are not accessable from Chip-8
+		programs. The program counter (PC) should be 16-bit, and is used to store the
+		currently executing address. The stack pointer (SP) can be 8-bit, it is used to
+		point to the topmost level of the stack.<br>
+		<br>
+		The stack is an array of 16 16-bit values, used to store the address that
+		the interpreter shoud return to when finished with a subroutine. Chip-8 allows
+		for up to 16 levels of nested subroutines.<br>
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="3"><strong><em><u>
+		<a name="2.3">2.3</a> - Keyboard&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		<a name="keyboard">The</a> computers which originally used the Chip-8 Language had a 16-key hexadecimal
+		keypad with the following layout:<br>
+		<br>
+		<table border="1" cellpadding="3" cellspacing="0" align="center">
+			<tbody><tr><td><tt>1</tt></td><td><tt>2</tt></td><td><tt>3</tt></td><td><tt>C</tt></td></tr>
+			<tr><td><tt>4</tt></td><td><tt>5</tt></td><td><tt>6</tt></td><td><tt>D</tt></td></tr>
+			<tr><td><tt>7</tt></td><td><tt>8</tt></td><td><tt>9</tt></td><td><tt>E</tt></td></tr>
+			<tr><td><tt>A</tt></td><td><tt>0</tt></td><td><tt>B</tt></td><td><tt>F</tt></td></tr>
+		</tbody></table>
+		<br>
+		This layout must be mapped into various other configurations to fit the keyboards
+		of today's platforms.<br>
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="3"><strong><em><u>
+		<a name="2.4">2.4</a> - Display&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		<a name="dispcoords">The</a> original implementation of the Chip-8 language used a 64x32-pixel monochrome display
+		with this format:<br>
+		<br>
+		<table border="1" width="128" height="64" cellpadding="0" cellspacing="0" align="center">
+			<tbody><tr><td>
+				<table border="0" height="60" width="100%"> 
+					<tbody><tr><td valign="top" align="left">(0,0)</td><td valign="top" align="right">(63,0)</td></tr>
+					<tr><td valign="bottom" align="left">(0,31)</td><td valign="bottom" align="right">(63,31)</td></tr>
+				</tbody></table>
+			</td></tr>
+		</tbody></table>
+		<br>
+		Some other interpreters, most notably the one on the ETI 660, also had 64x48 and 
+		64x64 modes. To my knowledge, no current interpreter supports these modes. More 
+		recently, Super Chip-48, an interpreter for the HP48 calculator, added a 
+		128x64-pixel mode. This mode is now supported by most of the interpreters on other
+		platforms.<br>
+		<br>
+		Chip-8 draws graphics on screen through the use of sprites. A sprite is a group
+		of bytes which are a binary representation of the desired picture. Chip-8 sprites
+		may be up to 15 bytes, for a possible sprite size of 8x15.<br>
+		<br>
+		Programs may also refer to a group of sprites representing the hexadecimal 
+		digits 0 through F. These sprites are 5 bytes long, or 8x5 pixels. The data
+		should be stored in the interpreter area of Chip-8 memory (0x000 to 0x1FF). 
+		Below is a listing of each character's bytes, in binary and hexadecimal:<br>
+		<br>
+		<a name="font">&nbsp;</a>
+		<table align="center">
+			<tbody><tr>
+				<td>
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"0"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;*<br>
+								*&nbsp;&nbsp;*<br>
+								*&nbsp;&nbsp;*<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10010000<br>
+								10010000<br>
+								10010000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x90<br>
+								0x90<br>
+								0x90<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>
+				</td>
+				<td>		
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"1"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								&nbsp;&nbsp;*&nbsp;<br>
+								&nbsp;**&nbsp;<br>
+								&nbsp;&nbsp;*&nbsp;<br>
+								&nbsp;&nbsp;*&nbsp;<br>
+								&nbsp;***<br>
+							</tt></td>
+							<td><tt>
+								00100000<br>
+								01100000<br>
+								00100000<br>
+								00100000<br>
+								01110000<br>
+							</tt></td>
+							<td><tt>
+								0x20<br>
+								0x60<br>
+								0x20<br>
+								0x20<br>
+								0x70<br>
+							</tt></td>
+						</tr>
+					</tbody></table>		
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"2"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								&nbsp;&nbsp;&nbsp;*<br>
+								****<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								00010000<br>
+								11110000<br>
+								10000000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x10<br>
+								0xF0<br>
+								0x80<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>
+				</td>
+				<td>		
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"3"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								&nbsp;&nbsp;&nbsp;*<br>
+								****<br>
+								&nbsp;&nbsp;&nbsp;*<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								00010000<br>
+								11110000<br>
+								00010000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x10<br>
+								0xF0<br>
+								0x10<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>		
+				</td>
+			</tr>
+
+			<tr>
+				<td>
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"4"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								*&nbsp;&nbsp;*<br>
+								*&nbsp;&nbsp;*<br>
+								****<br>
+								&nbsp;&nbsp;&nbsp;*<br>
+								&nbsp;&nbsp;&nbsp;*<br>
+							</tt></td>
+							<td><tt>
+								10010000<br>
+								10010000<br>
+								11110000<br>
+								00010000<br>
+								00010000<br>
+							</tt></td>
+							<td><tt>
+								0x90<br>
+								0x90<br>
+								0xF0<br>
+								0x10<br>
+								0x10<br>
+							</tt></td>
+						</tr>
+					</tbody></table>
+				</td>
+				<td>		
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"5"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								****<br>
+								&nbsp;&nbsp;&nbsp;*<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10000000<br>
+								11110000<br>
+								00010000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x80<br>
+								0xF0<br>
+								0x10<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>		
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"6"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								****<br>
+								*&nbsp;&nbsp;*<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10000000<br>
+								11110000<br>
+								10010000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x80<br>
+								0xF0<br>
+								0x90<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>
+				</td>
+				<td>		
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"7"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								&nbsp;&nbsp;&nbsp;*<br>
+								&nbsp;&nbsp;*&nbsp;<br>
+								&nbsp;*&nbsp;&nbsp;<br>
+								&nbsp;*&nbsp;&nbsp;<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								00010000<br>
+								00100000<br>
+								01000000<br>
+								01000000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x10<br>
+								0x20<br>
+								0x40<br>
+								0x40<br>
+							</tt></td>
+						</tr>
+					</tbody></table>		
+				</td>
+			</tr>
+
+			<tr>
+				<td>
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"8"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;*<br>
+								****<br>
+								*&nbsp;&nbsp;*<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10010000<br>
+								11110000<br>
+								10010000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x90<br>
+								0xF0<br>
+								0x90<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>
+				</td>
+				<td>		
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"9"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;*<br>
+								****<br>
+								&nbsp;&nbsp;&nbsp;*<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10010000<br>
+								11110000<br>
+								00010000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x90<br>
+								0xF0<br>
+								0x10<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>		
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"A"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;*<br>
+								****<br>
+								*&nbsp;&nbsp;*<br>
+								*&nbsp;&nbsp;*<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10010000<br>
+								11110000<br>
+								10010000<br>
+								10010000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x90<br>
+								0xF0<br>
+								0x90<br>
+								0x90<br>
+							</tt></td>
+						</tr>
+					</tbody></table>
+				</td>
+				<td>		
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"B"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								***&nbsp;<br>
+								*&nbsp;&nbsp;*<br>
+								***&nbsp;<br>
+								*&nbsp;&nbsp;*<br>
+								***&nbsp;<br>
+							</tt></td>
+							<td><tt>
+								11100000<br>
+								10010000<br>
+								11100000<br>
+								10010000<br>
+								11100000<br>
+							</tt></td>
+							<td><tt>
+								0xE0<br>
+								0x90<br>
+								0xE0<br>
+								0x90<br>
+								0xE0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>		
+				</td>
+			</tr>
+
+			<tr>
+				<td>
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"C"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10000000<br>
+								10000000<br>
+								10000000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x80<br>
+								0x80<br>
+								0x80<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>
+				</td>
+				<td>		
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"D"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								***&nbsp;<br>
+								*&nbsp;&nbsp;*<br>
+								*&nbsp;&nbsp;*<br>
+								*&nbsp;&nbsp;*<br>
+								***&nbsp;<br>
+							</tt></td>
+							<td><tt>
+								11100000<br>
+								10010000<br>
+								10010000<br>
+								10010000<br>
+								11100000<br>
+							</tt></td>
+							<td><tt>
+								0xE0<br>
+								0x90<br>
+								0x90<br>
+								0x90<br>
+								0xE0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>		
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"E"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								****<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								****<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10000000<br>
+								11110000<br>
+								10000000<br>
+								11110000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x80<br>
+								0xF0<br>
+								0x80<br>
+								0xF0<br>
+							</tt></td>
+						</tr>
+					</tbody></table>
+				</td>
+				<td>		
+					<table border="1" cellpadding="3" cellspacing="0">
+						<tbody><tr><td>"F"</td><td>Binary</td><td>Hex</td></tr>			
+						<tr>
+							<td><tt>
+								****<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								****<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+								*&nbsp;&nbsp;&nbsp;<br>
+							</tt></td>
+							<td><tt>
+								11110000<br>
+								10000000<br>
+								11110000<br>
+								10000000<br>
+								10000000<br>
+							</tt></td>
+							<td><tt>
+								0xF0<br>
+								0x80<br>
+								0xF0<br>
+								0x80<br>
+								0x80<br>
+							</tt></td>
+						</tr>
+					</tbody></table>		
+				</td>
+			</tr>
+
+		</tbody></table>
+		</font></tt>
+		<br>
+		<br>
+		<font size="3"><strong><em><u>
+		<a name="2.5">2.5</a> - Timers &amp; Sound&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		Chip-8 provides 2 timers, a delay timer and a sound timer.<br>
+		<br>
+		The delay timer is active whenever the delay timer register (DT) is non-zero.
+		This timer does nothing more than subtract 1 from the value of DT at a rate
+		of 60Hz. When DT reaches 0, it deactivates.<br>
+		<br>
+		The sound timer is active whenever the sound timer register (ST) is non-zero.
+		This timer also decrements at a rate of 60Hz, however, as long as ST's value is
+		greater than zero, the Chip-8 buzzer will sound. When ST reaches zero, the sound
+		timer deactivates.<br>
+		<br>
+		The sound produced by the Chip-8 interpreter has only one tone. The frequency
+		of this tone is decided by the author of the interpreter.<br> 
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="4"><strong><em><u>
+		<a name="3.0">3.0</a> - Chip-8 Instructions&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		The original implementation of the Chip-8 language includes 36 different
+		instructions, including math, graphics, and flow control functions.<br>
+		<br>
+		Super Chip-48 added an additional	 10 instructions, for a total of 46.<br>
+		<br>
+		All instructions are 2 bytes long and are stored most-significant-byte first.
+		In memory, the first byte of each instruction should be located at an even
+		addresses. If a program includes sprite data, it should be padded so any
+		instructions following it will be properly situated in RAM.<br>
+		<br>
+		This document does not yet contain descriptions of the Super Chip-48 instructions.
+		They are, however, listed below.<br>
+		<br>
+		In these listings, the following variables are used:<br>
+		<br>
+		<em>nnn</em> or <em>addr</em> - A 12-bit value, the lowest 12 bits of the instruction<br>
+		<em>n</em> or <em>nibble</em> - A 4-bit value, the lowest 4 bits of the instruction<br>
+		<em>x</em> - A 4-bit value, the lower 4 bits of the high byte of the instruction<br>
+		<em>y</em> - A 4-bit value, the upper 4 bits of the low byte of the instruction<br>
+		<em>kk</em> or <em>byte</em> - An 8-bit value, the lowest 8 bits of the instruction<br>
+		</font></tt>
+		<br>
+		<br>
+		<font size="3"><strong><em><u>
+		<a name="3.1">3.1</a> - Standard Chip-8 Instructions&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">		
+		<strong><a name="0nnn">0<em>nnn</em></a> - SYS <em>addr</em></strong><br>
+		Jump to a machine code routine at <em>nnn</em>.<br>
+		<br>
+		This instruction is only used on the old computers on which Chip-8 was originally implemented. It is ignored by modern interpreters.<br>
+		<br>
+		<br>
+
+		<strong><a name="00E0">00E0</a> - CLS</strong><br>
+		Clear the display.<br>
+		<br>
+		<br>
+
+		<strong><a name="00EE">00EE</a> - RET</strong><br>
+		Return from a subroutine.<br>
+		<br>
+		The interpreter sets the program counter to the address at the top of the
+		stack, then subtracts 1 from the stack pointer.<br>
+		<br>
+		<br>
+
+		<strong><a name="1nnn">1<em>nnn</em></a> - JP <em><em>addr</em></em></strong><br>
+		Jump to location <em>nnn</em>.<br>
+		<br>
+		The interpreter sets the program counter to <em>nnn</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="2nnn">2<em>nnn</em></a> - CALL <em>addr</em></strong><br>
+		Call subroutine at <em>nnn</em>.<br>
+		<br>
+		The interpreter increments the stack pointer, then puts the current PC on
+		the top of the stack. The PC is then set to <em>nnn</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="3xkk">3<em>xkk</em></a> - SE V<em>x</em>, <em>byte</em></strong><br>
+		Skip next instruction if V<em>x</em> = <em>kk</em>.<br>
+		<br>
+		The interpreter compares register V<em>x</em> to <em>kk</em>, and if they are 
+		equal, increments the program counter by 2.<br>
+		<br>
+		<br>
+
+		<strong><a name="4xkk">4<em>xkk</em></a> - SNE V<em>x</em>, <em>byte</em></strong><br>
+		Skip next instruction if V<em>x</em> != <em>kk</em>.<br>
+		<br>
+		The interpreter compares register V<em>x</em> to <em>kk</em>, and if they are
+		not equal, increments the program counter by 2.<br>
+		<br>
+		<br>
+
+		<strong><a name="5xy0">5<em>xy</em>0</a> - SE V<em>x</em>, V<em>y</em></strong><br>
+		Skip next instruction if V<em>x</em> = V<em>y</em>.<br>
+		<br>
+		The interpreter compares register V<em>x</em> to register V<em>y</em>, and if 
+		they are equal, increments the program counter by 2.<br>
+		<br>
+		<br>
+
+		<strong><a name="6xkk">6<em>xkk</em></a> - LD V<em>x</em>, <em>byte</em></strong><br>
+		Set V<em>x</em> = <em>kk</em>.<br>
+		<br>
+		The interpreter puts the value <em>kk</em> into register V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="7xkk">7<em>xkk</em></a> - ADD V<em>x</em>, <em>byte</em></strong><br>
+		Set V<em>x</em> = V<em>x</em> + <em>kk</em>.<br>
+		<br>
+		Adds the value <em>kk</em> to the value of register V<em>x</em>, then stores the result in V<em>x</em>.
+		<br>
+		<br>
+
+		<strong><a name="8xy0">8<em>xy</em>0</a> - LD V<em>x</em>, V<em>y</em></strong><br>
+		Set V<em>x</em> = V<em>y</em>.<br>
+		<br>
+		Stores the value of register V<em>y</em> in register V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="8xy1">8<em>xy</em>1</a> - OR V<em>x</em>, V<em>y</em></strong><br>
+		Set Vx = V<em>x</em> OR V<em>y</em>.<br>
+		<br>
+		Performs a bitwise OR on the values of V<em>x</em> and V<em>y</em>, then stores the result in V<em>x</em>. A
+		bitwise OR compares the corrseponding bits from two values, and if either bit
+		is 1, then the same bit in the result is also 1. Otherwise, it is 0. <br>
+		<br>
+		<br>
+
+		<strong><a name="8xy2">8<em>xy</em>2</a> - AND V<em>x</em>, V<em>y</em></strong><br>
+		Set V<em>x</em> = V<em>x</em> AND V<em>y</em>.<br>
+		<br>
+		Performs a bitwise AND on the values of V<em>x</em> and V<em>y</em>, then stores the result in V<em>x</em>. A
+		bitwise AND compares the corrseponding bits from two values, and if both bits
+		are 1, then the same bit in the result is also 1. Otherwise, it is 0. <br>
+		<br>
+		<br>
+
+		<strong><a name="8xy3">8<em>xy</em>3</a> - XOR V<em>x</em>, V<em>y</em></strong><br>
+		Set V<em>x</em> = V<em>x</em> XOR V<em>y</em>.<br>
+		<br>
+		Performs a bitwise exclusive OR on the values of V<em>x</em> and V<em>y</em>, then stores the
+		result in V<em>x</em>. An exclusive OR compares the corrseponding bits from two values,
+		and if the bits are not both the same, then the corresponding bit in the result
+		is set to 1. Otherwise, it is 0. <br>
+		<br>
+		<br>
+
+		<strong><a name="8xy4">8<em>xy</em>4</a> - ADD V<em>x</em>, V<em>y</em></strong><br>
+		Set V<em>x</em> = V<em>x</em> + V<em></em>y, set VF = carry.<br>
+		<br>
+		The values of V<em>x</em> and V<em>y</em> are added together. If the result is greater than 8 bits
+		(i.e., &gt; 255,) VF is set to 1, otherwise 0. Only the lowest 8 bits of the result
+		are kept, and stored in V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="8xy5">8<em>xy</em>5</a> - SUB V<em>x</em>, V<em>y</em></strong><br>
+		Set V<em>x</em> = V<em>x</em> - V<em>y</em>, set VF = NOT borrow.<br>
+		<br>
+		If V<em>x</em> &gt; V<em>y</em>, then VF is set to 1, otherwise 0. Then V<em>y</em> is subtracted from V<em>x</em>,
+		and the results stored in V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="8xy6">8<em>xy</em>6</a> - SHR V<em>x</em> {, V<em>y</em>}</strong><br>
+		Set V<em>x</em> = V<em>x</em> SHR 1.<br>
+		<br>
+		If the least-significant bit of V<em>x</em> is 1, then VF is set to 1, otherwise 0. Then
+		V<em>x</em> is divided by 2.<br>
+		<br>
+		<br>
+
+		<strong><a name="8xy7">8<em>xy</em>7</a> - SUBN V<em>x</em>, V<em>y</em></strong><br>
+		Set V<em>x</em> = V<em>y</em> - V<em>x</em>, set VF = NOT borrow.<br>
+		<br>
+		If V<em>y</em> &gt; V<em>x</em>, then VF is set to 1, otherwise 0. Then V<em>x</em> is subtracted from V<em>y</em>,
+		and the results stored in V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="8xyE">8<em>xy</em>E</a> - SHL V<em>x</em> {, V<em>y</em>}</strong><br>
+		Set V<em>x</em> = V<em>x</em> SHL 1.<br>
+		<br>
+		If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then
+		V<em>x</em> is multiplied by 2.<br>
+		<br>
+		<br>
+
+		<strong><a name="9xy0">9<em>xy</em>0</a> - SNE V<em>x</em>, V<em>y</em></strong><br>
+		Skip next instruction if V<em>x</em> != V<em>y</em>.<br>
+		<br>
+		The values of V<em>x</em> and V<em>y</em> are compared, and if they are not equal, the program
+		counter is increased by 2.<br>
+		<br>
+		<br>
+
+		<strong><a name="Annn">A<em>nnn</em></a> - LD I, <em>addr</em></strong><br>
+		Set I = <em>nnn</em>.<br>
+		<br>
+		The value of register I is set to <em>nnn</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="Bnnn">B<em>nnn</em></a> - JP V0, <em>addr</em></strong><br>
+		Jump to location <em>nnn</em> + V0.<br>
+		<br>
+		The program counter is set to <em>nnn</em> plus the value of V0.<br>
+		<br>
+		<br>
+
+		<strong><a name="Cxkk">C<em>xkk</em></a> - RND V<em>x</em>, <em>byte</em></strong><br>
+		Set V<em>x</em> = random <em>byte</em> AND <em>kk</em>.<br>
+		<br>
+		The interpreter generates a random number from 0 to 255, which is then ANDed
+		with the value kk. The results are stored in V<em>x</em>. See instruction <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy2">8<em>xy</em>2</a>
+		for more information on AND.<br>
+		<br>
+		<br>
+
+		<strong><a name="Dxyn">D<em>xyn</em></a> - DRW V<em>x</em>, V<em>y</em>, <em>nibble</em></strong><br>
+		Display <em>n</em>-byte sprite starting at memory location I at (V<em>x</em>, V<em>y</em>), set VF = collision.<br>
+		<br>
+		The interpreter reads <em>n</em> bytes from memory, starting at the address stored in
+		I. These bytes are then displayed as sprites on screen at coordinates (V<em>x</em>, V<em>y</em>).
+		Sprites are XORed onto the existing screen. If this causes any pixels to be
+		erased, VF is set to 1, otherwise it is set to 0. If the sprite is positioned
+		so part of it is outside the coordinates of the display, it wraps around to
+		the opposite side of the screen. See instruction <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy3">8<em>xy</em>3</a> for
+		more information on XOR, and section 2.4, <a href="http://devernay.free.fr/hacks/chip8/2.4">Display</a>, for
+		more information on the Chip-8 screen and sprites.<br>
+		<br>
+		<br>
+
+		<strong><a name="Ex9E">E<em>x</em>9E</a> - SKP V<em>x</em></strong><br>
+		Skip next instruction if key with the value of V<em>x</em> is pressed.<br>
+		<br>
+		Checks the keyboard, and if the key corresponding to the value of V<em>x</em> is currently
+		in the down position, PC is increased by 2.<br>
+		<br>
+		<br>
+
+		<strong><a name="ExA1">E<em>x</em>A1</a> - SKNP V<em>x</em></strong><br>
+		Skip next instruction if key with the value of V<em>x</em> is not pressed.<br>
+		<br>
+		Checks the keyboard, and if the key corresponding to the value of V<em>x</em> is currently
+		in the up position, PC is increased by 2.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx07">F<em>x</em>07</a> - LD V<em>x</em>, DT</strong><br>
+		Set V<em>x</em> = delay timer value.<br>
+		<br>
+		The value of DT is placed into V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx0A">F<em>x</em>0A</a> - LD V<em>x</em>, K</strong><br>
+		Wait for a key press, store the value of the key in V<em>x</em>.<br>
+		<br>
+		All execution stops until a key is pressed, then the value of that key
+		is stored in V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx15">F<em>x</em>15</a> - LD DT, V<em>x</em></strong><br>
+		Set delay timer = V<em>x</em>.<br>
+		<br>
+		DT is set equal to the value of V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx18">F<em>x</em>18</a> - LD ST, V<em>x</em></strong><br>
+		Set sound timer = V<em>x</em>.<br>
+		<br>
+		ST is set equal to the value of V<em>x</em>.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx1E">F<em>x</em>1E</a> - ADD I, V<em>x</em></strong><br>
+		Set I = I + V<em>x</em>.<br>
+		<br>
+		The values of I and V<em>x</em> are added, and the results are stored in I.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx29">F<em>x</em>29</a> - LD F, V<em>x</em></strong><br>
+		Set I = location of sprite for digit V<em>x</em>.<br>
+		<br>
+		The value of I is set to the location for the hexadecimal sprite corresponding to
+		the value of V<em>x</em>. See section 2.4, <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2.4">Display</a>, for more information
+		on the Chip-8 hexadecimal font.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx33">F<em>x</em>33</a> - LD B, V<em>x</em></strong><br>
+		Store BCD representation of V<em>x</em> in memory locations I, I+1, and I+2.<br>
+		<br>
+		The interpreter takes the decimal value of V<em>x</em>, and places the hundreds
+		digit in memory at location in I, the tens digit at location I+1, and the
+		ones digit at location I+2.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx55">F<em>x</em>55</a> - LD [I], V<em>x</em></strong><br>
+		Store registers V0 through V<em>x</em> in memory starting at location I.<br>
+		<br>
+		The interpreter copies the values of registers V0 through V<em>x</em> into memory,
+		starting at the address in I.<br>
+		<br>
+		<br>
+
+		<strong><a name="Fx65">F<em>x</em>65</a> - LD V<em>x</em>, [I]</strong><br>
+		Read registers V0 through V<em>x</em> from memory starting at location I.<br>
+		<br>
+		The interpreter reads values from memory starting at location I into registers
+		V0 through V<em>x</em>.<br>
+		<br>
+		<br>
+
+		</font></tt>
+		<font size="3"><strong><em><u>
+		<a name="3.2">3.2</a> - Super Chip-48 Instructions&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">	
+		<strong><a name="00Cn">00C<em>n</em></a> - SCD <em>nibble</em></strong><br>
+		<strong><a name="00FB">00FB</a> - SCR</strong><br>
+		<strong><a name="00FC">00FC</a> - SCL</strong><br>
+		<strong><a name="00FD">00FD</a> - EXIT</strong><br>
+		<strong><a name="00FE">00FE</a> - LOW</strong><br>
+		<strong><a name="00FF">00FF</a> - HIGH</strong><br>
+		<strong><a name="Dxy0">D<em>xy</em>0</a> - DRW V<em>x</em>, V<strong>y</strong>, 0</strong><br>
+		<strong><a name="Fx30">F<em>x</em>30</a> - LD HF, V<em>x</em></strong><br>
+		<strong><a name="Fx75">F<em>x</em>75</a> - LD R, V<em>x</em></strong><br>
+		<strong><a name="Fx85">F<em>x</em>85</a> - LD V<em>x</em>, R</strong><br>
+		<br>
+		<br>
+		<br>
+
+		</font></tt>
+							<font size="4"><strong><em><u>
+		<a name="4.0">4.0</a> - Interpreters&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		Below is a list of every Chip-8 interpreter I could find on the World Wide Web:<br>
+		<br>
+		<table border="1" cellspacing="0" cellpadding="3" align="center">
+			<tbody><tr>
+				<td><strong>Title</strong></td>
+				<td><strong>Version</strong></td>
+				<td><strong>Author</strong></td>
+				<td><strong>Platform(s)</strong></td>
+			</tr>
+			<tr>
+				<td>Chip-48</td>
+				<td>2.20</td>
+				<td>Anrdreas Gustafsson</td>
+				<td>HP48</td>
+			</tr>
+			<tr>
+				<td>Chip8</td>
+				<td>1.1</td>
+				<td>Paul Robson</td>
+				<td>DOS</td>
+			</tr>
+			<tr>
+				<td>Chip-8 Emulator</td>
+				<td>2.0.0</td>
+				<td>David Winter</td>
+				<td>DOS</td>
+			</tr>
+			<tr>
+				<td>CowChip</td>
+				<td>0.1</td>
+				<td>Thomas P. Greene</td>
+				<td>Windows 3.1</td>
+			</tr>
+			<tr>
+				<td>DREAM MON</td>
+				<td>1.1</td>
+				<td>Paul Hayter</td>
+				<td>Amiga</td>
+			</tr>
+			<tr>
+				<td>Super Chip-48</td>
+				<td>1.1</td>
+				<td>Based on Chip-48, modified by Erik Bryntse</td>
+				<td>HP48</td>
+			</tr>
+			<tr>
+				<td>Vision-8</td>
+				<td>1.0</td>
+				<td>Marcel de Kogel</td>
+				<td>DOS, Adam, MSX, ColecoVision</td>
+			</tr>
+		</tbody></table>
+		</font></tt>
+		<br>
+		<br>
+
+		<font size="4"><strong><em><u>
+		<a name="5.0">5.0</a> - Credits&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</u></em></strong></font> <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#0.0">[TOC]</a><br>
+		<br>
+		<tt><font size="3">
+		This document was compiled by <a href="mailto:cowgod@rockpile.com">Thomas P. Greene</a>.<br>
+		<br>
+		<strong>Sources include:</strong><br>
+		<ul>
+			<li>My own hacking.</li>
+			<li>E-mail between David Winter and myself.</li>
+			<li>David Winter's <u>Chip-8 Emulator</u> documentation.</li>
+			<li>Christian Egeberg's <u>Chipper</u> documentation.</li>
+			<li>Marcel de Kogel's <u>Vision-8</u> source code.</li>
+			<li>Paul Hayter's <u>DREAM MON</u> documentation.</li>
+			<li>Paul Robson's web page.</li>
+			<li>Andreas Gustafsson's <u>Chip-48</u> documentation.</li>
+		</ul>
+		</font></tt>
+		<br>
+		<br>
+		<br>
+		<font size="2"><tt>August 30, 1997 06:00:00</tt></font>
+	
+</body></html>

@@ -1,0 +1,218 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+ <head>
+  <title>DS Hardware Reference</title>
+  <link rel='stylesheet' type='text/css' href='index.css'>
+ </head>
+ <body>
+  <h1>Nintendo DS Hardware Reference</h1>
+version 0.01<br>
+Documented by Stephen Stair (sgstair AT akkit.org)<br>
+Please contact me if you find errors or omissions, thanks :)<br>
+<table cellspacing='0' cellpadding='5' border='0' width='100%'>
+<tr><td valign='top'>
+<h2>DS Reference</h2>
+<b>General Information</b><br>
+<a href="#TechnicalData">Technical Data</a><br>
+<a href="#MemoryMap">Memory Map</a><br>
+<a href="#IOMap">I/O Map</a><br>
+<a href="#ExternalConnectors">External Connectors</a><br>
+<a href="#Dimensions">Dimensions/Measurements</a><br>
+<br>
+<b>Hardware Information</b><br>
+
+
+
+
+
+
+</td><td valign='top'>
+<h2>CPU Reference</h2>
+
+<b>ARM Architecture</b><br>
+<b>ARM Instruction Set</b><br>
+<b>ARM7/ARM9 Differences</b><br>
+
+</td><td valign='top'>
+<h2>Formats/etc</h2>
+<b>General Formats</b><br>
+
+
+<b>Wifi Formats</b><br>
+
+
+<b>Etc...</b><br>
+
+
+
+</td></tr>
+</table>
+
+
+<a name="TechnicalData">
+<h1>Technical Data</h1>
+
+
+<a name="MemoryMap">
+<h1>Memory Map</h1>
+<table cellspacing='0' cellpadding='5' border='0'>
+<tr><td>Address</td><td><h2>ARM7 Memory</h2></td><td><h2>ARM9 Memory</h2></td></tr>
+
+</table>
+
+<a name="IOMap">
+<h1>I/O Map</h1>
+<b>Base I/O - all registers in this section are offset from 0x04000000</b>
+<pre>Offset    R/W   Name            Description
+
+</pre>
+<b>Wifi I/O - All registers in this section are offset from 0x04800000 (16bit unless otherwise noted)</b>
+<pre>Offset    R/W   Name            Description
+0x8004    ?/W   Name            Enabled/Reset? bit0 set to 1 to enable?
+0x8006    R/W   ?               masks: 0x0040, 0x0018, 0x0003
+0x8008    ?/W   Name            always set to 0?
+0x800A    ?/W   Name            always set to 0?
+0x8010    R/W   WIF             Wifi Interrupt Flags (works like IF)
+0x8012    R/W   WIE             Wifi Interrupt Enable
+0x8018    R/W   ?               ? 6 bytes copied to this address...
+0x801A    R/W   ?               mask 0xffff
+0x801C    R/W   ?               mask 0xffff
+0x8020    R/W   ?               ? 6 bytes copied to this address, then [80d0] bit 10 (0x0400) cleared and set.
+0x8022    R/W   ?               mask 0xffff
+0x8024    R/W   ?               mask 0xffff
+0x8028    ?/W   Name            ? seems like it should only range from 0-31
+0x802A    R/W   ?               ? set to the same thing as [8028] always
+0x802C    ?/W   Name            set from 0x00-0xFF
+0x8030    ?/W   Name            [8030] = 0x8000, [8030] |= 0x80, [8030] = 0x8001 (seems to like setting =0 immediately followed by =0x8000)
+0x8032    ?/W   Name            [8032] = 0x8000, [8032] = 0, (seems to like setting =0 immediately followed by =0x8000)
+0x8036    ?/W   Name            [8036]=0, [8036]=1
+0x8038    ?/W   Name            [8038]=0x0f, [8038] |= 2, [8038] &= ~2, (|= 1, &= ~1), |= 1
+0x803C    ?/W   Name            =1, =2
+0x8040    ?/W   Name            =0x8000, =0x8001, =0
+0x8044    R     Name            (likes the value [8044]+[8044]<<8), never written to.
+0x8048    ?/W   Name            =0, =3
+0x8050    R/W   Name            read & 0x3fff, =4794, =4BFC, =50C4, =4794
+0x8052    R/W   Name            mask 0xffff
+0x8054    R/?   Name            Description
+0x8056    R/W   Name            mask 0x0ffe
+0x8058    R/W   Name            mask 0x1ffe
+0x805A    R/W   Name            mask 0x0ffe
+0x805C    R/W   Name            mask 0x0fff
+0x8062    R/W   Name            mask 0x1ffe
+0x8064    R/W   Name            mask 0x0fff
+0x8068    R/W   Name            mask 0x1ffe
+0x806C    R/W   Name            mask 0x0fff
+0x8074    R/W   Name            mask 0x1ffe
+0x8076    ?/W   Name            Description
+0x8080    ?/W   Name            Description
+0x8084    ?/W   Name            Description
+0x8088    ?/W   Name            Description
+0x808C    ?/W   Name            Description
+0x808E    ?/W   Name            Description
+0x8090    ?/W   Name            Description
+0x8094    ?/W   Name            ?
+0x8098    ?/W   Name            Description
+0x80A0    ?/W   Name            Description
+0x80A8    R/?   Name            Description
+0x80AC    ?/W   Name            Description
+0x80AE    ?/W   Name            Description
+0x80B0    R/?   Name            Description
+0x80B4    ?/W   Name            Description
+0x80B6    R/?   Name            Description
+0x80B8    R/?   Name            Description
+0x80BC    ?/W   Name            Description
+0x80C0    R/?   Name            Description
+0x80C4    R/?   Name            Description
+0x80D0    R/?   Name            Description
+0x80D4    ?/W   Name            Description
+0x80D8    ?/W   Name            Description
+0x80DA    ?/W   Name            Description
+0x80E0    ?/W   Name            Description
+0x80E8    ?/W   Name            Description
+0x80EA    ?/W   Name            Description
+0x80EC    ?/W   Name            Description
+0x80EE    ?/W   Name            Description
+0x80F0    ?/W   Name            Description
+0x80F2    ?/W   Name            Description
+0x80F4    ?/W   Name            Description
+0x80F6    ?/W   Name            Description
+0x80F8    ?/W   Name            Description
+0x80FA    ?/W   Name            Description
+0x80FC    ?/W   Name            Description
+0x80FE    ?/W   Name            Description
+0x810C    ?/W   Name            Description
+0x8110    ?/W   Name            Description
+0x8118    ?/W   Name            Description
+0x8122    R/W   ?               mask 0xffff
+0x8124    R/W   ?               mask 0xffff
+0x8128    R/W   ?               mask 0xffff
+0x8130    R/W   ?               mask 0x0fff
+0x8132    R/W   ?               mask 0x8fff
+0x8134    R/W   ?               mask 0xffff
+0x8140    R/W   ?               mask 0xffff
+0x8142    R/W   ?               mask 0xffff
+0x8150    ?/W   Name            Description
+0x8158    ?/W   Name            Description
+0x815A    ?/W   Name            Description
+0x815C    ?/W   Name            Description
+0x815E    ?/W   Name            Description
+0x8160    ?/W   Name            Description
+0x8168    ?/W   Name            Description
+0x817C    ?/W   Name            Description
+0x817E    ?/W   Name            Description
+0x8180    ?/W   Name            Description
+0x8184    ?/W   Name            Description
+0x8194    ?/W   Name            Description
+0x819C    ?/W   Name            Description
+0x81A0    ?/W   Name            Description
+0x81A2    ?/W   Name            Description
+0x81A4    ?/W   Name            Description
+0x81A8    R/?   Name            Description
+0x81AA    ?/W   Name            Description
+0x81AC    ?/W   Name            Description
+0x81AE    ?/W   Name            Description
+0x81B0    ?/W   Name            Description
+0x81B2    ?/W   Name            Description
+0x81B4    ?/W   Name            Description
+0x81B6    ?/W   Name            Description
+0x81B8    ?/W   Name            Description
+0x81BA    ?/W   Name            Description
+0x81BC    ?/W   Name            Description
+0x81BE    ?/W   Name            Description
+0x81C0    ?/W   Name            Description
+0x81D0    ?/W   Name            Description
+0x81D2    ?/W   Name            Description
+0x81D4    ?/W   Name            Description
+0x81D6    ?/W   Name            Description
+0x81D8    ?/W   Name            Description
+0x81DA    ?/W   Name            Description
+0x81DC    ?/W   Name            Description
+0x81DE    ?/W   Name            Description
+0x8210    ?/W   Name            Description
+0x8214    ?/W   Name            Description
+0x8228    ?/W   Name            Description
+0x8244    ?/W   Name            Description
+0x8268    ?/W   ?               Description
+0x8290    R/W   ?               bit 0 = ?
+</pre>
+
+<a name="ExternalConnectors">
+<h1>External Connectors</h1>
+
+
+<a name="Dimensions">
+<h1>Dimensions/Measurements</h1>
+
+
+
+
+
+
+
+  <div id='foot'>
+   <a href="/contact.html">Contact Information</a> | 
+   Copyright Stephen Stair, 2005.
+  </div>
+ </body>
+</html>

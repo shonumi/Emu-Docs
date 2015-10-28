@@ -1,0 +1,405 @@
+<link rel="stylesheet" type="text/css" href="../common.css">
+
+<div class="docs">
+<h2>DS ROM Structure</h2>
+<li>Header
+<ul>Size: Usually 16384 bytes - only the first 352 bytes are used</ul>
+<ul>The first 0x200 bytes are copied from the header to 0x23ffe00 when the game is booted.</ul>
+<ul>
+<table border=1>
+<tr>
+<td width=90><b>Address</b></td><td width=100><b>Length</b></td><td width=300><b>Code</b></td>
+</tr>
+<tr>
+<td>0x0-0xb</td><td>12 bytes</td><td>Internal game title - Short</td>
+</tr>
+<tr>
+<td>0xc-0xf</td><td>4 bytes</td><td>Game ID</td>
+</tr>
+<tr>
+<td>0x10-0x11</td><td>2 bytes</td><td>Publisher</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>"00" - None/Homebrew</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>"01" - Nintendo</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>"7U" - Ignition</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>"8P" - SEGA/BIOWARE</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>"G9" - D3 Publisher</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Too many to list...</td>
+</tr>
+
+<tr>
+<td>0x12</td><td>1 byte</td><td>Unit code</td>
+</tr>
+<tr>
+<td></td><td></td><td>Always 0x0 (DS)</td>
+</tr>
+<tr>
+<td>0x13</td><td>1 byte</td><td>Encryption seed to use</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>0x0-0x7</td>
+</tr>
+
+<tr>
+<td>0x14</td><td>1 byte</td><td>Cartridge size</td>
+</tr>
+<tr>
+<td></td><td></td><td>2^(value at 0x14)Mbits</td>
+</tr>
+
+<tr>
+<td>0x15-0x1d</td><td>9 bytes</td><td>Reserved - Never used</td>
+</tr>
+
+<tr>
+<td>0x1e</td><td>1 byte</td><td>ROM version</td>
+</tr>
+
+<tr>
+<td>0x1f</td><td>1 byte</td><td>Autostart flag</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>If set to 0x4 the health screen is skipped</td>
+</tr>
+
+<tr>
+<td>0x20-0x23</td><td>4 bytes</td><td>ARM9 bin offset</td>
+</tr>
+
+<tr>
+<td>0x24-0x27</td><td>4 bytes</td><td>ARM9 execution address</td>
+</tr>
+
+<tr>
+<td>0x28-0x2b</td><td>4 bytes</td><td>ARM9 RAM address</td>
+</tr>
+
+<tr>
+<td>0x2c-0x2f</td><td>4 bytes</td><td>ARM9 bin length</td>
+</tr>
+
+
+<tr>
+<td>0x30-0x33</td><td>4 bytes</td><td>ARM7 bin offset</td>
+</tr>
+
+<tr>
+<td>0x34-0x37</td><td>4 bytes</td><td>ARM7 execution address</td>
+</tr>
+
+<tr>
+<td>0x38-0x3b</td><td>4 bytes</td><td>ARM7 RAM address</td>
+</tr>
+
+<tr>
+<td>0x3c-0x3f</td><td>4 bytes</td><td>ARM7 bin length</td>
+</tr>
+
+<tr>
+<td>0x40-0x43</td><td>4 bytes</td><td>Filename table offset</td>
+</tr>
+
+<tr>
+<td>0x44-0x47</td><td>4 bytes</td><td>Filename table length</td>
+</tr>
+
+<tr>
+<td>0x48-0x4b</td><td>4 bytes</td><td>FAT offset</td>
+</tr>
+
+<tr>
+<td>0x4c-0x4f</td><td>4 bytes</td><td>FAT length</td>
+</tr>
+
+<tr>
+<td>0x50-0x53</td><td>4 bytes</td><td>ARM9 overlay offset</td>
+</tr>
+
+<tr>
+<td>0x54-0x57</td><td>4 bytes</td><td>ARM9 overlay length</td>
+</tr>
+
+<tr>
+<td>0x58-0x5b</td><td>4 bytes</td><td>ARM7 overlay offset</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Seems to never be used</td>
+</tr>
+
+<tr>
+<td>0x5c-0x5f</td><td>4 bytes</td><td>ARM7 overlay length</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Seems to never be used</td>
+</tr>
+
+<tr>
+<td>0x60-0x63</td><td>4 bytes</td><td>Bus control/timing</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Used during normal access</td>
+</tr>
+
+<tr>
+<td>0x64-0x67</td><td>4 bytes</td><td>Bus control/timing</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Used during decryption process</td>
+</tr>
+
+<tr>
+<td>0x68-0x6b</td><td>4 bytes</td><td>Icon/Internal title offset</td>
+</tr>
+
+<tr>
+<td>0x6c-0x6d</td><td>2 bytes</td><td>Secure area CRC16</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Starting with a value of 0xffff</td>
+</tr>
+
+<tr>
+<td>0x6e-0x6f</td><td>2 bytes</td><td>Secure area timeout</td>
+</tr>
+
+<tr>
+<td>0x70-0x73</td><td>4 bytes</td><td>ARM9 pointer table</td>
+</tr>
+
+<tr>
+<td>0x74-0x77</td><td>4 bytes</td><td>ARM7 pointer table</td>
+</tr>
+
+<tr>
+<td>0x78-0x7f</td><td>8 bytes</td><td>Secure area disable</td>
+</tr>
+
+<tr>
+<td>0x80-0x83</td><td>4 bytes</td><td>ROM length</td>
+</tr>
+<tr>
+<td></td><td></td><td>Note: Download play is not included in this length</td>
+</tr>
+
+<tr>
+<td>0x84-0x87</td><td>4 bytes</td><td>ROM header length</td>
+</tr>
+
+<tr>
+<td>0x88-0xbf</td><td>56 bytes</td><td>Unused</td>
+</tr>
+
+<tr>
+<td>0xc0-0x15b</td><td>156 bytes</td><td>Nintendo logo</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Game will not boot if this is missing or invalid</td>
+</tr>
+
+<tr>
+<td>0x15c-0x15d</td><td>2 bytes</td><td>Nintendo logo CRC16 - 0xcf56</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Game will not boot if this is missing or invalid</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Starting with a value of 0xffff</td>
+</tr>
+
+<tr>
+<td>0x15e-0x15f</td><td>2 bytes</td><td>Header CRC16</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>CRC16 from 0x0-0x15d with start value 0xffff</td>
+</tr>
+
+<tr>
+<td></td><td></td><td>Game will not boot if this is missing or invalid</td>
+</tr>
+
+</table>
+
+</ul>
+</ul>
+</li>
+<li>ARM9 binary
+<ul>The first 0x4000 (16K) bytes contain the secure area</ul>
+<ul>Usually compressed
+<ul>Compression runs from the end of the binary to the start</ul>
+<ul>Decompressed size = value stored at the last 4 bytes of the ARM9 binary + the length of the compressed binary</ul>
+</ul>
+</li>
+<li>ARM9 overlays
+<ul>They alter how the ARM9 loads resources from the ROM by mapping memory directly to the resources with a structure used to easily load particular resource types</ul>
+</li>
+
+<li>ARM7 binary
+<ul>Sometimes is encrypted with a key stored in the BIOS at 0x30h-0x1077</ul>
+</li>
+
+<li>ARM7 overlays
+<ul>They would do the same as ARM9 overlays but they never seem to be used</ul>
+</li>
+
+<li>Filename table
+<ul>Header
+<table>
+<tr>
+<td><b>Offset</b></td><td><b>Size</b></td><td><b>Description</b></td>
+</tr>
+<tr>
+<td>0x0</td><td>4 bytes</td><td>Size of header</td>
+</tr>
+<tr>
+<td>0x4</td><td>2 bytes</td><td>First filename ID</td>
+</tr>
+<tr>
+<td>0x6</td><td>2 bytes</td><td>Number of directories (including the root)</td>
+</tr>
+<tr>
+<td>Every 0x8 bytes onward</td><td>8 bytes</td><td>Directory structures</td>
+</tr>
+<tr>
+<td></td><td>4 bytes</td><td>Offset to table of files in the directory (from the start of the filename table)</td>
+</tr>
+<tr>
+<td></td><td>2 bytes</td><td>Offset to table of files in the directory (from the start of the filename table)</td>
+</tr>
+<tr>
+<td></td><td>2 bytes</td><td>ID of parent directory - 0xf000 for the root, increases by 1 automatically for each new directory created</td>
+</tr>
+</table>
+</ul>
+<ul>File/directory names
+<ul>Table uses a runlength for the strings so it must be read from the start</ul>
+<ul>If the next byte &0x80 == 0x80 then the string is a directory name, the length of the directory name is the byte XOR 0x80</ul>
+<ul>If the next byte in the table is 0x0 then the current directory is increased to the next directory in the list and the process continues on to the next byte</ul>
+<ul>If the next byte in the table is >0x0 and <0x80 then it is a filename</ul>
+<ul>The table is terminated with 0x0 0xff 0xff</ul>
+<ul>ex: 0x7 0x30 0x30 x044 0x55 0x4d 0x4d 0x59 - 7 bytes in length, name = file "00DUMMY"</ul>
+<ul>ex: 0x87 0x30 0x30 x044 0x55 0x4d 0x4d 0x59 - 7 bytes in length, name = directory "00DUMMY"</ul>
+</ul>
+</li>
+<li>FAT
+<ul>File offsets are stored as pairs that are 8 bytes each
+<ul>First 4 bytes - file start</ul>
+<ul>Last 4 bytes - file end</ul>
+</ul>
+<ul>If the addresses are less than the offset of the FAT then they are for overlays</ul>
+</li>
+
+<li>Icon/Internal title name
+<ul>
+<table>
+<tr>
+<td><b>Offset</b></td><td><b>Size</b></td><td><b>Description</b></td>
+</tr>
+<tr>
+<td>0x0</td><td>2 bytes</td><td>Version</td>
+</tr>
+<tr>
+<td>0x2</td><td>2 bytes</td><td>CRC16 from offset+0x20-0x83f with start value 0xffff</td>
+</tr>
+<tr>
+<td>0x4</td><td>28 bytes</td><td>Unused</td>
+</tr>
+<tr>
+<td>0x20</td><td>512 bytes</td><td>Icon data</td>
+</tr>
+<tr>
+<td>0x220</td><td>32 bytes</td><td>Icon palette</td>
+</tr>
+<tr>
+<td>0x240</td><td>256 bytes</td><td>Japanese title (Unicode)</td>
+</tr>
+<tr>
+<td>0x340</td><td>256 bytes</td><td>English title</td>
+</tr>
+<tr>
+<td>0x440</td><td>256 bytes</td><td>French title</td>
+</tr>
+<tr>
+<td>0x540</td><td>256 bytes</td><td>German title</td>
+</tr>
+<tr>
+<td>0x640</td><td>256 bytes</td><td>Italian title</td>
+</tr>
+<tr>
+<td>0x740</td><td>256 bytes</td><td>Spanish title</td>
+</tr>
+<tr>
+<td></td><td></td><td>Note: iQue games use the same Chinese (multibyte) title for all languages</td>
+</tr>
+</table>
+</ul>
+
+<ul>Icon structure
+<ul>32x32 pixels, 16 color (4bit) paletted</ul>
+<ul>Broken into 16 tiles (8x8 pixels) each of which is 32 bytes big</ul>
+<ul>First 4 bits in each byte are for the right pixel, last 4 bits are for the left pixel</ul>
+<ul>Tile layout
+<ul>
+<table border=1>
+<tr>
+<td>0</td><td>1</td><td>2</td><td>3</td>
+</tr>
+<tr>
+<td>4</td><td>5</td><td>6</td><td>7</td>
+</tr>
+<tr>
+<td>8</td><td>9</td><td>10</td><td>11</td>
+</tr>
+<tr>
+<td>12</td><td>13</td><td>14</td><td>15</td>
+</tr>
+</table>
+byte * tilebytes = iconpointer + 0x220 + 0x20 * tile;
+</ul>
+</ul>
+</ul>
+<ul>Palette
+<ul>16 x 15-bit color values stored in little endian</ul>
+<ul>Color 0 is always transparent regardless of the value</ul>
+</ul>
+</li>
+
+<pre><h5>
+-cracker
+
+Note:
+Much of this info I learned through experimentation with DS games and a substantial use of a hex editor.
+However, I did need to supplement my knowledge with info found elsewhere and will give credit where it is due.
+
+Acknowledgements: 
+Martin Korth and everyone that contributed to GBATEK
+Whoever else I gained random knowledge from
+</h5></pre>
+</div>

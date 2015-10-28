@@ -1,0 +1,218 @@
+TIM Graphic Formats (PSX 2D Graphics)
+By Klarth (stevemonaco@hotmail.com)
+http://rpgd.emulationworld.com/klarth
+
+Version 0.7 - January 1, 2001
+-- Totally rewritten for extra clarity
+-- Removed Opinions/Ideas on Editing Utilities Section
+Version 0.5 - August 22, 2000
+-- Initial Release
+
+
+I. Table of Contents
+
+1. Introduction and Terminology
+2. TIM Graphic Formats (4BPP, 8BPP, 16BPP, and 24BPP)
+3. TIM Header Formats (4BPP, 8BPP, 16BPP, and 24BPP)
+4. Color Conversion Algorithms (15bit BGR <-> 24bit RGB)
+
+_______________________________________________________________________________________________
+
+
+1.   Introduction and Terminology
+
+-----A. Introduction
+
+     Hmm, I started this doc awhile ago when I first started to get interested in PSX hacking.
+     I then concluded that many tools needed to be coded before the PSX translation "scene" 
+     could really get started.  So I decided to finish it and release it so that all you 
+     coders out there can start making some graphic tools to make PSX translations remotely 
+     possible for anybody willing to try to tackle one.  These formats all have headers so I 
+     decided to make a seperate document for them only since they're so different from other 
+     console graphics formats.
+
+     If you wish to put this document on your site, please contact me for authorization 
+     *before* you post this file on your site.  If I seem to "magically" disappear from the 
+     scene, you may post this document *only* in its original form.  If you use this doc 
+     please credit me in a thanks section since I just like to see who reads and uses them.
+
+
+-----B. Terminology
+
+     CLUT - Color LookUp Table (The Sony term for Palette)
+
+     Image Org - Sets the coordinate of an image zero point, used for TIM files
+          in the VRAM of the Playstation.  Not particularly necessary from an editing point 
+          but could be useful for a program that creates TIM images and their headers.
+
+     Palette Org - Sets the coordinates of a CLUT image zero point.  Not particularly necessary 
+     from an editing standpoint but could be useful for a program that creates TIM images and 
+     their headers.
+
+     BPP:  Bits per pixel.
+
+     [pA-B rC]: pixels A-B (leftmost pixel 0), row number C (topmost row 0).
+          This won't have a bitplane value because it's a linear format.
+
+     [pX rX]: The last pixel of row X.  The last pixel's number is equal to the correct width 
+          of the image as defined in the header.
+
+_______________________________________________________________________________________________
+
+
+2. TIM Graphics Data (A. 4BPP, B. 8BPP, C. 16BPP, D. 24BPP)
+   All the graphics are stored in Big Endian order.
+
+
+-----A. 4BPP PSX TIM
+        Each pair represents one byte
+        Format:
+
+  [p0-1 r0], [p2-3 r0], [p4-5 r0], [p6-7 r0], ..., [pX r0]
+  [p0-1 r1], [p2-3 r1], [p4-5 r1], [p6-7 r1], ..., [pX r1]
+  ...
+  And it continues until the row number equals the height (from the header).  It gets its
+  colors from a 16 entry CLUT in the header of the file, there may be multiple CLUTs.
+
+
+-----B. 8BPP PSX TIM
+        Each pair represents one byte
+        Format:
+
+  [p0 r0], [p1 r0], [p2 r0], [p3, r0], [p4, r0], [p5, r0], [p6, r0], [p7, r0], ..., [pX r0]
+  [p0 r0], [p1 r0], [p2 r0], [p3, r0], [p4, r0], [p5, r0], [p6, r0], [p7, r0], ..., [pX r0]
+  ...
+  And it continues until the row number equals the height (from the header).  It gets its
+  colors from a 256 entry CLUT in the header of the file, there may be multiple CLUTs.
+
+
+-----C. 16BPP PSX TIM
+        Each pair represents two bytes
+        Format:
+
+  [p0 r0], [p1 r0], [p2 r0], [p3, r0], [p4, r0], [p5, r0], [p6, r0], [p7, r0], ..., [pX r0]
+  [p0 r0], [p1 r0], [p2 r0], [p3, r0], [p4, r0], [p5, r0], [p6, r0], [p7, r0], ..., [pX r0]
+  ...
+  And it continues until the row number equals the height (from the header).  It doesn't need
+  a CLUT because it's basically a type of 15bit color.
+
+
+-----D. 24BPP PSX TIM
+        Each pair represents three bytes
+        Format:
+
+  [p0 r0], [p1 r0], [p2 r0], [p3, r0], [p4, r0], [p5, r0], [p6, r0], [p7, r0], ..., [pX r0]
+  [p0 r0], [p1 r0], [p2 r0], [p3, r0], [p4, r0], [p5, r0], [p6, r0], [p7, r0], ..., [pX r0]
+  ...
+  Continues until the row number equals the height (from the header).  It doesn't need a CLUT 
+  since it's 24bit color.  I've never actually ripped a 24BPP TIM from a PSX game but I found 
+  one 24BPP TIM image and took this info from it.  May or may not actually be used on the PSX.
+
+_______________________________________________________________________________________________
+
+
+3. TIM Headers (A. 4BPP, B. 8BPP, C. 16BPP, D. 24BPP)
+   All two byte values are in Little Endian.  The rest are in Big Endian.
+
+
+-----A. 4BPP TIM Header:       
+
+  [1-4]   - 10 00 00 00: ID Tag for TIM Format
+  [5-8]   - 08 00 00 00: ID Tag for 4BPP
+  [9-10]  - ?
+  [11-12] - ?
+  [13-14] - Palette Org X
+  [15-16] - Palette Org Y
+  [17-18] - ?
+  [19-20] - Number of CLUTs
+  [??-??] - CLUT Data.  16 Colors per CLUT, 32 bytes per CLUT.
+  [21-22] - ?
+  [23-24] - ?
+  [25-26] - Image Org X
+  [27-28] - Image Org Y
+  [29-30] - Image Width (Multiply by 4 to get actual width)
+  [31-32] - Image Height
+
+
+-----B. 8BPP TIM Header:
+
+  [1-4]   - 10 00 00 00: ID Tag for TIM
+  [5-8]   - 09 00 00 00: ID Tag for 8BPP
+  [9-10]  - ?
+  [11-12] - ?
+  [13-14] - Palette Org X
+  [15-16] - Palette Org Y
+  [17-18] - ?
+  [19-20] - Number of CLUTs
+  [??-??] - CLUT Data.  256 Colors per CLUT, 512 bytes per CLUT.
+  [21-22] - ?
+  [23-24] - ?
+  [25-26] - Image Org X
+  [27-28] - Image Org Y
+  [29-30] - Image Width (Multiply by 2 to get actual width)
+  [31-32] - Image Height
+
+
+-----C. 16BPP TIM Header:
+
+  [1-4]   - 10 00 00 00: ID Tag for TIM
+  [5-8]   - 02 00 00 00: ID Tag for 16BPP
+  [9-10]  - ?
+  [11-12] - ?
+  [13-14] - Image Org X
+  [15-16] - Image Org Y
+  [17-18] - Image Width (Stored as actual width)
+  [19-20] - Image Height
+  There is no CLUT data.
+
+
+-----D. 24BPP TIM Header:
+
+  [1-4]   - 10 00 00 00: ID Tag for TIM
+  [5-8]   - 03 00 00 00: ID Tag for 24BPP
+  [9-10]  - ?
+  [11-12] - ?
+  [13-14] - Image Org X
+  [15-16] - Image Org Y
+  [17-18] - Image Width (Divide by 1.5 to get actual height)
+  [19-20] - Image Height
+  There is no CLUT data.
+
+_______________________________________________________________________________________________
+
+
+4. Color Conversion Algorithms (15bit BGR <-> 24bit RGB)
+
+-----A. 15bit BGR to 24bit RGB Color Conversion Algorithm
+        Two bytes per 15bit BGR color, stored in Little Endian.
+        Miscellaneous Note - Same as a SNES Palette Color.
+
+  Initial 15bit BGR color in Little Endian:
+  {ggg{rrrrr}  {0}{bbbbb}gg}
+  Swap the two bytes to change to Big Endian from Little Endian.
+  The color order will look like this now: (b-Blue, g-Green, r-Red, 0-mystery bit)
+  {0}{bbbbb}{gg  ggg}{rrrrr}
+  Take each of the color pairings and multiply by 8 to get a 24bit BGR color:
+  {bbbbbbbb}  {gggggggg}  {rrrrrrrr}
+  Rearrange from 15bit BGR to 24bit RGB:
+  {rrrrrrrr}  {gggggggg}  {bbbbbbbb}
+  This algorithm expands the color to 3 bytes instead of the original 2 bytes.
+
+
+-----B. 24bit to 15bit Color Conversion Algorithm
+        Three bytes per 24bit RGB color, stored in Big Endian.
+
+  {rrrrrrrr}  {gggggggg}  {bbbbbbbb}
+  Integer Divide (DIV) each color by 8
+  {rrrrr}{ggg  gg}{bbbbb}{0}
+  Rearrange into 15bit BRG
+  {0}{bbbbb}{gg  ggg}{rrrrr}
+  Swap the bytes to change from Big Endian to Little Endian (so the PSX can read it properly)
+  {ggg{rrrrr}  {0}{bbbbb}{gg}
+
+
+-----C. Notes on PSX 15bit BGR Colors
+
+  These are the same as the SNES 15bit BGR Colors.  There is a color loss whenever converting 
+  from 24bit RGB <-> 15bit BRG.  Also, there's probably a more advanced and quicker algorithm 
+  to convert the colors, however this is explaining the basic idea behind the algorithm.

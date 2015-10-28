@@ -1,0 +1,994 @@
+
+--------------------------
+The Open PSF ripping guide 12/05/03
+--------------------------
+
+Maintained by someone42 (someone42_000@hotmail.com)
+"Official" location: 
+http://angelfire.lycos.com/tx5/someone42/psfrip.txt
+
+Note: If viewing in a web browser you might want to press "refresh" or "reload" 
+once just to make sure, as web browsers tend to cache this file.
+
+
+
+
+CONTENTS
+Introduction
+The basics of PSF
+What is PSFLIB?
+Ripping tools
+Learning Assembly
+Is it custom?
+Is it streamed?
+Ripping
+Timing and Tagging
+Ripping Example
+History
+Conclusion/Credits
+
+
+
+
+INTRODUCTION
+
+Welcome to this PSF ripping guide. Hopefully it will answer your 
+questions related to PSF ripping in general. This document does not 
+apply to PSF2 or other formats.
+
+This guide was created for a number of reasons:
+- At time of writing only *8* people had posted complete rips. 
+Compare this to the potential tens of thousands who download the rips
+- The psf_rippers message group spiralled into a flame war after 
+someone requested some rips, stating that they did not know how to 
+rip and that there was no guide
+- There simply isn't another document like this! (at time of writing)
+
+I encourage you, the newbie, to ask questions, so hopefully this can 
+become a sort of faq, and I ask you, the veteran, to post all the 
+wisdom you have gained while ripping here so that it may be passed 
+on.
+
+"I have little programming experience, but there is this game I want to rip and 
+I'm willing to do a lot to do so"
+
+OK, before you begin, answer the following questions:
+- Are you willing to learn a programming language?
+- Are you willing to learn assembly (specifically MIPS assembly)?
+- Are you willing to stay up to 1am on Friday/Saturday nights stepping through 
+R3000 assembly?
+- Will you still be willing to rip the music if you spent two weeks doing the 
+above?
+
+"WHAT!? So it takes that much to rip PSFs. I'm outta here!"
+
+Wait, don't let that put you off. Remember, if you rip a PSF set after learning 
+programming and assembly, you will have gained new skills. There are people in 
+this world who look for people who are highly skilled in programming. Why not 
+use this as an excuse to learn programming? Also keep in mind that "reverse-
+engineering a competitor's product to find out how it works" is actually legal, 
+and numerous companies have hired people to do that. Just think of Bleem (they 
+were sued not because of reverse-engineering, but because of copyright breach of 
+the BIOS and stuff like that).
+
+If you already have programming background and know assembly, then good for you. 
+Seriously, I am a BASIC programmer, and I managed to rip a set. Some sets are 
+easier than others.
+
+I AM NOT A PRO AT THIS. I only created this guide because no-one else wanted to. 
+Hell I'm a BASIC programmer!
+
+
+
+
+THE BASICS OF PSF
+
+To be able to start ripping, you must know how the PSF format actually works. 
+All a PSF file is, is a compressed PSX-EXE that plays the game's music. 
+Specifically, you get the main game executable, hack all the non-music stuff out 
+of it, import relevant music data and voila.
+
+This hacked out music-playing section is referred to as the "driver".
+
+Remember, a PSX-EXE has a defined "text entry" and a defined "text length". No 
+data outside these bounds is defined. Remember this when importing music data.
+
+All sequenced data contains two parts: the samples, and the sequences. Those who 
+know tracked music or who track themselves know what I mean. Samples are sounds 
+(eg. A piano). Sequence data dictates exactly how these sounds are to be played. 
+Indeed, speeding the sound of a middle-C on a piano up by a specific amount 
+makes it sound like playing a middle-D. As well as that, sequence data also 
+dictates tempo, volumes, what samples are to be played etc. (much like MIDI).
+
+Note that the SPU has its own independent 512KB of RAM to store ADPCM-like 
+samples in. As a result many games have separate "sample packs" for each 
+individual track, even if they contain duplicate instruments.
+
+In "normal" PSFs, sample data is always VAB and sequence data is always SEQ. 
+Sometimes a driver will use SEQ but not VAB. Sometimes it is VAB but not SEQ. 
+Sometimes the driver is completely custom so the formats may be more obscure 
+(eg. FF7). Note that I personally do not have any experience with custom 
+drivers. (*Someone add something here*)
+
+All music playing drivers (including custom) consist of the following psuedo-
+Routines (routines that aren't named like that, but do the things in their 
+name):
+InitSystem
+InitMusicSystem
+LoadSampleData
+LoadSequenceData
+PlaySequenceData
+LoopInfinitely
+
+And hidden away in some interrupt routine:
+PlayNotes
+
+As a PSF ripper it is your responsibility to find all of these routines. It 
+helps if you can find a "sound test" routine in the code (eg. In debug mode of 
+the game) since it will most definitely contain these routines, except for 
+InitSystem.
+
+
+
+
+WHAT IS PSFLIB?
+
+PSFlib can be described as a hack to get PSFs even smaller than they already 
+are. You must understand that only some PSF sets can be converted to minipsf 
+(which is another name for psflib).
+
+Many PSFs contain common data. The most obvious of this is the driver. The 
+driver is included in every single PSF. So if the driver is 50KB, and there are 
+50 psf files, then the driver takes up 50KB * 50 = 2.5MB. For the sake of 
+bandwidth, it makes sense to somehow eliminate this redundant data. You can do 
+this by including the driver once, as a separate file, and having all other 
+files refer to this one file.
+
+This is achieved by the _lib tag. The PSF specification defines the loading 
+order of psfs/psflibs as:
+_lib, actual psf, _lib2, _lib3, _lib4 etc.
+_lib2 (and up) and _lib do not have to exist
+_libN tags must be in order (ie. To have _lib4 you must have _lib2 and _lib3, 
+but _lib does not necessarily have to exist as it is not a _libN tag)
+The first file found in the loading order will have its entry point address 
+used. That is, if a _lib tag exists, then the exe start (entry point) in the 
+file pointed to by _lib will be used. If not, then the entry point defined in 
+the actual psf will be used.
+
+Lets say we have the files hello.psflib and foobar.minipsf. foobar.minipsf 
+refers to hello.psflib using a _lib tag. hello.psflib has an entry point of 
+0x80026477, text start of 0x80010000 and a text length of 0x10000. 
+foobar.minipsf has an entry point of 0x801fffff, text start of 0x80100000 and a 
+text length of 0x8000. Because hello.psflib is referred to by the _lib tag, it 
+is loaded first, so the entry point is 0x80026477 and the memory at 0x80010000 - 
+0x80110000 is filled with the contents of hello.psflib. Then the actual psf is 
+loaded at 0x80100000 - 0x80108000, its entry point is ignored. Notice how the 
+actual psf overwrote an area in memory of the psflib? This was intentional (eg. 
+Track specific driver code) but in general make sure your text start/text length 
+of your minipsfs and psflib do not overlap unless intended.
+
+
+
+
+RIPPING TOOLS
+
+OK. When I first found out about PSFs I was ecstatic. True-quality game music in 
+10-100 times less space than MP3! I wanted to rip legend of legaia, but Neill's 
+mini-howto referred to using "IDA Pro". Since this costs something like $400 I 
+decided not to rip legend of legaia. But one day while surfing I found:
+
+http://www.alp(hello)ha-ii.com/caitsi"world"th2/psf/ida.htm
+(remove the (hello) and "world")
+
+[Yay! CaitSith2 has gotten a new site]
+
+There you go, that's a lot of questions answered.
+(If you already have IDA Pro still go here to get the PSYQ signature files)
+(Please do not download those files if you are not going to surely rip PSFs. 
+They are big and I'm sure caitsith2 would appreciate less bandwidth use.)
+PSFLab, PSF-O-Cycle, PSFPoint and of course Highly Experimental are available 
+from Neill's site:
+
+http://www.neillcorlett.com/psf/
+
+Of course I stole these links off the "links" section in the psf_rippers group.
+I also found to be useful:
+
+Search.exe (Search V1.1 by Reptile) (finds SEQ/VAB data in data files with 
+virtual filesystems)
+
+Seq2mid (useful for figuring out which SEQ files are which)
+
+PSEmuPro - Despite being an old emulator, it has a debugger which can step and 
+set breakpoints (but unfortunately cannot assemble into memory)
+
+Paper and hex calculator - I have many pages filled with hex numbers scrawled 
+all over them. Most starting with "80"
+
+WinHex - Any hex editor will do, but since WinHex was the one I had, this is the 
+one I used. However it is crippleware and cannot save >250KB files. You can find 
+many others on the internet. (*Someone add something here*)
+
+Cygnus Hex Editor - http://www.softcircuits.com/cygnus/ - allows saving, has 
+basic features (eg. search)
+
+AdriPSX - http://adripsx.psxemu.com/ - This is a pretty good emulator in terms 
+of speed and compatibility, but the highlight is that its savestates are not 
+compressed, which means you can hack them! (Or extract music data from them)
+
+ePSXe - http://www.epsxe.com - ePSXe savestates are simply g-zipped, so you can 
+use programs such as WinZip or WinRar to unzip them. [Thanks to Knurek for 
+pointing that out]
+
+Also look at the psf_rippers group at http://groups.yahoo.com/. You can 
+generally ask ripping related questions there. I would not post rip requests 
+there if I were you :)
+
+
+
+
+LEARNING ASSEMBLY
+
+If you do not already know programming/assembly, then be prepared to learn a 
+lot. It may not be worth it to learn programming just to rip PSFs, but if you 
+decide that you like programming and go furthur, then all the better for you.
+
+First, you should learn a high-level language such as C, C++, Pascal and BASIC. 
+Assembly should NEVER be your first language. Learn what iteration is, learn 
+what conditions are. Learn what common conventions in programming are. If you 
+find this all boring, then you will find PSF ripping even more boring.
+
+Don't ask me (or anybody) where to find tutorials. I can find hundreds of C 
+tutorials on http://www.google.com in two minutes. So can you.
+
+Once you have learnt a programming language, or if you already knew one, then it 
+is time to learn assembly. Assembly tends to be about the same across all 
+platforms, so you can start by learning x86 assembly. 
+
+The Art of Assembly is far by the best online assembly tutorial ever (IMHO). I 
+started with the 16-bit version, I don't think it matters which version you 
+select, as long as you know the difference between NAND and AND, the difference 
+between passing by reference and passing by value etc.
+
+http://webster.cs.ucr.edu/Page_asm/ArtOfAsm.html
+
+Big read, isn't it. 1000+ pages when printed actually. In fact it is used as a 
+textbook in some university computer science courses. But it teaches you nearly 
+every single thing about assembly, and more. You can learn assembly by this text 
+alone.
+
+I learnt R3000 assembly nearly by accident. One day I decided I would get into 
+N64 emulation. So I created a dissassembler for the N64. This required me to go 
+through all opcodes. Since ultimately I wanted to make an emulator (I never 
+did), I went over what each instruction did. The N64 uses a r4300i processor, 
+which is backwards compatible with the R3000, so when it came to PSF ripping, I 
+knew my way around.
+
+The document I used is known as the "MIPS IV Instruction Set". A quick search on 
+google points to:
+
+http://www.cs.cmu.edu/afs/cs.cmu.edu/academic/class/15740-f97/public/doc/mips-
+isa.pdf
+
+Note that the MIPS IV instruction set includes additional instructions not 
+present on the R3000 processor in the playstation. In fact the playstation CPU 
+is missing a floating point co-processor! But this document describes exactly 
+how each instruction works, including psuedo-code. (Ignore all 64-bit 
+instructions as well). The MIPS architecture is very popular among embedded 
+systems, so if you are ever going to get into that kind of stuff...
+
+The playstation CPU is actually a variant of the R3000, all non-coprocessor 
+instructions should work, but there is no floating point unit, and there is an 
+additional vector/matrix math co-processor. The memory management coprocessor is 
+also there. You do not need to know anything about them (the math/memory 
+coprocessors) to rip PSFs.
+
+You will also need to know about the general playstation architecture, 
+especially the SPU.
+http://www.zophar.net/tech/psx.html - contains one very good document
+http://www.upl.cs.wisc.edu/~hamblin/files/libref - is actually the library 
+reference for the net yaroze devkit, but the functions are similar
+Look at the "files" section in psf_rippers yahoo groups 
+(http://groups.yahoo.com/group/psf_rippers) as it contains other library 
+references that you will find useful. The "compilers" and "Ripping Tools" 
+sections contain these files.
+
+(*Someone add something here* - I didn't have to refer to much architecture 
+stuff to rip lol, so I don't know many sites)
+
+
+
+
+IS IT CUSTOM?
+
+Generally, your first rip should not be a custom driver because they are the 
+hardest. To figure out if it is a custom driver, look for the following text 
+strings:
+pBAV
+pQES
+Notice how they are backwards? That's because MIPS is a mainly big-endian 
+architecture, so stuff is backwards. Keep this in mind when ripping. Also, it 
+helps to treat everything as words (MIPS WORD IS 32-BITS!). Most of the time 
+everything is aligned to 4 byte boundaries.
+
+Oh, and if you find many many of those strings, you've got yourself a non-custom 
+driver.
+
+
+
+
+IS IT STREAMED?
+
+Another thing to consider is whether the game uses streamed music or not. If the 
+game uses streamed music, ripping a psf will be impossible. A psf is self-
+contained, so it *cannot* read off a cd or do non-sound stuff. Therefore 
+streamed music (which reads off the cd) will not work.
+
+(There may be cases where it is possible to rip streamed music. If it is psf2, 
+Neill Corlett has made a generic psf2 streaming driver. A psf2 is not entirely 
+self-contained. Also, if the streamed music is very very short, a psf rip might 
+be possible.)
+
+How do you tell if it is streamed? Neill offered a simple way: just play the 
+game on a real playstation, then when you start hearing the music you want to 
+test, hit the eject button. Listen for a few minutes. If the music continues, 
+then you have sequenced music, which can be ripped into psf. If the music starts 
+skipping or abnormally looping, then that music is probably streamed.
+
+Another way to test is to use an emulator that supports the "P.E.Op.S. DSound 
+Audio Driver 1.7" SPU plugin. In the config it has a "developer window" which 
+you can use to mute SPU voices. Now play the game and get up to some music, all 
+while that annoying developer window is showing. Then while the music is 
+playing, you'll notice some streams going in the developer window. Mute all 
+those streams except for one. If all you hear is a single instrument (or 
+alternating instruments) playing, you have sequenced music. If you hear the 
+music in full, you probably have streamed music. You may have to test more than 
+one of those streams (voices). Also note that sometimes you get sound effects or 
+drumloops, which can be misleading.
+
+Finally, you can use a program like psmplay to search for streams within the 
+game data. This will not always find the streams, but at least you know that if 
+it finds streams, the music in those streams is definitely streamed.
+
+Remember, games can sometimes store music in both streamed and sequenced 
+formats. For example, Final Fantasy 9 has sections of streamed music, but the 
+majority of the soundtrack is sequenced. In a case like that, you can only 
+include the sequenced music. Streamed music is often of a much better quality 
+(eg. live orchestra as opposed to "synthesised") and often accompanies streaming 
+video.
+
+
+
+
+RIPPING
+
+Here's the big part of it. Open up the main game executable in IDA Pro, named 
+something like "SLUS_010.13". If you can't find it then open up "SYSTEM.CNF" in 
+a text editor and there should be a line saying "BOOT = cdrom:\<filename>". 
+<filename> is the filename of the boot exe, which is usually the main exe. 
+Sometimes this is not the case, such as with Dino Crisis 2 (this loads another 
+file and executes it). (Be sure to enable "view hidden files".)
+
+IDA Pro will probably recognize the EXE as a PSX-EXE, but sometimes it doesn't 
+correctly apply the psyq signatures (go to
+http://www.alp(hello)ha-ii.com/caitsi"world"th2/psf/ida.htm (remove the (hello) 
+and "world") to find those signatures if you don't have them). To apply them 
+click "File", select "Load file", and click "FLIRT signature file". Then double 
+click on "PSYQ". You can also press SHIFT+F5 or click on that funny flower 
+thing, and if PSYQ is not there, press insert (on your keyboard) and double 
+click on PSYQ. (Thanks to zoopd2 for pointing all that out.)
+
+This file is actually a PSX-EXE (it took me a while to figure that out). Wait 
+for IDA Pro to finish its analysis. Note that the analysis is sometimes very 
+wrong, so you may have to work on the file yourself. Go to start() or main(). 
+start() calls main() anyway, so that doesn't matter. Write down the address of 
+these entry points. This is the start and will be your "hook" that you will use 
+to figure out where you are.
+
+Note that just after the start() entry point is a loop which copies nulls into a 
+range of addresses. This is the "BSS clearing loop". WATCH OUT. This thing can 
+overwrite your psf data if you are not careful. Be careful also that:
+lui $t0,0x8005
+addiu $t0,0xFFFC
+will NOT load 0x8005FFFC into $t0, but will load 0x8004FFFC. Why? Because all 
+adds are signed adds (even if it is unsigned, which simply means overflow is 
+never raised). Because 0xFFFC is negative, it decrements 0x8005 as a form of 
+"borrow".)
+
+Familiarise yourself with the known calls. Look out for spu calls (_spu_xxxxx) 
+and stuff like ssSeqOpen, ssSeqPlay, ssVabTransferBody, ssVabOpenHead etc. If 
+all these appear in IDA Pro then half the rip is done.
+
+(If the driver is custom, you will have to find equivalent functions. You should 
+probably try identifying low-level SPU calls first, so you can work your way 
+up.)
+
+If not, then you will have to find them (or their equivalents). Look for things 
+like SsInit or _SsInitSoundSeq. It is dreadfully obvious what functions these 
+are related to. Just as a refernce, the psuedo-functions you are looking for 
+are:
+InitSystem (SsInit, ResetCallback)
+InitMusicSystem (_ssInitSoundSeq, _ssInit???, SpuSetReverb, _SpuInit, SpuStart)
+LoadSampleData (ssVabOpenHead, ssVabTransferBody, SpuSetTransferMode, 
+SpuWritePartly)
+LoadSequenceData (SsSeqOpen)
+PlaySequenceData (SsSeqPlay, SsSetMVol)
+PlayNotes (_ssNoteOn)
+Note that PlayNotes will probably "find itself", as it will already be 
+programmed into the game code to tie itself to an interrupt routine. 
+LoopInfinitely is what you have to put in yourself (when all init stuff is 
+complete and the program is sitting "idle", waiting for interrupts).
+
+All the functions in parenthesis are functions which *may* be associated with 
+the psuedo-functions. I'm not 100% sure of this. (*Someone add something here*)
+
+Finding these psuedo-functions is one of the hardest part of ripping. One trick 
+is to do a "stack trace". This is where you use PSEmuPro and set a breakpoint on 
+a function under investigation, and henceforth set breakpoints on the return 
+addresses as they come. This produces a list of originating function calls. If 
+you examine where $a0, $a1, $a2 and $a3 (argument registers) point to and find 
+pQES or pBAV, then you may have found a loading function. Note that sometimes 
+arguments point to pointers (and even pointers of pointers).
+
+PSEmuPro is useful in another case. If you patch a PSX-EXE and use PSEmuPro's 
+"devkit mode" then you can run this patched PSX-EXE, but it will be as if you 
+ran it off the CD. In this way the game will function exactly as it normally 
+does in PSEmuPro, but with the patched stuff in. This technique does not work 
+with ePSXe, but I believe you can stuff around with savestates to achieve the 
+same effect.
+
+Another way to point out functions is to look at another file. I noticed 
+"GetVideoMode" was above "PCopen" in another game, it appears in legend of 
+legaia there is a very similar function above "PCopen", so I named that function 
+"GetVideoMode".
+
+Functions can sometimes be revealed by debug info. The programmers of legend of 
+legaia were nice enough to leave numerous debug strings in the code including 
+"This is not SEQ data". Obviously this text would only be displayed inside a SEQ 
+loading routine, so by finding references I found ssSeqOpen.
+
+You may also have to find some music data to test with. For now, just pick 
+whatever is loaded first (eg. Title screen) to make things easier. You have got 
+to isolate exactly what data is associated with the music. If the game just 
+loads different files in a music directory, then that is easy. If the game uses 
+a virtual filesystem, then you may have to do signature searches (pBAV, pQES).
+
+The encoding format used by the SPU seems to have a recognizable format. There 
+seems to be two bytes (eg. 27 02) followed by a series of 14-bytes that seem to 
+be close to each other eg. "EF EE DD CD CC DC". (Not always like this, but there 
+are definitely sections with sequences like that.) This is recognizable in hex 
+editors as you can see a column of 02s or 03s or whatever. Take this advice with 
+a grain of salt, I do not know the format and it is protected by Sony, however I 
+do know it is based on ADPCM, so it makes sense as the two bytes are a "block 
+header" and the 14 bytes "block data". Even custom drivers have this sort of 
+format.
+
+After finding the main music functions and isolating some music data, you should 
+then NOP out all non-music stuff in PSFLab. The easy way to do it (ie. The way I 
+do it) is to look at a function call (jal 0x80??????) and put a breakpoint two 
+instructions ahead (remember MIPS architecture executes the instruction 
+immediately following the jump in memory, before the jump). Then hit F2 to save 
+the state, hit F5 and see whether the breakpoint fires. If it doesn't then the 
+psf playing core will freeze at that section. Try and see what it does in IDA 
+Pro. If it is something like "MulMatrix0" or "SetGeomScreen" which are obviously 
+not music related, NOP it out. Otherwise write down the address and NOP it out 
+anyway. NOTE: sometimes you may have to follow the call and do this process 
+within the call, sometimes subroutines contain calls to all types of devices. 
+Every now and then run the altered PSX-EXE in PSEmuPro to see whether it still 
+works. It was really funny seeing the legend of legaia title screen get 
+progressively stuffed up (while the music was still active, of course). 
+Eventually you will get to a point where all the music is loaded and the command 
+to start playing has been issued. Simply create an infinite loop (don't forget 
+the NOP following the jump). Test it in PSEmuPro to see whether it still works. 
+Chances are it won't. You see, by NOPing out all these functions, you've 
+stripped away certain routines crucial to music. Music data has to be loaded 
+from the CD, doesn't it? But you've NOPed out the CD routines! You have to 
+import the music data you've isolated into some location, change the exe size to 
+incorporate it, make sure the music data isn't stuffed around with (eg. By the 
+BSS clearing loop), and force the music loading routines to point to the 
+locations you've loaded the music data into.
+
+If it still doesn't work, analyse the nature of all the functions you have NOPed 
+out. Find out which ones don't like to be NOPed out and figure what is wrong 
+with them. Sometimes they contain subroutines that call non-music stuff, like 
+PADInit, which you will have to NOP out. Find out at what point the music stops 
+- start with an unaltered PSX-EXE, slowly make changes to it, testing it with 
+PSEmuPro. This allows you to pinpoint the problem.
+
+After a lot of debugging, you should now have a PSX-EXE that works in PSFLab and 
+ePSXe/PSEmuPro. Well done, you have your first PSF! (Just save it in PSFLab as 
+PSF). Now you will have to do the rest of the set. If you have a sound test mode 
+available in the game, get into it and see where each track is stored (by 
+setting breakpoints). Often SEQ data is paired with VAB data (beware, they can 
+be paired in any order). Sometimes there is a common sample set. Sometimes there 
+is more than one VAB associated with a SEQ. If you really want, you can reverse-
+engineer the virtual filesystem of the game to make finding the other files easy 
+for you (which is what I did), but I warn you this can be hard. Of course if you 
+have individual files for each track stored on the CD obviously, then it is all 
+made for you.
+
+Oh yeah, remember to "remove unused data".
+
+
+
+
+TIMING AND TAGGING
+
+After making the entire set, you have to time and tag the set. This should be 
+pretty self-explanatory, but keep in mind:
+- Don't put your name in the "artist" tag, do some research and find out who the 
+composer actually is
+- Also find out the correct copyright dates
+- Don't take credit for someone else's rip
+- It is conventional to time for two loops (ie. Play tune, play tune again, 
+fade)
+- Do not fade on tracks that do not loop
+- Try to time as accurately as possible
+- You can use psfpoint to make things easier for you (eg. For copyright)
+
+
+
+
+RIPPING EXAMPLE:
+
+[Note: Many will find this section confusing and cryptic. I suggest you go to 
+zophar's domain's psf section and download the Vanguard Bandits rip, then open 
+up vb.psflib in psflab so you can follow on. I can supply the original psx-exe 
+on demand]
+
+Originally, I decided to include all my notes from the legend of legaia rip, but 
+they were scattered and I couldn't remember exactly how I went through it. So I 
+chose another "easy" rip and documented that.
+
+During this rip I found out a new hex editor, "Cygnus Hex Editor" and a new 
+emulator, "AdriPSX".
+
+OK, I'll select a game in my collection that hasn't been ripped: Vanguard 
+Bandits. Looking at cdrom:\epica.bin, there seems to be pQES and pBAV signatures 
+all over the place, indicating a possible easy rip.
+
+Anyway, we'll open Slus_010.70 in IDA Pro and wait for the analysis to complete. 
+PSYQ is recognized, so nothing needs to be done there.
+
+Well what do you know! A range of ssSeqXxx functions are detected as well as 
+ssVabOpenHead etc. This should be easy.
+
+main() contains the following calls:
+jal _main
+jal GetSp
+jal SetMem
+jal SetVideoMode
+jal ResetCallback
+jal VSync
+jal 0x800162E0 - This calls GetSp and VSyncCallback
+jal 0x800163A8 - Does some PAD stuff, calls SsInitHot. Although this is a sound 
+function, I think it just makes the "bleep" noise that you hear when you select 
+something. It also may have something to do with the streamed music at the 
+start.
+jal 0x800130E0 - Large function, makes CD related calls. Probably a loading 
+routine, or part of the start up video routine.
+jal 0x80016A6C - Doesn't make any calls, moves data around
+jal 0x8001493C - Makes lots of ssInit-like calls. I'm naming this function 
+MusicInit because that's obviously what it does.
+jal GsInitGraph
+jal 0x80018468 - HUGE function, obviously game loop
+jal ResetGraph
+jal 0x80014D4C - Calls SsQuit
+jal PadStop
+jal StopCallback
+
+When making a PSF, we will only consider 0x8001493C, as that is obviously 
+crucial to the music system. All other functions (except the game loop) are non 
+music related. SsQuit does not need to be called. Technically, the game should 
+never execute anything after the game loop, except in an exception.
+
+The next function we'll examine is 0x80018468, the game loop. It initially has 
+two calls:
+jal 0x80018270 - Calls lots of things including SsVabTranfer. Although this may 
+be important, I think it just loads sound effects
+jal 0x8002842C - Goes furthur into the game loop
+
+Before we go through 0x8002842C, consider that music only starts when you press 
+"Load". So we'll need to find out what function is called when you press "Load".
+
+Put a breakpoint on 0x8002842C. Progressively going through and putting 
+breakpoints two instructions after each call, we find that the menu screen 
+displays on 0x80077FD0, and no breakpoints fire. After you select "Load", the 
+breakpoint fires! Note that v0 = 1 here. I did a little experiment, if you 
+select "Start" v0 = 0. If you select "Options" the breakpoint doesn't fire.
+
+Indeed there is an instruction that compares v0 to 1, and if it is 1 jumps to 
+0x800284B8.
+
+The first function called in 0x800284B8 is 0x80029F34. This seems to make a lot 
+of music calls, but also a lot of other functions. Setting a breakpoint two 
+instructions after this indicates that this function really is a "Load" 
+function, since the breakpoint doesn't fire while you are in the load screen 
+(but if you press triangle to go back to the main menu, then the breakpoint 
+fires).
+
+So we will examine 0x80029F34.
+
+The first function called is 0x8002A178. This makes many music related calls, 
+including ssVabOpenHead and ssSeqOpen. None of the other functions seem to make 
+music related calls, except for:
+jal 0x80014B98 - Calls music volume related functions
+jal 0x8002A0E0 - Calls SsUtVibrateOn, plus graphics calls. I think we can ignore 
+this one
+jal 0x8002A268 - Makes reverb calls, ssSepClose. This probably stops the music.
+
+I decided to try an experiment. I opened Slus_070.10 in PSFLab (using "Import 
+PS-X EXE") and at 0x80029F50 created an infinite loop:
+j 0x80029F50
+nop
+Then exported the PS-X EXE as sces017a.exe on my hard drive. I used PSEmuPro's 
+"Run DevKit" mode to load and execute this patched exe. (Using the "Load exe" 
+function). Ok, PSEmuPro freezes. Maybe it doesn't like infinite loops.
+
+We'll try something different. It appears that if you select nothing, the 
+following instructions are executed:
+80029f50 lui   v0,0x8007
+80029f54 lw    s1,v0,0xf4f8
+80029f58 addiu s2,zr,0x0001
+80029f5c jal   0x0002a8cc
+80029f60 sw    s0,s1,0x0058
+80029f64 jal   0x00014694
+80029f68 nop
+80029f6c lui   a0,0x8003
+80029f70 addiu a0,a0,0xb06c
+80029f74 lui   v0,0x8007
+80029f78 jal   0x00059a98
+80029f7c sw    zr,v0,0xf2d4
+80029f80 jal   0x00015fdc
+80029f84 nop
+80029f88 jal   0x0002a060
+80029f8c nop
+80029f90 lh    v0,s1,0x0014
+80029f94 nop
+80029f98 bne   zr,v0,0x00029fb0
+80029f9c nop
+80029fb0 lh    v0,s1,0x000c
+80029fb4 lhu   v1,s1,0x000c
+80029fb8 beq   zr,v0,0x00029fe8
+80029fbc addiu v0,v1,0xffff
+80029fe8 lh    v0,s1,0x0014
+80029fec nop
+80029ff0 bne   zr,v0,0x0002a000
+80029ff4 nop
+8002a000 jal   0x0002ab2c
+8002a004 nop
+8002a008 jal   0x0002a0e0
+8002a00c nop
+8002a010 j     0x00029f88
+8002a014 nop
+
+(This is psemupro disassembly, hence the 0x0??????? instead of 0x8???????)
+As you can see, it is a loop. The only music related call is to 0x8002A0E0. This 
+calls SsUtVibrateOn. If you look, SsUtVibrateOn is just a null function! So we 
+can happily say that 0x80029F50 is where we can put the infinite loop when the 
+final PSF is made.
+
+The next function to examine will be 0x8002A178. It makes the following calls:
+jal 0x800173D4 - calls strcpy, nothing to do with music
+jal bzero
+jal 0x800149F0 - calls SsStart and SsSetMono/SsSetStereo based on a value in 
+memory. Keep this one in mind as we will have to patch it to always be stereo
+jal 0x8002A2F4 - calls SsVabTransfer and SsSeqOpen, as well as a variety of 
+video calls. Important.
+jal 0x8002A414 - graphics system calls, non-music
+jal 0x8002A480 - more non-music stuff
+jal 0x8002A704 - more non-music stuff
+jal 0x800332A4 - calls SsUtSetReverbDepth, SsSepPlay and SsSetSepVol
+jal 0x80016E84 - non-music
+
+Only 0x800149F0, 0x8002A2F4 and 0x800332A4 seem to be important here. We will 
+patch 0x800149F0 when making the PSF. We will analyse 0x8002A2F4 and 0x800332A4 
+now.
+
+0x8002A2F4 contains the following calls:
+jal 0x80016AE8 - calls strcpy, nothing to do with music
+jal 0x80013230 - calls cd related functions
+jal 0x8003326C - doesn't make any calls, but probably unrelated to music
+jal 0x80013390 - another cd related function
+jal SsVabTransfer
+jal SsSeqOpen
+jal 0x80013D2C - doesn't make any calls, but probably unrelated to music
+jal 0x80016C30 - LoadImage, not related to music
+jal DrawSync
+jal 0x80016BC8 - not related to music
+
+0x800332A4 contains the following calls:
+jal SsSepSetVol
+jal SsUtSetReverbDepth
+jal SsSepPlay
+
+Next we need some test data. Looking at the signatures and their positions, I 
+can see that we are not dealing with a very simple filesystem. In fact things 
+are wrong with the VAB and SEQ data - they are non-standard. It appears the 
+loading routines do something to the data. Perhaps some sort of compression or 
+encryption is applied?
+
+At 0x8002A328 there is: li $a0, 0x1A2. What happens if this is changed? Whoa! It 
+changes the background. Whoops, that wasn't what was intended. But it points out 
+that 0x80013230 is the loading function. At 0x8002A368 there is another call to 
+0x80013230. Only problem is, $a0 comes from 2($s1). In PSEmuPro, at that point 
+2($s1) = 0x1A8. What if it is 0x1A9? The game makes weird sounds. Oh well...
+
+But above is move $s1, $v0. $v0 is a function return register, and the nearest 
+function is 0x8003326C. Analysis of this function reveals it actually indexes an 
+array of words at 0x80064C40 that contains:
+0x01A7 0x01A9 0x01AB 0x01AD
+0x01A7 0x01A7 0x01A7 0x01AF
+0x01B1 0x01B3 0x01B5 0x01B7
+0x01B9 0x01BB 0x01BD 0x01BF
+0x01C1 0x01C3 0x01C5 0x01C7
+0x01C9 0x01CB 0x01CD 0x01CF
+0x01D1 0x01D3 0x01D5 0x01D7
+0x01D9 0x01DB 0x01DD 0x01DE
+
+(The value returned is a pointer to a list containing halfwords: value, value+1, 
+value+2)
+Except for a few entries, it appears that each entry increments by 2. Above the 
+call to the function 0x8003326C is move $a0, 0. $a0 seems to be the index to 
+this list. What happens if this is 1? Hehe, it's different music playing in the 
+background. We have found the music loading function.
+
+By setting a breakpoint on 0x8002A364 we find out that the subroutine 0x80013390 
+actually loads the music data off the cd. Stepping and setting breakpoints 
+inside this routine, we find that it contains calls to CdGetSector followed by a 
+call to 0x80013E5C. The arguments to both of these is 0x801FF6F0, and looking at 
+that area it is a sector of the cd. You would think that CdGetSector gets that 
+sector, and 0x80013E5C decodes it. It definately is the decoding routine we are 
+looking for. It references to some memory variables that were set in another 
+subroutine within 0x80013390.
+
+After some thought, I've decided it's too complicated to reverse engineer. 
+Although it would be possible to create a program to decode the data, it would 
+be more efficient to just dump the 30 or so tracks from memory.
+
+There's this emulator called adripsx. It is pretty good, but I've picked it 
+because it saves its states in a raw format. So we can hack stuff into it, and 
+hack stuff out of it!
+
+Searching through, we find at offset 0x1B6CF8 within the savestate is the 
+instruction move $a0, 0 (the one that changes music). The original bytes are: 21 
+20 00 00, and the new ones are: <musicno> 04 24 where musicno is the index into 
+the array described above somewhere and is a little-endian 16-bit number. Yay, 
+you can also change the music this way.
+
+We still need the address of the data and length of data to start extracting it 
+though. For safety, we are going to freeze the game with an infinite loop just 
+after the load. This is to ensure that memory variables don't get overwritten. 
+Since the loader is called at 0x8002A35C we will freeze it at 0x8002A364. 
+Looking in the decoding routine, it seems that $t2 is used as a "destination 
+pointer". At the start of the routine $t2 is loaded from 0x8006F0D0 and at the 
+end $t2 is written back to 0x8006F0D0. It makes sense that after everything is 
+loaded, 0x8006F0D0 will contain the address of the last byte that was written, 
+or one byte more than that. Since I can't be bothered finding out, we'll just 
+add 16 to that offset. Why 16? I just felt like it. The starting offset is 
+always 0x800EB7B0, but just to be sure I looked in the code. $s3 is loaded from 
+0x8006F4F8 (which is 0x800B7E00 at this point) and 0x339B0 is added to it 
+(actually, 0x339B0 is loaded into $s0 and $s3 is added onto $s0). This forms the 
+start address, as a further instruction is "move $a1, $s0" where $a1 is the 
+destination address for the loaded function.
+
+I also calculated that to get the savestate offset you subtract 0x7FE73644. So 
+0x8002A364 in memory would be equivalent to 0x1B6D20 in the savestate. Anyway, 
+we patch that address with D9 A8 00 08 00 00 00 00 (j 0x8002A364, nop). By that 
+calculation the data should be at 0x27816C. It is! The end offset should be at 
+0x1FBA8C. It appears to be. However something is wrong. The length does not 
+include the VB (VAG Body). Looking at the code following the loader function, 
+there seems to be another loader function which loads the VB. Oops, looks like 
+we forgot about that.
+
+More analysis reveals the VB is loaded into 0x800F3E70. (I really should have 
+picked this up before). It is contained in $a1. Just to be sure, we'll make it 
+write $a1 to 0x8006F0D4 and we'll read off that. We'll remove the patch we 
+applied earlier and put a new one at 0x8002A374 (0x1B6D30 in savestate) which 
+is:
+lui $t0, 0x8007
+addiu $t0, 0xF0D4
+sw $a1, ($t0)
+j 0x8002A380
+nop
+I can't be bothered writing all the hex codes for those instructions. I just 
+realised one more thing is needed: the end of VB data. The second loader 
+function uses $s2. Hey! I just realised something, the VB is stored in a raw 
+format! That means we can just extract it from epica.bin. The filesystem is 
+trivial. I picked it up in one minute. All it is, is an array of words (32-bit) 
+as in offset of file 0, length of file 0, offset of file 1, length of file 1, 
+offset of file 2, length of file 2 etc. The VB is always stored one file number 
+after the SEQ/VH (which you get from that array mentioned above). So the first 
+VB is 0x1A8. To get the offset/length, multiply by 8 = 0xD40 and look at 
+epica.bin. 0x1A8 is at 0xC78000 and has a length of 0x1F3E0. Easy.
+
+Now we have all the SEQ/VH/VB files for all tracks. Note: I made a program to 
+help me extract the files in both cases. It took me only about 30 minutes to do 
+that, it would have taken me hours to do it manually with a hex editor.
+
+At this point, we have enough information to start making the final PSF. We open 
+Slus_010.70 in PSFLab using the "Import EXE" function. The BSS clearing loop 
+only clears out 0x8006C770 to 0x800751A8, so we don't have to worry about that. 
+Now we go through everything like we did before, only we NOP out non-music 
+stuff. The first few calls are standard. At 0x80015444 a call is made to VSync. 
+Although this runs properly, it is non-music related, it consumes CPU time and 
+does not enter an idle loop (j currentaddress, nop). We'll NOP it out. At 
+0x80015454 there is a call to numerous functions which are all init functions. 
+However that call does not work in PSFLab. So we will NOP it out (the _SsInitHot 
+probably starts the title theme, which is streamed). The next call (at 
+0x8001545C) is completely CD related so we'll NOP it out. From now on I'll 
+abbreviate NOP it out with NIO. The call at 0x8001547C is the MusicInit function 
+that was identified earlier. Even though this takes CPU time, we must not NIO. 
+The call to GsInitGraph can be NOPed out since it is a graphics call. Then the 
+main game function is called. Note that since this main game function will never 
+return (we'll idle it before that), we'll NOP out everything after it up to the 
+jr $ra.
+
+Now we're in the first level of the main game loop. The first function is 
+probably non-music related. It does contain ssVabTransfer, but ssVabTransfer is 
+supposed to come later. (This is probably for sound effects). We will NIO.
+
+In 0x8002842C is the title loop. There are lots of functions here, but the only 
+one we're interested in is the "load" function. If you remember it was located 
+at 0x800284B8. Except for the variable saving/stack instructions, we'll NOP 
+everything out up to there and since we do not intend the function to return, 
+further to the jr $ra. In fact, since we are not intending to return, we can 
+forget all the stack crap! (But I'm keeping the addiu $sp, 0xffd8 just to keep 
+sp consistant)
+
+Now that we're in 0x80029F34, remember we said we would put the idle (infinite) 
+loop at 0x80029F50? Well lets put it in, and NOP everything out after that since 
+it's never going to be executed.
+
+Inside 0x8002A178, the first two function calls work and are fast, so we'll 
+leave them in (they jsut call strcpy). The call to bzero can also be forgiven 
+(for now, later we'll see if things work without it). The call to function 
+0x80033C50 is the stereo/mono select. The branch that selects mono is "80014A0C: 
+bne $v0, $0, 0x80014A24". If this branch is removed mono cannot be selected, so 
+we'll NIO.
+
+0x8002A2F4 is the next function. In fact, this is the main loading function and 
+a lot of work will need to be done here. The loading calls can all be NOPed out. 
+Now we have to load the data ourselves. I loaded the SEQ/VH into 0x80100000 and 
+the VB into 0x80120000, just because. Remember to set the exe size to 
+accommodate this data! It was initially 0x0005C800, I set it to 0x00190000. $s0 
+is the start of the SEQ/VH data and $a1 is a pointer to the VB. Note that the 
+SEQ/VH also contains offsets which are used, hence we can't just dump some value 
+into $a0 (they specify the offset of VH from $s0). The code I put in was:
+8002A364: lui   $s0, 0x8010
+8002A368: addiu $s0, 0x0000
+8002A36C: lui   $a1, 0x8012
+8002A370: addiu $a1, 0x0000
+Oh dear, it seems $s3 has to contain some location that will store the vab id 
+and seq id. Lets just make it 0x800FFFE0. I added in:
+8002A35C: lui   $s3, 0x8010
+8002A360: addiu $s3, 0xFFE0
+OK, the ssVabTransfer and ssSeqOpen function complete successfully. This is 
+good. Keep in mind that $s3 value (0x800FFFE0) for later. The remaining calls in 
+0x8002A2F4 are non-music related, so we'll NOP them out.
+
+Back in 0x8002A178, all the calls from 0x8002A204 to 0x8002A224 seem to be 
+graphics related, so we'll nop them out. Notice here how there are references to 
+0x10($s0) and 0xE($s0)? These are the vab id/seq id, so $s0 will need to equal 
+0x800FFFE0. You know what the code looks like. Now we go into 0x800332A4.
+
+0x800332A4 virtually runs itself. It needs no patching whatsoever! Even though 
+it indexes a table of reverb depths and volumes, it works fine! (The tables are 
+included with the exe).
+
+At 0x8002A240, that one remaining function is a graphic function, so NIO.
+
+Now press play...Yay, it works!!! We'll go back to 0x8002A1E8 (the bzero call) 
+and see whether it works without that call. Yes it does work without it. Now 
+it's time to "Remove Unused Data". I used to "I'm paranoid" box and set it to 
+256 (to encompass those tables mentioned before). Note: I decided to change the 
+tick mode from SS_TICKVSYNC (5) to SS_TICK240 (2) because 240 is better than 
+VSync (60).
+
+Now to do the other PSFs. To make things easier, why don't we psflib the set? To 
+make a psflib in this case, we'll split the driver and music data. The driver 
+occupies the region 0x80010000 - 0x80100000, so we'll make the exe start 
+0x80010000 and exe size 0x000F0000. The music data goes in 0x80100000 - 
+0x801A0000, so we'll make the exe start 0x80100000 and exe size 0x000A0000. 
+There, then we create the _lib tag (in the music data psf): "_lib=vb.psflib".
+
+Now to import all the other data into seperate PSFs, well I got a program to do 
+it for me. Just for interest, the offset to import the SEQ/VH data is 0x800 in 
+the PSX-EXE of music data, and 0x20800 for the VB in the PSX-EXE of music data. 
+(I just used exe2psf in batch processing to convert/make the set.)
+
+AH CRAP. Some of them don't seem to work properly - they just bomb out halfway 
+through. Looks like we're gonna have to debug.
+
+Well actually, it appears the "remove unused data" stunt really stuffed things 
+up. Well, since we're using psflib this is easy to fix, just use an un-removed-
+unused-data driver. Yeah, that's better. Word of warning: "Remove Unused Data" 
+can stuff things up.
+
+F***. Some tracks are still stuffed up.
+
+OK I tried importing SEQ/VH to 0x80160000 and VB to 0x801A0000. It appears to 
+work... The lesson seems to be: if it doesn't work import it to a different 
+address.
+
+Now to time them. Timing is just listening to them to find the loop points. It's 
+pretty tedious, but you get to listen to music. Since Vanguard Bandits doesn't 
+have an OST, I didn't name the tracks. I could have named them things like 
+"title screen" and "battle 1", but I don't know what they all are.
+
+I also ran psfpoint:
+psfpoint -game="Vanguard Bandits" *.minipsf
+psfpoint -year=2000 *.minipsf
+psfpoint -copyright="2000 Working Designs" *.minipsf
+psfpoint -psfby=someone42 *.minipsf
+psfpoint -volume=1 *.minipsf
+psfpoint -artist=??? *.minipsf
+
+I stuck with titling them "000" and "001" etc.
+NB: I put "pseudo-names" in the comments section.
+
+If you look at the set, you will notice that the artist field is ???. I tried to 
+find out who the composer was (I even finished the game again) but surprisingly, 
+no hint of the composer is found in the credits. I am guessing it is Noriyuki 
+Iwadare (Lunar) based on the style, but that is a guess.
+
+After all of that, you have a complete PSF set. Most PSF rips won't be as easy 
+as this though.
+
+
+
+
+HISTORY
+
+10/24/03 - Initial version
+10/26/03 - Minor changes (thanks to zoopd2)
+11/24/03 - Major changes, added rip example
+11/29/03 - Minor changes (eg. speeling errars), CaitSith2 new mirror, added "Is 
+it streamed?"
+12/05/03 - Fixed reference to CaitSith2's mirror
+
+
+
+
+CONCLUSION/CREDITS
+
+Thanks has to go to all the people at psf_rippers for all their help in ripping 
+legend of legaia.
+Very special thanks has to go to Neill Corlett for creating the psf 
+specification, highly experimental and ripping FF7, FF8 and FF9, the *best* game 
+music you can ever listen to.
+Special thanks to CaitSith2 for offering an excellent PSF mirror. [He has got a 
+new one, unfortunately he isn't mirroring sets > 10mb]
+
+Here are just some links:
+http://groups.yahoo.com/group/psf_rippers - join if you are interested in psf 
+ripping, but only post legit messages
+http://www.zophar.net - zophar's domain, the largest emulation resource on the 
+net. Contains psfs < 12mb
+http://www.alpha-ii.com/caitsith2/psf - CaitSith2's new mirror, only sets < 10mb
+http://www.neillcorlett.com/psf/ - Neill Corlett's PSF Central. Contains some 
+useful PSF ripping tools as well as the specification
+
+Hopefully this guide has helped you. Remember, it is in no way complete! While 
+ripping, you may discover a technique or find a trap. Don't keep it to yourself, 
+e-mail me (someone42_000@hotmail.com) and I will add it to this guide, credit 
+goes to you. The more people who contribute, the better the psf ripping scene 
+can grow. All sections marked with (*Someone add something here*) are sections 
+which I'm not sure of or have no experience with. I'd appreciate those who do 
+know about those sections to contribute.
+
+Comments, suggestions, contributions, random information? 
+someone42_000@hotmail.com is the address.
+
+This guide is OPEN. This means although I maintain it, it will hopefully grow 
+with user contributions. I encourage you to contribute and to ask others to 
+contribute to this guide. You may alter this guide, distribute it, and 
+distribute altered versions as long as credit is given where due and this 
+paragraph remains and remains unchanged.
+
+someone42 (Christopher Chua)
+
+
+
+
+EOF

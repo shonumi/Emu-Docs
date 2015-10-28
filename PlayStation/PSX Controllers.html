@@ -1,0 +1,712 @@
+<HTML>
+  <HEAD>
+    <TITLE>PSX Controllers</TITLE>
+    <META NAME="description" CONTENT="PSX Controllers">
+    <META NAME="keywords"    CONTENT="PSX, playstation, sony, SCE, sony playstation,
+                                      Modchip, Modchips, Mod Chip, Mod-chip,
+                                      Mod Chips, Mod-chips, Mod, Mods, Colormod,
+                                      colormods, color mod, color mods, color-mod,
+                                      color-mods, colourmod, colourmods,
+                                      colour mod, colour mods, colour-mod,
+                                      colour-mods, NTSC, PAL, black and white,
+                                      no colour, no color, import, silver, HK,
+                                      HONG-KONG, hong kong, silver imports,
+                                      copies, backup, backups, back up, back ups,
+                                      back-up, back-ups, copy, dao, disk at once,
+                                      gear, gearmm, wincd, golden hawk, golden-hawk,
+                                      jeff arnold, play,Controller, Steering Wheel,
+                                      PCB, Microcontroller, build, build your own,
+                                      Negcon, Analouge">
+  </HEAD>
+  <BODY>
+    <BODY BGCOLOR = "#EEEEEE">
+    <BODY TEXT    = "#000077">
+    <BODY LINK    = "#1111CC">
+    <BODY VLINK   = "#880055">
+    <BODY ALINK   = "#990066">
+
+    Go back to Andrewm's <A HREF="../../index.html">HOME PAGE.</A><BR>
+    Download the ZIP file <A HREF="psxcont.zip">PSXCONT.ZIP</A> here (240K).
+
+    <H1 Align="LEFT">SONY PLAYSTATION<SUP>&reg;</SUP><BR>
+                     CONTROLLER INFORMATION</H1>
+
+    <H3 Align-"LEFT">What you will find here</H3>
+
+    <UL>
+      <LI><A HREF="#PINOUTS">The Playstation Controller Pinouts</A></LI>
+      <LI><A HREF="#SIGNAL">The PSX Controller Signals</A></LI>
+      <LI><A HREF="#DATA">The PSX Controller Data</A></LI>
+      <LI><A HREF="#CIRCUIT">A Circuit to Emulate a PSX Controller in 74XX Logic</A></LI>
+      <LI><A HREF="#MICRO">A Microcontroller to Emulate a PSX Controller</A></LI>
+    </UL>
+
+    <A NAME="PINOUTS"><H3>The Playstation Controller Pinouts</H3>
+
+    <PRE>        LOOKING AT THE PLUG
+        -------------------------------
+ PIN 1->| o  o  o | o  o  o | o  o  o |
+        \_____________________________/
+    </PRE>
+    PIN #  USAGE
+    <OL>
+      <LI> DATA</LI>
+      <LI> COMMAND</LI>
+      <LI> N/C (9 Volts unused)</LI>
+      <LI> GND</LI>
+      <LI> VCC</LI>
+      <LI> ATT</LI>
+      <LI> CLOCK</LI>
+      <LI> N/C</LI>
+      <LI> ACK</LI>
+    </OL>
+
+    <DL>
+      <DT>DATA</DT>
+        <DD>
+          Signal from  Controller to PSX.<BR>
+          This signal is an 8 bit serial transmission synchronous to the falling edge of clock
+          (That is both the incoming and outgoing signals change on a high to low transition
+          of clock.  All the reading of signals is done on the leading edge to allow settling
+          time.)
+        </DD>
+      <DT>COMMAND</DT>
+        <DD>
+        Signal from PSX to Controller.<BR>
+        This signal is the counter part of DATA.  It is again an 8 bit serial transmission
+        on the falling edge of clock.
+        </DD>
+      <DT>VCC</DT>
+        <DD>
+          VCC can vary from 5V down to 3V and the official SONY Controllers will still
+          operate.  The controllers outlined here really want 5V.<BR>
+          The main board in the PSX also has a surface mount
+          <A HREF= "HTTP://home.quicknet.com.au/andrewm/psx/psxfuse/index.html">
+          750mA fuse</A> that will blow if you try to draw to much current through the
+          plug (750mA is for both left, right and memory cards).
+        </DD>
+      <DT>ATT</DT>
+        <DD>
+          ATT is used to get the attention of the controller.<BR>
+          This signal will go low for the duration of a transmission.
+          I have also seen this pin called Select, DTR and Command.
+        </DD>
+      <DT>CLOCK</DT>
+        <DD>
+          Signal from PSX to Controller.<BR>
+          Used to keep units in sync.
+        </DD>
+      <DT>ACK</DT>
+        <DD>
+          Acknowledge signal from Controller to PSX.<BR>
+          This signal should go low for at least one clock period after each 8 bits are
+          sent and ATT is still held low.  If the ACK signal does not go low within
+          about 60 us the PSX will then start interrogating other devices. 
+        </DD>
+    </DL>
+
+    <P>
+    It should also be noted that this is a bus of sorts.  This means that the wires
+    are all tied together (except select which is separate for each device).  For the
+    CLK, ATT, and CMD pins this does not matter as the PSX is always the originator.
+    The DATA and ACK pins however can be driven from any one of four devices.  To avoid
+    contentions on these lines they are open collectors and can only be driven low.
+    </P>
+
+    <A NAME="SIGNAL"><H3>The PSX Controller Signals</H3>
+
+    All transmissions are eight bit serial LSB first. All timing in the PSX controller
+    bus is synchronous to the falling edge of the clock.
+
+    One byte of the transmissions will look kinda like this.
+
+    <PRE>
+               |BIT 0|BIT 1|BIT 2|BIT 3|BIT 4|BIT 5|BIT 6|BIT 7|
+    CLOCK -----___---___---___---___---___---___---___---___-----------
+
+    DATA  -----000000111111222222333333444444555555666666777777--------
+                  *     *     *     *     *     *     *     *
+    CMND  -----000000111111222222333333444444555555666666777777--------
+
+    ACK   ----------------------------------------------------------__-
+    </PRE>
+
+    <p>
+    The logic level on the data lines is changed by the transmitting device on the
+    falling edge of clock. This is then read by the receiving device on the leading
+    edge (at the points marked *) allowing time for the signal to settle.  After each
+    COMMAND is received by a selected controller, that controller needs to pull ACK
+    low for at least one clock tick.  If a selected controller does not ACK the
+    PSX will assume that there is no controller present.
+    </p>
+
+    <P>
+    When the PSX wants to read information from a controller it pulls that
+    devices ATT line low and issues a start command (0x01).  The Controller
+    Will then reply with its ID (0x41=Digital, 0x23=NegCon, 0x73=Analogue Red
+    LED, 0x53=Analogue Green LED).  At the same time as the controller is
+    sending this ID byte the PSX is transmitting 0x42 to request the data.
+    Following this the COMMAND line goes idle and the controller transmits
+    0x5A to say "here comes the data".
+    </P>
+
+    This would look like this for a digital controller
+
+    <PRE>
+    ATT    -______________________________________________________________
+              |   Byte 1     |    |   Byte 2     |    |   Byte 3     |
+    CLOCK  ---_-_-_-_-_-_-_-_-----_-_-_-_-_-_-_-_-----_-_-_-_-_-_-_-_-----
+                   0xFF                0x41                0x5A 
+    DATA   -------------------------__________--__----__--__----__--__----
+                   0x01                0x42
+    CMND   -----_____________-----__--________--__------------------------
+
+    ACK    --------------------__-------------------__-----------------__-
+    </PRE>
+
+    <P>
+    After this command initiation process the controller then sends all its data
+    bytes (in the case of a digital controller there is only two).  After the last
+    byte is sent ATT will go high and the controller does not need to ACK. 
+    </P>
+
+    The data transmission for a digital controller would look like this (where 
+    A0,A1,A2...B6,B7 are the data bits in the two bytes).
+
+    <PRE>
+    ATT    _______________________________________-------
+              |   Byte 4     |    |   Byte 5     |  
+    CLOCK  ---_-_-_-_-_-_-_-_-----_-_-_-_-_-_-_-_--------
+
+    DATA   ---D0D1D2D3D4D5D6D7----E0E1E2E3E4E5E6E7-------
+
+    CMND   ----------------------------------------------
+                                                    ***
+    ACK    --------------------__------------------------
+
+    NOTE: No ACK.
+    </PRE>
+
+    <A NAME="DATA"><H3>The PSX Controller Data</H3>
+
+    Below are five tables that show the actual bytes sent by the controllers
+
+    <PRE>
+    Standard Digital Pad
+
+    BYTE    CMND    DATA
+
+     01     0x01    idle
+     02     0x42    0x41
+     03     idle    0x5A    Bit0 Bit1 Bit2 Bit3 Bit4 Bit5 Bit6 Bit7
+     04     idle    data    SLCT           STRT UP   RGHT DOWN LEFT
+     05     idle    data    L2   R2    L1  R1   /\   O    X    |_|
+
+    All Buttons active low.
+    </PRE>
+
+    <PRE>
+    NegCon
+
+    BYTE    CMND    DATA
+
+     01     0x01    idle
+     02     0x42    0x23
+     03     idle    0x5A    Bit0 Bit1 Bit2 Bit3 Bit4 Bit5 Bit6 Bit7
+     04     idle    data                   STRT UP   RGHT DOWN LEFT
+     05     idle    data                   R1   A    B
+     06     idle    data    Steering  0x00 = Right 0xFF = Left
+     07     idle    data    I  Button 0x00 = Out   0xFF = In
+     08     idle    data    II Button 0x00 = Out   0xFF = In
+     09     idle    data    L1 Button 0x00 = Out   0xFF = In
+
+    All Buttons active low.
+    </PRE>
+
+    <PRE>
+    Analogue Controller in Red Mode
+
+    BYTE    CMND    DATA
+
+     01     0x01    idle
+     02     0x42    0x73
+     03     idle    0x5A    Bit0 Bit1 Bit2 Bit3 Bit4 Bit5 Bit6 Bit7
+     04     idle    data    SLCT JOYR JOYL STRT UP   RGHT DOWN LEFT
+     05     idle    data    L2   R2   L1   R1   /\   O    X    |_|
+     06     idle    data    Right Joy 0x00 = Left  0xFF = Right
+     07     idle    data    Right Joy 0x00 = Up    0xFF = Down
+     08     idle    data    Left Joy  0x00 = Left  0xFF = Right
+     09     idle    data    Left Joy  0x00 = Up    0xFF = Down
+
+    All Buttons active low.
+    </PRE>
+
+    <PRE>
+    Analogue Controller in Green Mode
+
+    BYTE    CMND    DATA
+
+     01     0x01    idle
+     02     0x42    0x53
+     03     idle    0x5A    Bit0 Bit1 Bit2 Bit3 Bit4 Bit5 Bit6 Bit7
+     04     idle    data                   STRT UP   RGHT DOWN LEFT
+     05     idle    data    L2   L1   |_|  /\   R1   O    X    R2
+     06     idle    data    Right Joy 0x00 = Left  0xFF = Right
+     07     idle    data    Right Joy 0x00 = Up    0xFF = Down
+     08     idle    data    Left Joy  0x00 = Left  0xFF = Right
+     09     idle    data    Left Joy  0x00 = Up    0xFF = Down
+
+    All Buttons active low.
+    </PRE>
+
+    <PRE>
+    PSX Mouse 
+    (credit to T.Fujita 
+     http://www.keisei.tsukuba.ac.jp/~kashima/games/ps-e.txt)
+
+    BYTE    CMND    DATA
+
+     01     0x01    idle
+     02     0x42    0x12
+     03     idle    0x5A    Bit0 Bit1 Bit2 Bit3 Bit4 Bit5 Bit6 Bit7
+     04     idle    0xFF
+     05     idle    data         L    R
+     06     idle    data    Delta Vertical
+     07     idle    data    Delta Horizontal
+
+    All Buttons active low.
+    </PRE>
+
+    <A NAME="CIRCUIT"><H3>A Circuit to Emulate a PSX Controller in 74XX Logic</H3>
+
+    <P>
+    This circuit can be set up to emulate a digital controller, an analogue controller
+    (in either mode) or a NegCon.  The circuit uses six 74XX IC's to emulate a digital
+    controller.  To emulate an analogue controller a further four 74XX IC's and four
+    A/D converters are needed.  To emulate a NegCon you also need four A/D's and four
+    extra 74XX over the digital controllers six chips.
+    </P>
+
+
+    <H4>How the circuit works</H4>
+    <P>
+    <A HREF="PSX74L.GIF">
+      <IMG SRC    = "PSX74S.GIF"
+           ALIGN  = RIGHT
+           HEIGHT = 220
+           WIDTH  = 380
+           BORDER = 1>
+    </A>
+    When ATT is pulled LOW by the PSX, inverter 4/4A will pull SH/!LD on the 74HC165's
+    HIGH.  This will load the data at their serial input pins (Only two of five IC's are
+    shown).  Inverter 1/4A supplies the clocking for the HC165's so that on each falling
+    edge of the PSX's supplied CLK the next bit of data in the HC165's is shifted out.
+    This data out is gated by the ATT signal on inverter 2/4B, this is so only the
+    selected device can drive the bus.
+    </P>
+
+    <P>
+    The data loaded into the HC165's is directly related to the data shown in the timing
+    diagrams in the section above.  Looking back at the diagram shows the first byte as
+    0xFF.  This means that A1 through to A8 would all be tied HIGH.  The next byte is the
+    controller ID.  For the digital controller this is 0x41 so B1-8 are HLLLLLLHL
+    respectively.  The next byte is the DATA READY command 0x5A so C1-8 are HLHLLHLH.
+    The final two bytes are the button presses and should be set HIGH (through a pull up)
+    when the button is not pressed or LOW if the button is pressed. (NB E8 is SER IN on
+    the last HC165)
+    </P>
+
+    <P>
+    The Ack signal is provided by the missing pulse detector built around inverters 1/4A,
+    2/4A and 1/4B.  Diode D1 only allows inverter 1/4A to charge up C1 when CLK is low.
+    When CLK goes HIGH for longer than the time set by R1/C1, inverter 2/4A will go HIGH.
+    This HIGH going signal is coupled to inverter 1/4B via C2 which causes its output to
+    pulse LOW.  This signal is also gated by the ATT signal (again to avoid bus contention).
+    </P>
+
+    <A NAME="MICRO"><H3>A Microcontroller to Emulate a PSX Controller</H3>
+
+    <TABLE>
+      <TD>
+        <A HREF="PSXTOP.HTML">
+          <IMG SRC    = "PSXTOPS.JPG"
+               HEIGHT = 225
+               WIDTH  = 300
+               BORDER = 1>
+        </A>
+      </TD>
+      <TD VALIGN=TOP>
+        <P>
+        The micro controller version uses the Motorola 68HC11 (no one presented a
+        compelling argument to use anything different).  The code is currently set
+        up to assemble for an E2 but can be changed to run on any 52 pin version
+        with EEPROM (I made sure that I didn't use interrupts or use more than
+        256 bytes).
+        </P>
+        <P>
+        Clicking on either the picture to the left or the overlay below will take
+        you to a larger version of the picture.  In the large version clicking on
+        any component will take you to that part in the parts list. 
+        </P>
+      </TD>
+    </TABLE>    
+
+    <H4>How the circuit works</H4>
+
+    <P>
+    The circuit uses a Motorola MC68HC11 to do everything.  It reads the state
+    of the sixteen N/O (normally open) switch inputs on the left.  It reads the
+    values of the four analog inputs on the right.  It then sends this data
+    out one of its two serial ports.
+    </P>
+
+    <P>
+    The four jumpers in the circuit affect how the circuit works.  J1 at the top
+    of the board is used to put the HC11 into one of two operating modes.  With
+    J1 open the microcontroller is in single chip mode with it closed the micro
+    is in special bootstrap mode. 
+    </P>
+
+    <P>
+    J2,3 and 4 select what type of PSX controller to emulate as shown in the
+    table below.
+
+    <TABLE
+      BORDER = "1">
+      <TR>
+        <TD>MODE</TD>
+        <TD>J2</TD>
+        <TD>J3</TD>
+        <TD>J4</TD>
+      </TR>
+      <TR>
+        <TD>Digital</TD>
+        <TD>O</TD>
+        <TD>O</TD>
+        <TD>O</TD>
+      </TR>
+      <TR>
+        <TD>Analog RED</TD>
+        <TD>O</TD>
+        <TD>O</TD>
+        <TD>C</TD>
+      </TR>
+      <TR>
+        <TD>NegCon</TD>
+        <TD>O</TD>
+        <TD>C</TD>
+        <TD>O</TD>
+      </TR>
+      <TR>
+        <TD>Analog GREEN</TD>
+        <TD>O</TD>
+        <TD>C</TD>
+        <TD>C</TD>
+      </TR>
+      <TR>
+        <TD>Future use</TD>
+        <TD>C</TD>
+        <TD>X</TD>
+        <TD>X</TD>
+      </TR>
+      <TR>
+        <TD
+          COLSPAN = "4">
+          O = Open, C = Closed, X = Don't Care
+        </TD>
+      </TR>
+    </TABLE>
+    </P>
+
+    <P>
+    The four analog inputs in the top right hand corner of the circuit are
+    designed for hooking up potentiometers.  The size of the pots is not
+    critical but a 10K to 50K pot would be sensible.  The three wires for
+    each pot are WIPER, VCC and GND as shown below.
+
+    <PRE>  
+    ____________________
+    |                 ||
+    |                 \/
+    |           /\  /\  /\  /\
+    |          /  \/  \/  \/  \
+    |          |              |
+    |          |              |
+    O          O              O
+  PIN 3      PIN 2          PIN 1
+    </PRE>
+    </P>
+
+    <P>
+    The nine pin connector at the bottom of the circuit goes to the playstation
+    as well as being used to program the microcontroller.  Its pin assignments
+    are shown below.
+
+    <TABLE
+      BORDER = "1">
+      <TR>
+        <TD>Pin #</TD>
+        <TD>Usage</TD>
+      </TR>
+      <TR>
+        <TD>1</TD>
+        <TD>SCI RX FOR RS-232 comms (not used by psx)</TD>
+      </TR>
+      <TR>
+        <TD>2</TD>
+        <TD>SCI TX  "</TD>
+      </TR>
+      <TR>
+        <TD>3</TD>
+        <TD>DATA (pin 1 on PSX)</TD>
+      </TR>
+      <TR>
+        <TD>4</TD>
+        <TD>CLOCK (pin 2 on PSX)</TD>
+      </TR>
+      <TR>
+        <TD>5</TD>
+        <TD>COMMAND (pin 7 on PSX)</TD>
+      </TR>
+      <TR>
+        <TD>6</TD>
+        <TD>ATT (pin 6 on PSX)</TD>
+      </TR>
+      <TR>
+        <TD>7</TD>
+        <TD>VCC (pin 5 on PSX)</TD>
+      </TR>
+      <TR>
+        <TD>8</TD>
+        <TD>ACK (pin 9 on PSX)</TD>
+      </TR>
+      <TR>
+        <TD>9</TD>
+        <TD>GND (pin 4 on PSX)</TD>
+      </TR>
+    </TABLE>
+    </P>
+
+    <P>
+    Finally the LVI (low voltage inhibitor) at the bottom of the circuit is used
+    to keep the HC11 in a state of RESET when there is not enough voltage to run
+    it safely.  It is fairly safe to leave this out of the circuit if you can't
+    get hold of one but be warned you may pop that <A HREF="psxfuse.html">fuse</A>
+    if you don't include it.
+    </P>
+
+    <H4>The PCB</H4>
+
+    <P>
+    <A HREF="PSXOVER.HTML">
+      <IMG SRC    = "PSXOVERS.GIF"
+           HEIGHT = 250
+           WIDTH  = 347
+           BORDER = 1>
+    </A>
+    <A HREF="PSXBOARL.GIF">
+      <IMG SRC    = "PSXBOARS.GIF"
+           HEIGHT = 250
+           WIDTH  = 347
+           BORDER = 1>
+    </A>
+    </P>
+    <P>
+    The overlay above shows the PCB and all the components on it.  The parts and their
+    functions are described below.
+    </P>
+
+    <H4>The parts</H4>
+
+    <TABLE>
+      <TR>
+        <TD><A NAME = "U1">U1</A></TD>
+        <TD>MC68HC11E2</TD>
+      </TR>
+      <TR>
+        <TD><A NAME = "U2">U2</A></TD>
+        <TD>MC 34064 Low voltage inhibitor</TD>
+      </TR>
+      <TR>
+        <TD><A NAME = "XTAL">XTAL</A></TD>
+        <TD>8Mhz crystal</TD>
+      </TR>
+      <TR>
+        <TD>
+          <A NAME = "C1">C1,</A>
+          <A NAME = "C2">C2</A>
+        </TD>
+        <TD>18pF ceramic cap</TD>
+      </TR>
+      <TR>
+        <TD>
+          <A NAME = "C3">C3,</A>
+          <A NAME = "C4">C4</A>
+        </TD>
+        <TD>1uF mono or MKT cap</TD>
+      </TR>
+      <TR>
+        <TD><A NAME = "R1">R1</A></TD>
+        <TD>10M res</TD>
+      </TR>
+      <TR>
+        <TD>
+          <A NAME = "R2">R2-</A>
+          <A NAME = "R3"></A>
+          <A NAME = "R4"></A>
+          <A NAME = "R5">R5</A>
+        </TD>
+        <TD>4K7 res</TD>
+      </TR>
+      <TR>
+        <TD><A NAME = "RP1">RP1</A></TD>
+        <TD>4K7 x 9 sip res pack</TD>
+      </TR>
+      <TR>
+        <TD><A NAME = "CONNECTOR">CON1</A></TD>
+        <TD>9 way sil connector</TD>
+      </TR>
+      <TR>
+        <TD>
+          <A NAME = "D1">D1-</A>
+          <A NAME = "D2"></A>
+          <A NAME = "D3"></A>
+          <A NAME = "D4"></A>
+          <A NAME = "D5"></A>
+          <A NAME = "D6"></A>
+          <A NAME = "D7"></A>
+          <A NAME = "D8"></A>
+          <A NAME = "D9"></A>
+          <A NAME = "D10"></A>
+          <A NAME = "D11"></A>
+          <A NAME = "D12"></A>
+          <A NAME = "D13"></A>
+          <A NAME = "D14"></A>
+          <A NAME = "D15"></A>
+          <A NAME = "D16">D16</A>
+        </TD>
+        <TD>1N4148 diode</TD>
+      </TR>
+      <TR>
+        <TD><A NAME = "J1"></A>J1</TD>
+        <TD>Boot mode jumper</TD>
+      </TR>
+      <TR>
+        <TD>
+          <A NAME = "J2">J2-</A>
+          <A NAME = "J3"></A>
+          <A NAME = "J4">J4</A>
+        </TD>
+        <TD>Controller mode jumpers</TD>
+      </TR>
+      <TR>
+        <TD>
+          <A NAME = "POT1">POT1-</A>
+          <A NAME = "POT2"></A>
+          <A NAME = "POT3"></A>
+          <A NAME = "POT4">4</A>
+        </TD>
+        <TD>Analogue inputs</TD>
+      </TR>
+      <TR>
+        <TD>
+          <A NAME = "BUTTON1">Button 1-</A>
+          <A NAME = "BUTTON2"></A>
+          <A NAME = "BUTTON3"></A>
+          <A NAME = "BUTTON4"></A>
+          <A NAME = "BUTTON5"></A>
+          <A NAME = "BUTTON6"></A>
+          <A NAME = "BUTTON7"></A>
+          <A NAME = "BUTTON8"></A>
+          <A NAME = "BUTTON9"></A>
+          <A NAME = "BUTTON10"></A>
+          <A NAME = "BUTTON11"></A>
+          <A NAME = "BUTTON12"></A>
+          <A NAME = "BUTTON13"></A>
+          <A NAME = "BUTTON14"></A>
+          <A NAME = "BUTTON15"></A>
+          <A NAME = "BUTTON16">16</A>
+        </TD>
+        <TD>Header for 16 N/O momentary switches</TD>
+      </TR>
+    </TABLE>
+
+    <H4>The software</H4>
+
+    <P>
+    The software is totally free and can be downloaded from the URL's below.
+    However it is not Freeware.  It is a slightly different concept called
+    Great-Guy-Ware.  All you have to do if you wish to use the software is
+    send me an E-mail telling me I am a great guy.  This serves two main
+    purposes.  One is to make me feel good and secondly it encourages me
+    to finish some of the other articles I may have started in the last
+    ten years.
+
+    <P>
+    The software is for the microcontroller is VERY heavily commented and should
+    not need any explanation.  It can be downloaded with the PCB (in auto/easytrax
+    format) here <A HREF="PSXCONT.ZIP">psxcont.zip</A> (240K).
+    </P>
+
+    <H4>Downloading the software to the HC11</H4>
+
+    <TABLE>
+      <TD>
+        <A HREF="max232l.gif">
+          <IMG SRC    = "max232s.gif"
+               HEIGHT = 250
+               WIDTH  = 250
+               BORDER = 1>
+        </A>
+      </TD>
+      <TD VALIGN = TOP>
+        Also included in the ZIP file above is a program called EELOADER.EXE.  This
+        is an IBM executable that can be used to download the code into the HC11.
+        The first two pins on the nine pin connector are a 5V RS232 port.  This can
+        be connected to any serial port on your IBM compatible PC through a MAX232
+        as shown.
+      </TD>
+    </TABLE>
+
+    <P>
+    The PCB shown does not have connections for RTS-CTS and DTR-DSR-CD.  These
+    connections must be made manually with pieces of wire soldered to the DB25
+    female plug.  These connections, that are shown in the photo, are pin four
+    to pin five and pin six to pin eight to pin twenty.
+    </P>
+
+    <P>
+    <A HREF="maxolayl.gif">
+      <IMG SRC    = "maxolays.gif"
+           HEIGHT = 233
+           WIDTH  = 300
+           BORDER = 1>
+    </A>
+    <A HREF="maxpcbl.gif">
+      <IMG SRC    = "maxpcbs.gif"
+           HEIGHT = 233
+           WIDTH  = 300
+           BORDER = 1>
+    </A>
+    </P>      
+
+    <P>
+    To use it connect it to a 5 volt power supply.  I used four nicad batteries which
+    gives 4.8v (do not use non-rechargables, the voltage will be to high).  You also
+    have to connect it to a serial port on your PC and place a jumper on J1.  Then
+    type <KBD>EELOAD PSXCONT.S19 /Cx</KBD> where x is the com port the
+    controller is on.  Then follow the instructions on the screen.
+    </P>
+
+    Please read the <A HREF="disclaim.html">disclaimer</A>
+    <HR>
+    <SMALL>
+      &copy; 1998 Andrew J McCubbin<BR>
+      Maintained by <A HREF="mailto:andrewm@quicknet.com.au">
+                                    andrewm@quicknet.com.au</A><BR>
+      Last Updated April 1, 1999.<BR>
+      This pages URL is <A HREF="HTTP://home.quicknet.com.au/andrewm/psx/psxcont/index.html">
+                                 HTTP://home.quicknet.com.au/andrewm/psx/psxcont/index.html</A>
+    </SMALL>
+  </BODY>
+</HTML>

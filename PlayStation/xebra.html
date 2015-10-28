@@ -1,0 +1,6526 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Windows (vers 1st December 2004), see www.w3.org">
+
+  <title>NYOットやろうぜ</title>
+</head>
+
+<body text="#000000" bgcolor="#F0F0F0">
+  <!-- 広告が入る -->
+<!-- [FC2 Analyzer] http://analyzer.fc2.com/  -->
+<script language="javascript" src="http://analyzer54.fc2.com/ana/processor.php?uid=1148309" type="text/javascript"></script>
+<noscript><div align="right"><img src="http://analyzer54.fc2.com/ana/icon.php?uid=1148309&ref=&href=&wid=0&hei=0&col=0" /></div></noscript>
+<!-- [FC2 Analyzer]  -->
+  <hr>
+  <!-- ============================================================= -->
+
+  <center>
+    <h1>NYOットやろうぜ</h1>
+
+    <p>～独田地獄斎が贈るPlayStation研究序説～</p>
+    <pre>
+<b>                     NNNNNN                           
+                     NNNNNNNNNNNN                     
+                     NNNNNNNNNNNNNNNN                 
+                     NNNNNNNNNNNNNNNNNNN              
+                     NNNNNNNNN   NNNNNNNNN            
+                     NNNNNNNNN    NNNNNNNNN           
+                     NNNNNNNNN    NNNNNNNNN           
+                     NNNNNNNNN    NNNNNNNNNN          
+                     NNNNNNNNN    NNNNNNNNNN          
+                     NNNNNNNNN    NNNNNNNNNN          
+                     NNNNNNNNN    NNNNNNNNNN          
+                     NNNNNNNNN    NNNNNNNNN           
+                     NNNNNNNNN    NNNNNNNN            
+                   OONNNNNNNNN    NNNNNNN             
+              YYYOOOONNNNNNNNN                        
+          YYYYYYYYYYYNNNNNNNNN     OOOOOOOOOOOO       
+      YYYYYYYYYYYYYYYNNNNNNNNNYYOOOOOOOOOOOOOOOOOOO   
+ OOOOOOYYYYYYYYY     NNNNNNNNNYYYYYYYOOO     OOOOOOOOO
+OOOOOOOOOOO        YYNNNNNNNNNYYYYY        OOOOOOOOOOO
+OOOOOOOOO     OOOYYYYNNNNNNNNN        YYYYYYYYYOOOOOO 
+   OOOOOOOOOOOOOOOOOONNNNNNNNN   YYYYYYYYYYYYYYY      
+       OOOOOOOOOOOO  NNNNNNNNNOYYYYYYYYYYYY           
+                     NNNNNNNNNOOOOOOYYY               
+                          NNNNOOOO                    </b>
+</pre>
+  </center>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>はじめに</h1>
+
+  <div style="margin-left: 2em">
+    <p>
+    本ページは未来のPlayStationエミュレータ開発者への情報提供を目的とする。
+    ただし、ここでコーディングの講義をするつもりはない。
+    なぜならコーディングの観点からエミュレータ特有と呼べるものは何もないからだ。
+    動的コンパイルは珍しいかもしれないが、これはエミュレータの本質ではない。
+    換言すると、この程度のコーディングに躓くようではプログラマとして終っている。
+    基礎からやり直した方がいいんじゃないか。</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>解析環境</h1>
+
+  <div style="margin-left: 2em">
+    <dl>
+      <dt>PlayStation本体</dt>
+
+      <dd>
+        <p>SCPH-7000 (SONY)</p>
+      </dd>
+
+      <dt>制御マシン</dt>
+
+      <dd>
+        <p>いわゆる自作DOS/V</p>
+      </dd>
+
+      <dt>通信デバイス</dt>
+
+      <dd>
+        <p>PS X-TERMINATOR (Future Console Design)</p>
+      </dd>
+
+      <dt>通信デバイスファームウェア</dt>
+
+      <dd>
+        <p>caetla 0.34 (K-Communications)</p>
+      </dd>
+
+      <dt>通信プログラム</dt>
+
+      <dd>
+        <p>caetools (K-Communications)<br>
+        directio (K-Communications)</p>
+      </dd>
+
+      <dt>解析プログラム作成</dt>
+
+      <dd>
+        <p>GNU Binary Utilities 2.8.1 mipsel-generic-elf/ecoff
+        (こぺる)<br>
+        GNU C/C++ Compiler 2.7.2.3 mipsel-generic-elf/ecoff
+        (こぺる)<br>
+        Borland C++Compiler 5.5 (Borland)</p>
+      </dd>
+    </dl>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>参考文献</h1>
+
+  <div style="margin-left: 2em">
+    <dl>
+      <dt>「ネットやろうぜ」ユーザガイドホームページ</dt>
+
+      <dd>
+        <p>http://www.scei.co.jp/Net/guide/user/</p>
+      </dd>
+
+      <dt>PADUA PLAYSTATION RESOURCE</dt>
+
+      <dd>
+        <p>http://psx.rules.org/psxrul2.shtml</p>
+      </dd>
+
+      <dd>
+        <p>
+        ただし、これらには多くの誤記があるので鵜呑みにしないこと。
+        正規開発マニュアルから抜粋したと思われる部分にすら誤記がある
+        (正規マニュアルにも誤記はある)。
+        開発者ならば最終的には自分でウラをとること。
+        幸い、PlayStationにはその現実的な手段があるのだから。</p>
+      </dd>
+
+      <dt>東芝のTX39のドキュメント</dt>
+
+      <dd>
+        <p>
+        http://www.semicon.toshiba.co.jp/product/micro/index.html</p>
+      </dd>
+    </dl>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>アーキテクチャ</h1>
+
+  <h2>ブロック図</h2>
+
+  <div style="margin-left: 2em">
+    <p><img alt="" src="block.gif"></p>
+  </div>
+
+  <h2>メモリマップ</h2>
+
+  <div style="margin-left: 2em">
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. メモリマップ</b>
+      </caption>
+
+      <tr>
+        <th>アドレス</th>
+
+        <th>内容</th>
+      </tr>
+
+      <tr>
+        <td>0x00000000～0x001FFFFF</td>
+
+        <td>メインメモリ(命令キャッシュ有効)</td>
+      </tr>
+
+      <tr>
+        <td>0x00200000～0x003FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ有効)</td>
+      </tr>
+
+      <tr>
+        <td>0x00400000～0x005FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ有効)</td>
+      </tr>
+
+      <tr>
+        <td>0x00600000～0x007FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ有効)</td>
+      </tr>
+
+      <tr>
+        <td>0x00800000～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F000000～</td>
+
+        <td>PIO</td>
+      </tr>
+
+      <tr>
+        <td>0x1F0?????～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F800000～0x1F8003FF</td>
+
+        <td>スクラッチパッド</td>
+      </tr>
+
+      <tr>
+        <td>0x1F000400～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801000～</td>
+
+        <td>I/Oポート(いわゆるメモリマップドI/O)</td>
+      </tr>
+
+      <tr>
+        <td>0x1F80????～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1FC00000～0x1FC7FFFF</td>
+
+        <td>OS ROM</td>
+      </tr>
+
+      <tr>
+        <td>0x1F800000～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x80000000～0x801FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ有効)</td>
+      </tr>
+
+      <tr>
+        <td>0x80200000～0x803FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ有効)</td>
+      </tr>
+
+      <tr>
+        <td>0x80400000～0x805FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ有効)</td>
+      </tr>
+
+      <tr>
+        <td>0x80600000～0x807FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ有効)</td>
+      </tr>
+
+      <tr>
+        <td>0x80800000～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x9FC00000～0x9FC7FFFF</td>
+
+        <td>OS ROM ミラー</td>
+      </tr>
+
+      <tr>
+        <td>0x9FC80000～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0xA0000000～0xA01FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ無効)</td>
+      </tr>
+
+      <tr>
+        <td>0xA0200000～0xA03FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ無効)</td>
+      </tr>
+
+      <tr>
+        <td>0xA0400000～0xA05FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ無効)</td>
+      </tr>
+
+      <tr>
+        <td>0xA0600000～0xA07FFFFF</td>
+
+        <td>メインメモリ
+        ミラー(命令キャッシュ無効)</td>
+      </tr>
+
+      <tr>
+        <td>0xA0800000～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0xBFC00000～0xBFC7FFFF</td>
+
+        <td>OS ROM ミラー</td>
+      </tr>
+
+      <tr>
+        <td>0xBFC80000～</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0xFFFE0130～0xFFFE0133</td>
+
+        <td>SwapCache?</td>
+      </tr>
+
+      <tr>
+        <td>0xFFFE0134～</td>
+
+        <td><br></td>
+      </tr>
+    </table>
+  </div>
+
+  <h2>レジスタマップ</h2>
+
+  <div style="margin-left: 2em">
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. レジスタマップ</b>
+      </caption>
+
+      <tr>
+        <th>アドレス</th>
+
+        <th>レジスタ名(仮)</th>
+
+        <th>内容</th>
+      </tr>
+
+      <tr>
+        <td>0x1F801000</td>
+
+        <td>?</td>
+
+        <td>拡張メモリ領域指定?</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801004</td>
+
+        <td>?</td>
+
+        <td>I/Oポート終端指定?</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801008</td>
+
+        <td>?</td>
+
+        <td>?</td>
+      </tr>
+
+      <tr>
+        <td>0x1F80100C</td>
+
+        <td>?</td>
+
+        <td>?</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801010</td>
+
+        <td>?</td>
+
+        <td>?</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801014</td>
+
+        <td>?</td>
+
+        <td>SPU DMAのウェイト?</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801018</td>
+
+        <td>?</td>
+
+        <td>OTC DMAのウェイト?</td>
+      </tr>
+
+      <tr>
+        <td>0x1F80101C</td>
+
+        <td>?</td>
+
+        <td>?</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801020</td>
+
+        <td>?</td>
+
+        <td>CD DMAのウェイト?</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801040</td>
+
+        <td>COMA_DATA</td>
+
+        <td>COMAデータ</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801044</td>
+
+        <td>COMA_STAT</td>
+
+        <td>COMAステータス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801048</td>
+
+        <td>COMA_MODE</td>
+
+        <td>COMAモード</td>
+      </tr>
+
+      <tr>
+        <td>0x1F80104A</td>
+
+        <td>COMA_CTRL</td>
+
+        <td>COMAコントロール</td>
+      </tr>
+
+      <tr>
+        <td>0x1F80104E</td>
+
+        <td>COMA_BAUD</td>
+
+        <td>COMAボー</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801050</td>
+
+        <td>SIO_DATA</td>
+
+        <td>SIOデータ</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801054</td>
+
+        <td>SIO_STAT</td>
+
+        <td>SIOステータス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801058</td>
+
+        <td>SIO_MODE</td>
+
+        <td>SIOモード</td>
+      </tr>
+
+      <tr>
+        <td>0x1F80105A</td>
+
+        <td>SIO_CTRL</td>
+
+        <td>SIOコントロール</td>
+      </tr>
+
+      <tr>
+        <td>0x1F80105E</td>
+
+        <td>SIO_BAUD</td>
+
+        <td>SIOボー</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801060</td>
+
+        <td>RAM_SIZE</td>
+
+        <td>実効メモリサイズ</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801070</td>
+
+        <td>I_STAT</td>
+
+        <td>割り込みステータス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801074</td>
+
+        <td>I_MASK</td>
+
+        <td>割り込みマスク</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801080</td>
+
+        <td>D0_MADR</td>
+
+        <td>DMACチャネル0(MDECin)メモリアドレス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801084</td>
+
+        <td>D0_BCR</td>
+
+        <td>DMACチャネル0(MDECin)ブロックカウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801088</td>
+
+        <td>D0_CHCR</td>
+
+        <td>
+        DMACチャネル0(MDECin)チャネルコントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801090</td>
+
+        <td>D1_MADR</td>
+
+        <td>DMACチャネル1(MDECout)メモリアドレス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801094</td>
+
+        <td>D1_BCR</td>
+
+        <td>DMACチャネル1(MDECout)ブロックカウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801098</td>
+
+        <td>D1_CHCR</td>
+
+        <td>
+        DMACチャネル1(MDECout)チャネルコントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010A0</td>
+
+        <td>D2_MADR</td>
+
+        <td>DMACチャネル2(GPU)メモリアドレス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010A4</td>
+
+        <td>D2_BCR</td>
+
+        <td>DMACチャネル2(GPU)ブロックカウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010A8</td>
+
+        <td>D2_CHCR</td>
+
+        <td>DMACチャネル2(GPU)チャネルコントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010B0</td>
+
+        <td>D3_MADR</td>
+
+        <td>DMACチャネル3(CD)メモリアドレス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010B4</td>
+
+        <td>D3_BCR</td>
+
+        <td>DMACチャネル3(CD)ブロックカウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010B8</td>
+
+        <td>D3_CHCR</td>
+
+        <td>DMACチャネル3(CD)チャネルコントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010C0</td>
+
+        <td>D4_MADR</td>
+
+        <td>DMACチャネル4(SPU)メモリアドレス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010C4</td>
+
+        <td>D4_BCR</td>
+
+        <td>DMACチャネル4(SPU)ブロックカウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010C8</td>
+
+        <td>D4_CHCR</td>
+
+        <td>DMACチャネル4(SPU)チャネルコントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010D0</td>
+
+        <td>D5_MADR</td>
+
+        <td>DMACチャネル5(PIO)メモリアドレス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010D4</td>
+
+        <td>D5_BCR</td>
+
+        <td>DMACチャネル5(PIO)ブロックカウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010D8</td>
+
+        <td>D5_CHCR</td>
+
+        <td>DMACチャネル5(PIO)チャネルコントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010E0</td>
+
+        <td>D6_MADR</td>
+
+        <td>DMACチャネル6(OTC)メモリアドレス</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010E4</td>
+
+        <td>D6_BCR</td>
+
+        <td>DMACチャネル6(OTC)ブロックカウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010E8</td>
+
+        <td>D6_CHCR</td>
+
+        <td>DMACチャネル6(OTC)チャネルコントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010F0</td>
+
+        <td>D_PCR</td>
+
+        <td>DMAC優先度コントロール</td>
+      </tr>
+
+      <tr>
+        <td>0x1F8010F4</td>
+
+        <td>D_ICR</td>
+
+        <td>DMAC割り込みコントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801100</td>
+
+        <td>T0_COUNT</td>
+
+        <td>
+        タイマ0(システム／ピクセル)カウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801104</td>
+
+        <td>T0_MODE</td>
+
+        <td>
+        タイマ0(システム／ピクセル)モード</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801108</td>
+
+        <td>T0_COMP</td>
+
+        <td>
+        タイマ0(システム／ピクセル)コンペア</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801110</td>
+
+        <td>T1_COUNT</td>
+
+        <td>
+        タイマ1(システム／水平同期)カウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801114</td>
+
+        <td>T1_MODE</td>
+
+        <td>
+        タイマ1(システム／水平同期)モード</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801118</td>
+
+        <td>T1_COMP</td>
+
+        <td>
+        タイマ1(システム／水平同期)コンペア</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801120</td>
+
+        <td>T2_COUNT</td>
+
+        <td>
+        タイマ2(システム／8分周)カウント</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801124</td>
+
+        <td>T2_MODE</td>
+
+        <td>
+        タイマ2(システム／8分周)モード</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801128</td>
+
+        <td>T2_COMP</td>
+
+        <td>
+        タイマ2(システム／8分周)コンペア</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801800</td>
+
+        <td>CD_REG0</td>
+
+        <td>CDレジスタ0</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801801</td>
+
+        <td>CD_REG1</td>
+
+        <td>CDレジスタ1</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801802</td>
+
+        <td>CD_REG2</td>
+
+        <td>CDレジスタ2</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801803</td>
+
+        <td>CD_REG3</td>
+
+        <td>CDレジスタ3</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801810</td>
+
+        <td>GPU_DATA</td>
+
+        <td>GPUデータ／コマンド</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801814</td>
+
+        <td>GPU_CTRL</td>
+
+        <td>GPUステータス／コントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801820</td>
+
+        <td>MDEC_DATA</td>
+
+        <td>MDECデータ／コマンド</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801824</td>
+
+        <td>MDEC_CTRL</td>
+
+        <td>MDECステータス／コントロール</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F801C00</td>
+
+        <td>SPU_REG00</td>
+
+        <td>SPUレジスタ0</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801C02</td>
+
+        <td>SPU_REG01</td>
+
+        <td>SPUレジスタ1</td>
+      </tr>
+
+      <tr>
+        <td>中略</td>
+
+        <td>中略</td>
+
+        <td>中略</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801DFC</td>
+
+        <td>SPU_REGFE</td>
+
+        <td>SPUレジスタ254</td>
+      </tr>
+
+      <tr>
+        <td>0x1F801DFE</td>
+
+        <td>SPU_REGFF</td>
+
+        <td>SPUレジスタ255</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F802041</td>
+
+        <td>?</td>
+
+        <td>ディップスイッチ?</td>
+      </tr>
+
+      <tr>
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+    </table>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>CPU(中央処理装置)</h1>
+
+  <div style="margin-left: 2em">
+    <p>
+    PlayStationのCPUはMIPSのR3000をベースとしたカスタムCPUである。
+    動作周波数は33868800Hzと言われ、エンディアンはリトルである。
+    若干の違いはあるが、それは青本も同じなので、
+    基本的な理解は東芝のTX39のドキュメントで十分である。</p>
+  </div>
+
+  <h2>コード表</h2>
+
+  <div style="margin-left: 2em">
+    <p>COP1,COP3,TLB系は存在しない。
+    サービスコール内のatofでCOP1命令が使われているがatof自体が呼ばれた試しがない。
+    おそらく試作機ではデバグ処理のために存在するが、結局オミットされたのだろう。</p>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. フィールドの名称</b>
+      </caption>
+
+      <tr>
+        <td>31</td>
+
+        <td>30</td>
+
+        <td>29</td>
+
+        <td>28</td>
+
+        <td>27</td>
+
+        <td>26</td>
+
+        <td>25</td>
+
+        <td>24</td>
+
+        <td>23</td>
+
+        <td>22</td>
+
+        <td>21</td>
+
+        <td>20</td>
+
+        <td>19</td>
+
+        <td>18</td>
+
+        <td>17</td>
+
+        <td>16</td>
+
+        <td>15</td>
+
+        <td>14</td>
+
+        <td>13</td>
+
+        <td>12</td>
+
+        <td>11</td>
+
+        <td>10</td>
+
+        <td>09</td>
+
+        <td>08</td>
+
+        <td>07</td>
+
+        <td>06</td>
+
+        <td>05</td>
+
+        <td>04</td>
+
+        <td>03</td>
+
+        <td>02</td>
+
+        <td>01</td>
+
+        <td>00</td>
+      </tr>
+
+      <tr>
+        <td colspan="6">op</td>
+
+        <td colspan="5">rs</td>
+
+        <td colspan="5">rt</td>
+
+        <td colspan="5">rd</td>
+
+        <td colspan="5">sa</td>
+
+        <td colspan="6">funct</td>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. op</b>
+      </caption>
+
+      <tr>
+        <th>op</th>
+
+        <th>0x00</th>
+
+        <th>0x01</th>
+
+        <th>0x02</th>
+
+        <th>0x03</th>
+
+        <th>0x04</th>
+
+        <th>0x05</th>
+
+        <th>0x06</th>
+
+        <th>0x07</th>
+      </tr>
+
+      <tr>
+        <th>0x00</th>
+
+        <td>SPECIAL</td>
+
+        <td>BCOND</td>
+
+        <td>J</td>
+
+        <td>JAL</td>
+
+        <td>BEQ</td>
+
+        <td>BNE</td>
+
+        <td>BLEZ</td>
+
+        <td>BGTZ</td>
+      </tr>
+
+      <tr>
+        <th>0x08</th>
+
+        <td>ADDI</td>
+
+        <td>ADDIU</td>
+
+        <td>SLTI</td>
+
+        <td>SLTIU</td>
+
+        <td>ANDI</td>
+
+        <td>ORI</td>
+
+        <td>XORI</td>
+
+        <td>LUI</td>
+      </tr>
+
+      <tr>
+        <th>0x10</th>
+
+        <td>COP0</td>
+
+        <th><br></th>
+
+        <td>COP2</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x18</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x20</th>
+
+        <td>LB</td>
+
+        <td>LH</td>
+
+        <td>LWL</td>
+
+        <td>LW</td>
+
+        <td>LBU</td>
+
+        <td>LHU</td>
+
+        <td>LWR</td>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x28</th>
+
+        <td>SB</td>
+
+        <td>SH</td>
+
+        <td>SWL</td>
+
+        <td>SW</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>SWR</td>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x30</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>LWC2</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x38</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>SWC2</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. funct(op=SPECIAL)</b>
+      </caption>
+
+      <tr>
+        <th>funct</th>
+
+        <th>0x00</th>
+
+        <th>0x01</th>
+
+        <th>0x02</th>
+
+        <th>0x03</th>
+
+        <th>0x04</th>
+
+        <th>0x05</th>
+
+        <th>0x06</th>
+
+        <th>0x07</th>
+      </tr>
+
+      <tr>
+        <th>0x00</th>
+
+        <td>SLL</td>
+
+        <th><br></th>
+
+        <td>SRL</td>
+
+        <td>SRA</td>
+
+        <td>SLLV</td>
+
+        <th><br></th>
+
+        <td>SRLV</td>
+
+        <td>SRAV</td>
+      </tr>
+
+      <tr>
+        <th>0x08</th>
+
+        <td>JR</td>
+
+        <td>JALR</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>SYSCALL</td>
+
+        <td>BREAK</td>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x10</th>
+
+        <td>MFHI</td>
+
+        <td>MTHI</td>
+
+        <td>MFLO</td>
+
+        <td>MTLO</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x18</th>
+
+        <td>MULT</td>
+
+        <td>MULTU</td>
+
+        <td>DIV</td>
+
+        <td>DIVU</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x20</th>
+
+        <td>ADD</td>
+
+        <td>ADDU</td>
+
+        <td>SUB</td>
+
+        <td>SUBU</td>
+
+        <td>AND</td>
+
+        <td>OR</td>
+
+        <td>XOR</td>
+
+        <td>NOR</td>
+      </tr>
+
+      <tr>
+        <th>0x28</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>SLT</td>
+
+        <td>SLTU</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x30</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x38</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. rs(op=BCOND)</b>
+      </caption>
+
+      <tr>
+        <th>rs</th>
+
+        <th>0x00</th>
+
+        <th>0x01</th>
+
+        <th>0x02</th>
+
+        <th>0x03</th>
+
+        <th>0x04</th>
+
+        <th>0x05</th>
+
+        <th>0x06</th>
+
+        <th>0x07</th>
+      </tr>
+
+      <tr>
+        <th>0x00</th>
+
+        <td>BLTZ</td>
+
+        <td>BGEZ</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x08</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x10</th>
+
+        <td>BLTZAL</td>
+
+        <td>BGEZAL</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x18</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. rs(op=COP0)</b>
+      </caption>
+
+      <tr>
+        <th>rs</th>
+
+        <th>0x00</th>
+
+        <th>0x01</th>
+
+        <th>0x02</th>
+
+        <th>0x03</th>
+
+        <th>0x04</th>
+
+        <th>0x05</th>
+
+        <th>0x06</th>
+
+        <th>0x07</th>
+      </tr>
+
+      <tr>
+        <th>0x00</th>
+
+        <td>MFC0</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>MTC0</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x08</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x10</th>
+
+        <td colspan="8" rowspan="2">CP0</td>
+      </tr>
+
+      <tr>
+        <th>0x18</th>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. funct(op=COP0,rs=CP0)</b>
+      </caption>
+
+      <tr>
+        <th>funct</th>
+
+        <th>0x00</th>
+
+        <th>0x01</th>
+
+        <th>0x02</th>
+
+        <th>0x03</th>
+
+        <th>0x04</th>
+
+        <th>0x05</th>
+
+        <th>0x06</th>
+
+        <th>0x07</th>
+      </tr>
+
+      <tr>
+        <th>0x00</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x08</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x10</th>
+
+        <td>RFE</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x18</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x20</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x28</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x30</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x38</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. rs(op=COP2)</b>
+      </caption>
+
+      <tr>
+        <th>rs</th>
+
+        <th>0x00</th>
+
+        <th>0x01</th>
+
+        <th>0x02</th>
+
+        <th>0x03</th>
+
+        <th>0x04</th>
+
+        <th>0x05</th>
+
+        <th>0x06</th>
+
+        <th>0x07</th>
+      </tr>
+
+      <tr>
+        <th>0x00</th>
+
+        <td>MFC2</td>
+
+        <th><br></th>
+
+        <td>CFC2</td>
+
+        <th><br></th>
+
+        <td>MTC2</td>
+
+        <th><br></th>
+
+        <td>CTC2</td>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x08</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x10</th>
+
+        <td colspan="8" rowspan="2">CP2</td>
+      </tr>
+
+      <tr>
+        <th>0x18</th>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. funct(op=COP2,rs=CP2)</b>
+      </caption>
+
+      <tr>
+        <th>funct</th>
+
+        <th>0x00</th>
+
+        <th>0x01</th>
+
+        <th>0x02</th>
+
+        <th>0x03</th>
+
+        <th>0x04</th>
+
+        <th>0x05</th>
+
+        <th>0x06</th>
+
+        <th>0x07</th>
+      </tr>
+
+      <tr>
+        <th>0x00</th>
+
+        <th><br></th>
+
+        <td>RTPS</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>NCLIP</td>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x08</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>OP</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x10</th>
+
+        <td>DPCS</td>
+
+        <td>INTPL</td>
+
+        <td>MVMVA</td>
+
+        <td>NCDS</td>
+
+        <td>CDP</td>
+
+        <th><br></th>
+
+        <td>NCDT</td>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x18</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>NCCS</td>
+
+        <td>CC</td>
+
+        <th><br></th>
+
+        <td>NCS</td>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x20</th>
+
+        <td>NCT</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x28</th>
+
+        <td>SQR</td>
+
+        <td>DCPL</td>
+
+        <td>DPCT</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>AVSZ3</td>
+
+        <td>AVSZ4</td>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x30</th>
+
+        <td>RTPT</td>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+      </tr>
+
+      <tr>
+        <th>0x38</th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <th><br></th>
+
+        <td>GPF</td>
+
+        <td>GPL</td>
+
+        <td>NCCT</td>
+      </tr>
+    </table>
+    rs+b<sub>20</sub>をコードと一対一に対応させるのは、ただの慣習である。
+  </div>
+
+  <h2>I(命令)キャッシュ</h2>
+
+  <div style="margin-left: 2em">
+    <p>
+    ネットやろうぜの記述には重要部であるほど誤りがあるので、注意が必要である。
+    まずメモリ空間とキャッシュ(バースト転送)の有効／無効の関係を示した表において
+    メモリ空間を取り違えている。また</p>
+
+    <blockquote>
+      <i>Iキャッシュが有効な論理メモリ空間上の命令コードは通常の約５倍の速度でCPUに読み込まれます。
+      また、一旦読み込まれた命令コードはCPU内のIキャッシュメモリに保存されますので、
+      再実行時にはメインメモリへのアクセスなしに実行されます。</i>
+    </blockquote>
+
+    <p>という文章もおかしい。
+    後半の文章があるから、前半はキャッシュミスした状態での実行速度と考えるしかない。
+    ならば理論的に24/9倍速以上にはならない。</p>
+  </div>
+
+  <h2>スクラッチパッド <s>Dキャッシュ</s></h2>
+
+  <div style="margin-left: 2em">
+    <p>
+    アドレス0x1F800000にマッピングされた、ストールの発生しないRAMを
+    PlayStationの「方言」としてDキャッシュと呼んでいるが、
+    これは一般的な意味のDキャッシュではない。
+    一般的な意味のDキャッシュはPlayStationには存在しない。</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>GTE(Geometry Transformation Engine
+  グラフィックデータ生成プロセッサ)</h1>
+
+  <h2>逆数テーブル</h2>
+
+  <div style="margin-left: 2em">
+    <p>RTPS,RTPT命令において、投影変換係数</p>
+
+    <table bgcolor="#FFFFFF" border="0" cellpadding="8" summary="">
+      <tr>
+        <td>(int) (h * 65536 / Sz + 0.5)</td>
+      </tr>
+    </table>
+
+    <p>
+    が求められるが、実際は除算ではなく、逆数テーブルを用いた積算</p>
+
+    <table bgcolor="#FFFFFF" border="0" cellpadding="8" summary="">
+      <tr>
+        <td>(h * iSz + (1 &lt;&lt; (N - 1))) &gt;&gt; N</td>
+      </tr>
+    </table>
+
+    <p>
+    が行われる。iSzは0x10000～0x1FFFFの範囲であり、小数部16ビットの浮動小数に相当する。
+    iSzは必ずしも</p>
+
+    <table bgcolor="#FFFFFF" border="0" cellpadding="8" summary="">
+      <tr>
+        <td>(65536 &lt;&lt; N) / Sz</td>
+      </tr>
+    </table>
+
+    <p>
+    にはなっていないので、ブルートフォースアタックによる探索が必要になる。</p>
+
+    <p><a href=
+    "inverse.txt">Sz:32768～65535(N=16)について結果を示す。</a>
+    Sz:0～32767については、Nを減らすだけなので割愛する。</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>エミュレート法</h1>
+
+  <h2>動的コンパイル法の一例</h2>
+
+  <div style="margin-left: 2em">
+    <p>
+    コード表から分かるようにR3000は単純な命令だけで構成されており、既にマイクロコードであるとも言える。
+    従って、一コードに対して一個のコンパイル済みデータを予め用意し、実行時に変数部分を書き換えるだけでも
+    実用に耐える動的コンパイルが可能である。例えばSRAV,SRLVでは、</p>
+
+    <table bgcolor="#FFFFFF" border="0" cellpadding="8" summary="">
+      <tr>
+        <td>
+          <pre>
+/*
+ *
+ */
+uchar __SRAV[] = {
+    0x8B, 0x0D, '\\', '\\', '\\', '\\', /* 00 mov ecx,[GPR[rs]] 02 &amp;GPR[rs] */
+    0xA1, '\\', '\\', '\\', '\\',       /* 06 mov eax,[GPR[rt]] 07 &amp;GPR[rt] */
+    0xD3, 0xF8,                         /* 0B sar eax,cl */
+    0xA3, '\\', '\\', '\\', '\\'        /* 0D mov [GPR[rd]],eax 0E &amp;GPR[rd] */
+};
+
+
+/*
+ *
+ */
+uchar __SRLV[] = {
+    0x8B, 0x0D, '\\', '\\', '\\', '\\', /* 00 mov ecx,[GPR[rs]] 02 &amp;GPR[rs] */
+    0xA1, '\\', '\\', '\\', '\\',       /* 06 mov eax,[GPR[rt]] 07 &amp;GPR[rt] */
+    0xD3, 0xE8,                         /* 0B shr eax,cl */
+    0xA3, '\\', '\\', '\\', '\\'        /* 0D mov [GPR[rd]],eax 0E &amp;GPR[rd] */
+};
+</pre>
+        </td>
+      </tr>
+    </table>
+
+    <p>の様なデータを予め用意し、実行時に</p>
+
+    <table bgcolor="#FFFFFF" border="0" cellpadding="8" summary="">
+      <tr>
+        <td>
+          <pre>
+/*
+ *
+ */
+#define _rs_    ((opcode &gt;&gt; 21) &amp; 31)
+#define _rt_    ((opcode &gt;&gt; 16) &amp; 31)
+#define _rd_    ((opcode &gt;&gt; 11) &amp; 31)
+
+
+/*
+ *
+ */
+#define CPU_SET_SRAV()                                    \
+    {                                                     \
+        *(ulong *) (&amp;__SRAV[0x02]) = (ulong) &amp; GPR[_rs_]; \
+        *(ulong *) (&amp;__SRAV[0x07]) = (ulong) &amp; GPR[_rt_]; \
+        *(ulong *) (&amp;__SRAV[0x0E]) = (ulong) &amp; GPR[_rd_]; \
+        CPU_OPCODE                 = __SRAV;              \
+        CPU_OPSIZE                 = sizeof(__SRAV);      \
+    }
+
+
+/*
+ *
+ */
+#define CPU_SET_SRLV()                                    \
+    {                                                     \
+        *(ulong *) (&amp;__SRLV[0x02]) = (ulong) &amp; GPR[_rs_]; \
+        *(ulong *) (&amp;__SRLV[0x07]) = (ulong) &amp; GPR[_rt_]; \
+        *(ulong *) (&amp;__SRLV[0x0E]) = (ulong) &amp; GPR[_rd_]; \
+        CPU_OPCODE                 = __SRLV;              \
+        CPU_OPSIZE                 = sizeof(__SRLV);      \
+    }
+</pre>
+        </td>
+      </tr>
+    </table>
+
+    <p>
+    の様に変数部分を書き換える。後はこれを連結コピーして関数を作成し、出来上がった関数を実行する。</p>
+  </div>
+
+  <h2>注意事項</h2>
+
+  <div style="margin-left: 2em">
+    <p>巷で誤解があるようなので、注意を喚起すると、
+    実行毎に新たな関数を作成していたのでは、インタプリタよりも遅くなる。
+    出来上がった関数を管理・再利用することこそが、動的コンパイルの肝である。
+    動的コンパイルとは可変長データを対象としたキャッシュ機構を構築することに等しい。</p>
+  </div>
+
+  <h2>コンパイル済データの作成法の一例</h2>
+
+  <div style="margin-left: 2em">
+    <p>
+    アセンブラで直接記述する以外に、以下の様にCで記述し、
+    ファイル出力、逆アセンブルするのも一つの手である。</p>
+
+    <table bgcolor="#FFFFFF" border="0" cellpadding="8" summary="">
+      <tr>
+        <td>
+          <pre>
+/*
+ *
+ */
+#define _rs_    1               /* 変数部分なので適当 */
+#define _rt_    2               /* 変数部分なので適当 */
+#define _rd_    3               /* 変数部分なので適当 */
+
+
+/*
+ *
+ */
+long GPR[32];
+
+
+/*
+ *
+ */
+void __SRAV(void)
+{
+    GPR[_rd_] = GPR[_rt_] &gt;&gt; GPR[_rs_];
+}
+
+
+/*
+ *
+ */
+void ____SRAV(void)
+{
+}
+
+
+/*
+ *
+ */
+void __SRLV(void)
+{
+    GPR[_rd_] = ((ulong) GPR[_rt_]) &gt;&gt; GPR[_rs_];
+}
+
+
+/*
+ *
+ */
+void ____SRLV(void)
+{
+}
+
+
+/*
+ *
+ */
+void SaveToFile(char *lpFileName, void *lpStart, void *lpEnd)
+{
+    FILE *fp;
+
+    if (NULL == (fp = fopen(lpFileName, "wb"))) {
+        return;
+    }
+    fwrite(lpStart, (ulong) lpEnd - (ulong) lpStart, 1, fp);
+    fclose(fp);
+}
+
+
+/*
+ *
+ */
+int main(void)
+{
+    SaveToFile("SRAV.X86", __SRAV, ____SRAV);
+    SaveToFile("SRLV.X86", __SRLV, ____SRLV);
+    return(0);
+}
+</pre>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>INTC(割り込みコントローラ)</h1>
+
+  <h2>I_STATレジスタ</h2>
+
+  <div style="margin-left: 2em">
+    <p>ロードした場合</p>
+
+    <div style="margin-left: 2em">
+      <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+      "#FFFFFF" summary="" border="1">
+        <tr>
+          <td>15</td>
+
+          <td>14</td>
+
+          <td>13</td>
+
+          <td>12</td>
+
+          <td>11</td>
+
+          <td>10</td>
+
+          <td>09</td>
+
+          <td>08</td>
+
+          <td>07</td>
+
+          <td>06</td>
+
+          <td>05</td>
+
+          <td>04</td>
+
+          <td>03</td>
+
+          <td>02</td>
+
+          <td>01</td>
+
+          <td>00</td>
+        </tr>
+
+        <tr>
+          <td colspan="6"><br></td>
+
+          <td>S<br>
+          S<br>
+          P<br>
+          U</td>
+
+          <td>S<br>
+          S<br>
+          I<br>
+          O</td>
+
+          <td>S<br>
+          C<br>
+          O<br>
+          M<br>
+          A</td>
+
+          <td>S<br>
+          T<br>
+          M<br>
+          R<br>
+          2</td>
+
+          <td>S<br>
+          T<br>
+          M<br>
+          R<br>
+          1</td>
+
+          <td>S<br>
+          T<br>
+          M<br>
+          R<br>
+          0</td>
+
+          <td>S<br>
+          D<br>
+          M<br>
+          A<br>
+          C</td>
+
+          <td>S<br>
+          C<br>
+          D</td>
+
+          <td>S<br>
+          G<br>
+          P<br>
+          U</td>
+
+          <td>S<br>
+          V<br>
+          S<br>
+          Y<br>
+          N<br>
+          C</td>
+        </tr>
+      </table><br>
+
+      <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+      "#FFFFFF" summary="" border="1">
+        <tr>
+          <th>フィールド</th>
+
+          <th>内容</th>
+        </tr>
+
+        <tr>
+          <td>SVSYNC</td>
+
+          <td>VSYNCの割り込みステータス<br>
+          0:VSYNCから割り込み要求がない<br>
+          1:VSYNCから割り込み要求があった</td>
+        </tr>
+
+        <tr>
+          <td>SGPU～SSPU</td>
+
+          <td>SVSYNCと同様</td>
+        </tr>
+      </table>
+    </div>
+
+    <p>ストアした場合</p>
+
+    <div style="margin-left: 2em">
+      <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+      "#FFFFFF" summary="" border="1">
+        <tr>
+          <td>15</td>
+
+          <td>14</td>
+
+          <td>13</td>
+
+          <td>12</td>
+
+          <td>11</td>
+
+          <td>10</td>
+
+          <td>09</td>
+
+          <td>08</td>
+
+          <td>07</td>
+
+          <td>06</td>
+
+          <td>05</td>
+
+          <td>04</td>
+
+          <td>03</td>
+
+          <td>02</td>
+
+          <td>01</td>
+
+          <td>00</td>
+        </tr>
+
+        <tr>
+          <td colspan="6"><br></td>
+
+          <td>C<br>
+          S<br>
+          P<br>
+          U</td>
+
+          <td>C<br>
+          S<br>
+          I<br>
+          O</td>
+
+          <td>C<br>
+          C<br>
+          O<br>
+          M<br>
+          A</td>
+
+          <td>C<br>
+          T<br>
+          M<br>
+          R<br>
+          2</td>
+
+          <td>C<br>
+          T<br>
+          M<br>
+          R<br>
+          1</td>
+
+          <td>C<br>
+          T<br>
+          M<br>
+          R<br>
+          0</td>
+
+          <td>C<br>
+          D<br>
+          M<br>
+          A<br>
+          C</td>
+
+          <td>C<br>
+          C<br>
+          D</td>
+
+          <td>C<br>
+          G<br>
+          P<br>
+          U</td>
+
+          <td>C<br>
+          V<br>
+          S<br>
+          Y<br>
+          N<br>
+          C</td>
+        </tr>
+      </table><br>
+
+      <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+      "#FFFFFF" summary="" border="1">
+        <tr>
+          <th>フィールド</th>
+
+          <th>内容</th>
+        </tr>
+
+        <tr>
+          <td>CVSYNC</td>
+
+          <td>VSYNCの割り込みクリア<br>
+          0→SVSYNCを0にする</td>
+        </tr>
+
+        <tr>
+          <td>CGPU～CSPU</td>
+
+          <td>CVSYNCと同様</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <h2>I_MASKレジスタ</h2>
+
+  <div style="margin-left: 2em">
+    <p>ロードした場合</p>
+
+    <div style="margin-left: 2em">
+      <p>ストアした値が返る</p>
+    </div>
+
+    <p>ストアした場合</p>
+
+    <div style="margin-left: 2em">
+      <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+      "#FFFFFF" summary="" border="1">
+        <tr>
+          <td>15</td>
+
+          <td>14</td>
+
+          <td>13</td>
+
+          <td>12</td>
+
+          <td>11</td>
+
+          <td>10</td>
+
+          <td>09</td>
+
+          <td>08</td>
+
+          <td>07</td>
+
+          <td>06</td>
+
+          <td>05</td>
+
+          <td>04</td>
+
+          <td>03</td>
+
+          <td>02</td>
+
+          <td>01</td>
+
+          <td>00</td>
+        </tr>
+
+        <tr>
+          <td colspan="6"><br></td>
+
+          <td>M<br>
+          S<br>
+          P<br>
+          U</td>
+
+          <td>M<br>
+          S<br>
+          I<br>
+          O</td>
+
+          <td>M<br>
+          C<br>
+          O<br>
+          M<br>
+          A</td>
+
+          <td>M<br>
+          T<br>
+          M<br>
+          R<br>
+          2</td>
+
+          <td>M<br>
+          T<br>
+          M<br>
+          R<br>
+          1</td>
+
+          <td>M<br>
+          T<br>
+          M<br>
+          R<br>
+          0</td>
+
+          <td>M<br>
+          D<br>
+          M<br>
+          A<br>
+          C</td>
+
+          <td>M<br>
+          C<br>
+          D</td>
+
+          <td>M<br>
+          G<br>
+          P<br>
+          U</td>
+
+          <td>M<br>
+          V<br>
+          S<br>
+          Y<br>
+          N<br>
+          C</td>
+        </tr>
+      </table><br>
+
+      <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+      "#FFFFFF" summary="" border="1">
+        <tr>
+          <th>フィールド</th>
+
+          <th>内容</th>
+        </tr>
+
+        <tr>
+          <td>MVSYNC</td>
+
+          <td>VSYNCの割り込みマスク<br>
+          MVSYNCとSVSYNCがともに1である限り、INTCはCPUに割り込みを要求し続ける。</td>
+        </tr>
+
+        <tr>
+          <td>MGPU～MSPU</td>
+
+          <td>MVSYNCと同様</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>DMAC(DMAコントローラ)</h1>
+
+  <div style="margin-left: 2em">
+    <p>準備中</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>タイマ</h1>
+
+  <div style="margin-left: 2em">
+    <p>
+    タイマは設定によりシステムクロックではなくピクセル表示や水平同期によりカウントアップさせることができる。</p>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. カウントタイミング</b>
+      </caption>
+
+      <tr>
+        <th rowspan="3">タイプ</th>
+
+        <th rowspan="3">画面幅</th>
+
+        <th rowspan="3">[A]</th>
+
+        <th rowspan="3">
+        [B]システムクロック/水平同期</th>
+
+        <th rowspan="3">
+        システムクロック/ピクセル表示</th>
+
+        <th colspan="3">システムクロック/垂直同期</th>
+      </tr>
+
+      <tr>
+        <th rowspan="2">非インターレース</th>
+
+        <th colspan="2">インターレース</th>
+      </tr>
+
+      <tr>
+        <th>偶数フィールド</th>
+
+        <th>奇数フィールド</th>
+      </tr>
+
+      <tr>
+        <td rowspan="5">NTSC</td>
+
+        <td>256</td>
+
+        <td rowspan="5">566107.5005</td>
+
+        <td rowspan="5">[A]/263</td>
+
+        <td>[A]/89683=[B]/341</td>
+
+        <td rowspan="5">[B]*263</td>
+
+        <td rowspan="5">[B]*263</td>
+
+        <td rowspan="5">[B]*262</td>
+      </tr>
+
+      <tr>
+        <td>320</td>
+
+        <td>[A]/112038=[B]/426</td>
+      </tr>
+
+      <tr>
+        <td>368</td>
+
+        <td>[A]/128081=[B]/487</td>
+      </tr>
+
+      <tr>
+        <td>512</td>
+
+        <td>[A]/179366=[B]/682</td>
+      </tr>
+
+      <tr>
+        <td>640</td>
+
+        <td>[A]/224339=[B]/853</td>
+      </tr>
+
+      <tr>
+        <td rowspan="5">PAL</td>
+
+        <td>256</td>
+
+        <td rowspan="5">674399.5367</td>
+
+        <td rowspan="5">[A]/314</td>
+
+        <td>[A]/106760=[B]/340</td>
+
+        <td rowspan="5">[B]*314</td>
+
+        <td rowspan="5">[B]*313</td>
+
+        <td rowspan="5">[B]*312</td>
+      </tr>
+
+      <tr>
+        <td>320</td>
+
+        <td>[A]/133764=[B]/426</td>
+      </tr>
+
+      <tr>
+        <td>368</td>
+
+        <td>[A]/152604=[B]/486</td>
+      </tr>
+
+      <tr>
+        <td>512</td>
+
+        <td>[A]/213834=[B]/681</td>
+      </tr>
+
+      <tr>
+        <td>640</td>
+
+        <td>[A]/267214=[B]/851</td>
+      </tr>
+    </table>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>メインメモリ(Main Memory or RAM 主記憶装置)</h1>
+
+  <div style="margin-left: 2em">
+    <p>準備中</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>OS ROM(or BIOS 基本操作システム記憶装置)</h1>
+
+  <div style="margin-left: 2em">
+    <p>準備中</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>MDEC(Motion Decoder データ伸長エンジン)</h1>
+
+  <div style="margin-left: 2em">
+    <p>準備中</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>PIO(拡張パラレルポート)</h1>
+
+  <div style="margin-left: 2em">
+    <p>準備中</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>SIO(or COMB 拡張シリアルポート)</h1>
+
+  <div style="margin-left: 2em">
+    <p>準備中</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>GPU(グラフィック描画処理プロセッサ)</h1>
+
+  <h2>GPU_DATAレジスタ</h2>
+
+  <div style="margin-left: 2em">
+    <p>ロードした場合</p>
+
+    <div style="margin-left: 2em">
+      <p>基本的には内部のリザルトレジスタの値が返るが、
+      StoreImageコマンド実行中の場合は、その結果が返る。</p>
+
+      <p>リザルトレジスタには、
+      GPU制御系コマンドの結果や
+      StoreImageコマンドの最初の結果が格納される。
+      途中の結果は格納されない。</p>
+    </div>
+
+    <p>ストアした場合</p>
+
+    <div style="margin-left: 2em">
+      <p>データは内部の多目的FIFOに格納され、
+      必要な数のデータが貯まると、
+      GPU描画系コマンドが実行される。</p>
+    </div>
+  </div>
+
+  <h2>GPU_CTRLレジスタ</h2>
+
+  <div style="margin-left: 2em">
+    <p>ロードした場合</p>
+
+    <div style="margin-left: 2em">
+      <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+      "#FFFFFF" summary="" border="1">
+        <tr>
+          <td>31</td>
+
+          <td>30</td>
+
+          <td>29</td>
+
+          <td>28</td>
+
+          <td>27</td>
+
+          <td>26</td>
+
+          <td>25</td>
+
+          <td>24</td>
+
+          <td>23</td>
+
+          <td>22</td>
+
+          <td>21</td>
+
+          <td>20</td>
+
+          <td>19</td>
+
+          <td>18</td>
+
+          <td>17</td>
+
+          <td>16</td>
+
+          <td>15</td>
+
+          <td>14</td>
+
+          <td>13</td>
+
+          <td>12</td>
+
+          <td>11</td>
+
+          <td>10</td>
+
+          <td>09</td>
+
+          <td>08</td>
+
+          <td>07</td>
+
+          <td>06</td>
+
+          <td>05</td>
+
+          <td>04</td>
+
+          <td>03</td>
+
+          <td>02</td>
+
+          <td>01</td>
+
+          <td>00</td>
+        </tr>
+
+        <tr>
+          <td>o<br>
+          d<br>
+          e</td>
+
+          <td colspan="2">t<br>
+          m<br>
+          o<br>
+          d<br>
+          e</td>
+
+          <td>i<br>
+          s<br>
+          e<br>
+          m<br>
+          p<br>
+          t<br>
+          y</td>
+
+          <td>d<br>
+          a<br>
+          t<br>
+          a<br>
+          r<br>
+          d<br>
+          y</td>
+
+          <td>i<br>
+          s<br>
+          i<br>
+          d<br>
+          l<br>
+          e</td>
+
+          <td>d<br>
+          m<br>
+          a<br>
+          r<br>
+          d<br>
+          y</td>
+
+          <td>r<br>
+          e<br>
+          s<br>
+          e<br>
+          r<br>
+          v<br>
+          e<br>
+          d</td>
+
+          <td>i<br>
+          s<br>
+          s<br>
+          t<br>
+          o<br>
+          p</td>
+
+          <td>i<br>
+          s<br>
+          i<br>
+          n<br>
+          t<br>
+          e<br>
+          r</td>
+
+          <td>i<br>
+          s<br>
+          r<br>
+          g<br>
+          b<br>
+          2<br>
+          4</td>
+
+          <td>i<br>
+          s<br>
+          p<br>
+          a<br>
+          l</td>
+
+          <td>v<br>
+          r<br>
+          e<br>
+          s</td>
+
+          <td colspan="2">h<br>
+          r<br>
+          e<br>
+          s<br>
+          1</td>
+
+          <td>h<br>
+          r<br>
+          e<br>
+          s<br>
+          2</td>
+
+          <td>r<br>
+          e<br>
+          s<br>
+          e<br>
+          r<br>
+          v<br>
+          e<br>
+          d</td>
+
+          <td>u<br>
+          n<br>
+          k<br>
+          n<br>
+          o<br>
+          w<br>
+          n</td>
+
+          <td>r<br>
+          e<br>
+          s<br>
+          e<br>
+          r<br>
+          v<br>
+          e<br>
+          d</td>
+
+          <td>p<br>
+          b<br>
+          c</td>
+
+          <td>p<br>
+          b<br>
+          w</td>
+
+          <td>d<br>
+          f<br>
+          e</td>
+
+          <td>d<br>
+          t<br>
+          d</td>
+
+          <td colspan="2">t<br>
+          p</td>
+
+          <td colspan="2">a<br>
+          b<br>
+          r</td>
+
+          <td>t<br>
+          y</td>
+
+          <td colspan="4">t<br>
+          x</td>
+        </tr>
+      </table><br>
+
+      <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+      "#FFFFFF" summary="" border="1">
+        <tr>
+          <th>フィールド</th>
+
+          <th>内容</th>
+        </tr>
+
+        <tr>
+          <td>ode</td>
+
+          <td>
+          ビデオ出力の走査フィールドがフレームバッファ上の奇数ラインかどうか。
+          よってインターレースでは数百水平同期毎、非インターレースでは1水平同期毎(指定ブランク区間は0のまま)に変化する。</td>
+        </tr>
+
+        <tr>
+          <td>tmode</td>
+
+          <td>転送モード</td>
+        </tr>
+
+        <tr>
+          <td>isempty</td>
+
+          <td>FIFO(パケットバッファ)が空かどうか</td>
+        </tr>
+
+        <tr>
+          <td>datardy</td>
+
+          <td>データレディ</td>
+        </tr>
+
+        <tr>
+          <td>isidle</td>
+
+          <td>アイドル状態である</td>
+        </tr>
+
+        <tr>
+          <td>dmardy</td>
+
+          <td>DMAレディ</td>
+        </tr>
+
+        <tr>
+          <td>isstop</td>
+
+          <td>ビデオ出力を停止している</td>
+        </tr>
+
+        <tr>
+          <td>isinter</td>
+
+          <td>
+          インターレースで出力している(垂直解像度を倍密度にする場合は必須)</td>
+        </tr>
+
+        <tr>
+          <td>isrgb24</td>
+
+          <td>rgb24ビットモードである</td>
+        </tr>
+
+        <tr>
+          <td>ispal</td>
+
+          <td>PALモードである</td>
+        </tr>
+
+        <tr>
+          <td>vres</td>
+
+          <td>垂直解像度</td>
+        </tr>
+
+        <tr>
+          <td>hres1</td>
+
+          <td>水平解像度1</td>
+        </tr>
+
+        <tr>
+          <td>hres2</td>
+
+          <td>
+          水平解像度2(水平解像度1は無効になる)</td>
+        </tr>
+
+        <tr>
+          <td>unknown</td>
+
+          <td>不明(オン／オフ操作は可能)</td>
+        </tr>
+
+        <tr>
+          <td>pbc</td>
+
+          <td>優先度ビットコンペアを行う</td>
+        </tr>
+
+        <tr>
+          <td>pbw</td>
+
+          <td>優先度ビットを書き込む</td>
+        </tr>
+
+        <tr>
+          <td>dfe</td>
+
+          <td>インターレースであっても、
+          非インターレースと同様、
+          走査フィールドに関係なく描画する</td>
+        </tr>
+
+        <tr>
+          <td>dtd</td>
+
+          <td>ディザ処理を行う</td>
+        </tr>
+
+        <tr>
+          <td>tp</td>
+
+          <td>テクスチャのビットモード</td>
+        </tr>
+
+        <tr>
+          <td>abr</td>
+
+          <td>半透明率</td>
+        </tr>
+
+        <tr>
+          <td>ty</td>
+
+          <td>テクスチャページのY座標</td>
+        </tr>
+
+        <tr>
+          <td>tx</td>
+
+          <td>テクスチャページのX座標</td>
+        </tr>
+      </table>
+    </div>
+
+    <p>ストアした場合</p>
+
+    <div style="margin-left: 2em">
+      <p>GPU制御系コマンドが実行される。</p>
+    </div>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>SPU(サウンド処理プロセッサ)</h1>
+
+  <h2>ブロック図</h2>
+
+  <div style="margin-left: 2em">
+    <p><img alt="" src="spublock.gif"></p>
+  </div>
+
+  <h2>ボイス</h2>
+
+  <div style="margin-left: 2em">
+    <p>全24チャネルの内蔵音源のこと。各チャネルは独立に
+    「波形データ(ADPCMまたは共通ノイズ)×エンベロープ×ボイス音量(左右独立)」
+    の三者の掛け合わせを出力する。</p>
+  </div>
+
+  <h2>エンベロープ</h2>
+
+  <div style="margin-left: 2em">
+    <p>波形データにかけるバイアスのこと。</p>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. ADSRレート</b>
+      </caption>
+
+      <tr>
+        <th rowspan="2">レート<sup>[*]</sup></th>
+
+        <th colspan="3">実効レート</th>
+      </tr>
+
+      <tr>
+        <td>分母</td>
+
+        <td>分子(増加)</td>
+
+        <td>分子(減少)</td>
+      </tr>
+
+      <tr>
+        <td>0～47</td>
+
+        <td>1</td>
+
+        <td>(7 - (RATE &amp; 3)) &lt;&lt; (11 - (RATE &gt;&gt;
+        2))</td>
+
+        <td>(-8 + (RATE &amp; 3)) &lt;&lt; (11 - (RATE &gt;&gt;
+        2))</td>
+      </tr>
+
+      <tr>
+        <td>48～</td>
+
+        <td>1 &lt;&lt; ((RATE &gt;&gt; 2) - 11)</td>
+
+        <td>7 - (RATE &amp; 3)</td>
+
+        <td>-8 + (RATE &amp; 3)</td>
+      </tr>
+    </table>[*]ディケイレート、リリースレートは1/4で指定されるので4倍して考える<br>
+
+    <br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. ADSRモード</b>
+      </caption>
+
+      <tr>
+        <th>モード</th>
+
+        <th>内容</th>
+      </tr>
+
+      <tr>
+        <td>線形増加</td>
+
+        <td>
+        分母サンプリング時間毎にエンベロープレベルに分子(増加)を加算</td>
+      </tr>
+
+      <tr>
+        <td>線形減少</td>
+
+        <td>
+        分母サンプリング時間毎にエンベロープレベルに分子(減少)を加算</td>
+      </tr>
+
+      <tr>
+        <td>指数増加</td>
+
+        <td>
+        基本的には線形増加と同じだがエンベロープレベルが0x6000以上になるとレートが8増加</td>
+      </tr>
+
+      <tr>
+        <td>指数減少</td>
+
+        <td>分母サンプリング時間毎にエンベロープレベルに
+        ((分子(減少) * レベル) &gt;&gt;
+        15)を加算</td>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. ADSRステータス</b>
+      </caption>
+
+      <tr>
+        <th>ステータス</th>
+
+        <th>開始条件</th>
+
+        <th>終了条件</th>
+
+        <th>飽和下限</th>
+
+        <th>飽和上限</th>
+      </tr>
+
+      <tr>
+        <td>初期化</td>
+
+        <td>キーオンする</td>
+
+        <td>
+        アタックレートに依存した初期化時間<sup>[*]</sup>が経過する</td>
+
+        <td>0</td>
+
+        <td>0</td>
+      </tr>
+
+      <tr>
+        <td>アタック</td>
+
+        <td>初期化が終了する</td>
+
+        <td>エンベロープレベルが32767以上になる</td>
+
+        <td><br></td>
+
+        <td>32767</td>
+      </tr>
+
+      <tr>
+        <td>ディケイ</td>
+
+        <td>アタックが終了する</td>
+
+        <td>
+        エンベロープレベルがサステインレベル未満になる</td>
+
+        <td>0</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>サステイン</td>
+
+        <td>ディケイが終了する</td>
+
+        <td>キーオフする</td>
+
+        <td>0</td>
+
+        <td>32767</td>
+      </tr>
+
+      <tr>
+        <td>リリース</td>
+
+        <td>キーオフする</td>
+
+        <td>エンベロープレベルが0以下になる</td>
+
+        <td>-1</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>停止</td>
+
+        <td>・リリースが終了する<br>
+        ・ADPCMデコーダが強制停止する</td>
+
+        <td>キーオンする</td>
+
+        <td>0</td>
+
+        <td>0</td>
+      </tr>
+    </table>[*]アタックレート0～47では5サンプリング時間で、
+    それ以上は徐々に短くなる。
+    これはADPCMデコードのフィルタ処理に起因する、
+    残響が消えるための時間である。
+    レートが大きくなると、アタックの方で0になる時間が増えるから、
+    その分短くて良いのである。
+
+    <p><img alt="" src="envelope.gif"></p>
+  </div>
+
+  <h2>ADPCM波形</h2>
+
+  <div style="margin-left: 2em">
+    <p>
+    ADPCMデコーダが圧縮データをデコードして得たサンプリング波形のこと。
+    重要なのはADPCMデコーダが(リバーブプロセスも)常時稼動していることだろう。
+    停止したように見えて、それはエンベロープを強制停止させた結果にすぎない。
+    つまり、常に割り込みが発生する可能性がある。
+    しかしながら、常時稼動のエミュレーションは、高負荷のワリに見返りが小さい。
+    モラトリアム期間を設けるのが現実解であろう。</p>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. ループフラグ</b>
+      </caption>
+
+      <tr>
+        <th>フィールド</th>
+
+        <th>内容</th>
+      </tr>
+
+      <tr>
+        <td>0x04</td>
+
+        <td>
+        カレントブロックの先頭をループアドレスに設定する。</td>
+      </tr>
+
+      <tr>
+        <td>0x02</td>
+
+        <td>エンベロープを強制停止しない。</td>
+      </tr>
+
+      <tr>
+        <td>0x01</td>
+
+        <td>
+        カレントブロックを演奏後、ループアドレスにジャンプする。
+        0x02が設定されていないと、エンベロープを強制停止する。</td>
+      </tr>
+    </table>
+
+    <p>
+    組み合わせとしては以下の5通りとなる(ループアドレスが強制的に設定された場合は、この限りではない)。</p>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. ループフラグの組み合わせ</b>
+      </caption>
+
+      <tr>
+        <th>ループフラグ</th>
+
+        <th>内容</th>
+      </tr>
+
+      <tr>
+        <td>0x06,0x04</td>
+
+        <td>
+        カレントブロックの先頭をループアドレスに設定する。</td>
+      </tr>
+
+      <tr>
+        <td>0x03</td>
+
+        <td>
+        カレントブロック演奏後、ループアドレスにジャンプする。</td>
+      </tr>
+
+      <tr>
+        <td>0x07</td>
+
+        <td>
+        上２つの組み合わせにより、カレントブロックを延々と演奏する。</td>
+      </tr>
+
+      <tr>
+        <td>0x01</td>
+
+        <td>
+        ループアドレスにジャンプするが、エンベロープを停止するので無音になる。</td>
+      </tr>
+
+      <tr>
+        <td>0x05</td>
+
+        <td>
+        カレントブロックを延々と演奏するが、エンベロープを停止するので無音になる。</td>
+      </tr>
+    </table>
+  </div>
+
+  <h2>ADPCM波形のフィルタ処理</h2>
+
+  <div style="margin-left: 2em">
+
+    <p><img alt="" src="filter.png"></p>
+
+<p>
+図中、赤丸で示した点が波形データで、黒の破線が実際に出力される値である。
+黒の実線は波形データと比較するために平行移動したものである。
+赤の破線は参考として波形データに対しスプライン曲線を引いたものである。
+重要なのは中間点以外も全く同じ処理がされているということであり、
+出力は基本的に波形データを通過しないということである。
+多くの人が想像するであろう、スプライン曲線とは、かなり違った形になる。
+</p>
+
+    <p><img alt="" src="gauss.png"></p>
+
+<p>
+ちなみにg(x)=g(INT(x * 256)/256)であり、
+4096個のテーブルデータとして実装していると思われる。
+16ビット固定小数で実装したところ(1/32768)ほど値が異なることがあるので、
+おそらくシフト値を有する、実質浮動小数になっていると推測される。
+</p>
+
+
+  </div>
+
+  <h2>共通ノイズ波形</h2>
+
+  <div style="margin-left: 2em">
+    <p>ADPCM波形の替わりに用いるランダム波形のこと。
+    チャネル毎にどちらかを選択できるが、
+    チャネル毎に異なるノイズ波形を得るといったことは出来ない。</p>
+
+    <p>アルゴリズム</p>
+
+    <div style="margin-left: 2em">
+      <table bgcolor="#FFFFFF" border="0" cellpadding="8" summary=
+      "">
+        <tr>
+          <td>
+            <pre>
+/*
+ * レベル変化時の計算式
+ */
+char Addition[64] = {
+    1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0,
+    1, 0, 0, 1, 0, 1, 1, 0,
+    0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 1, 0, 0, 1
+};
+
+NoiseLevel = (short) (NoiseLevel + NoiseLevel + Addition[(NoiseLevel &gt;&gt; 10) &amp; 63]);
+
+
+/*
+ * レベル変化の周期
+ */
+Freq = 0x8000 &gt;&gt; (NoiseClock &gt;&gt; 2);
+
+
+/*
+ * 周期が半減する頻度
+ */
+Half = ((NoiseClock &amp; 3) * 2) / (4 + (NoiseClock &amp; 3));
+</pre>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p><img alt="" src="noise.gif"></p>
+  </div>
+
+  <h2>リバーブ</h2>
+
+  <div style="margin-left: 2em">
+    <p>アルゴリズム</p>
+
+    <div style="margin-left: 2em">
+      <table bgcolor="#FFFFFF" border="0" cellpadding="8" summary=
+      "">
+        <tr>
+          <td>
+            <pre>
+/*
+ * PlayStation Reverberation Algorithm (C)Dr.Hell, 2005
+ * 厳密には、左右の処理のタイミングは1サンプリング時間ずれており、
+ * 各々は2サンプリング時間毎に実行される
+ */
+mAPF1    = *((ushort *) 0x1F801DC0) * 4;
+mAPF2    = *((ushort *) 0x1F801DC2) * 4;
+gIIR     = *((short *) 0x1F801DC4) / 32768.0;
+gCOMB1   = *((short *) 0x1F801DC6) / 32768.0;
+gCOMB2   = *((short *) 0x1F801DC8) / 32768.0;
+gCOMB3   = *((short *) 0x1F801DCA) / 32768.0;
+gCOMB4   = *((short *) 0x1F801DCC) / 32768.0;
+gWALL    = *((short *) 0x1F801DCE) / 32768.0;
+gAPF1    = *((short *) 0x1F801DD0) / 32768.0;
+gAPF2    = *((short *) 0x1F801DD2) / 32768.0;
+z0_Lsame = *((ushort *) 0x1F801DD4) * 4;
+z0_Rsame = *((ushort *) 0x1F801DD6) * 4;
+m1_Lcomb = *((ushort *) 0x1F801DD8) * 4;
+m1_Rcomb = *((ushort *) 0x1F801DDA) * 4;
+m2_Lcomb = *((ushort *) 0x1F801DDC) * 4;
+m2_Rcomb = *((ushort *) 0x1F801DDE) * 4;
+zm_Lsame = *((ushort *) 0x1F801DE0) * 4;
+zm_Rsame = *((ushort *) 0x1F801DE2) * 4;
+z0_Ldiff = *((ushort *) 0x1F801DE4) * 4;
+z0_Rdiff = *((ushort *) 0x1F801DE6) * 4;
+m3_Lcomb = *((ushort *) 0x1F801DE8) * 4;
+m3_Rcomb = *((ushort *) 0x1F801DEA) * 4;
+m4_Lcomb = *((ushort *) 0x1F801DEC) * 4;
+m4_Rcomb = *((ushort *) 0x1F801DEE) * 4;
+zm_Ldiff = *((ushort *) 0x1F801DF0) * 4;
+zm_Rdiff = *((ushort *) 0x1F801DF2) * 4;
+z0_Lapf1 = *((ushort *) 0x1F801DF4) * 4;
+z0_Rapf1 = *((ushort *) 0x1F801DF6) * 4;
+z0_Lapf2 = *((ushort *) 0x1F801DF8) * 4;
+z0_Rapf2 = *((ushort *) 0x1F801DFA) * 4;
+gLIN     = *((short *) 0x1F801DFC) / 32768.0;
+gRIN     = *((short *) 0x1F801DFE) / 32768.0;
+z1_Lsame = z0_Lsame - 1;
+z1_Rsame = z0_Rsame - 1;
+z1_Ldiff = z0_Ldiff - 1;
+z1_Rdiff = z0_Rdiff - 1;
+zm_Lapf1 = z0_Lapf1 - mAPF1;
+zm_Rapf1 = z0_Rapf1 - mAPF1;
+zm_Lapf2 = z0_Lapf2 - mAPF2;
+zm_Rapf2 = z0_Rapf2 - mAPF2;
+for (;;) {
+    /*
+     * LoadFromLowPassFilterは35もしくは39タップのFIRフィルタ
+     * 最外周の係数が0でも結果は同じなので、35か39かは特定できず
+     */
+    L_in = gLIN * LoadFromLowPassFilterL();
+    R_in = gRIN * LoadFromLowPassFilterR();
+
+
+    /*
+     * Left -&gt; Wall -&gt; Left Reflection
+     */
+    L_temp = ReadReverbWork(zm_Lsame);
+    R_temp = ReadReverbWork(zm_Rsame);
+    L_same = L_in + gWALL * L_temp;
+    R_same = R_in + gWALL * R_temp;
+    L_temp = ReadReverbWork(z1_Lsame);
+    R_temp = ReadReverbWork(z1_Rsame);
+    L_same = L_temp + gIIR * (L_same - L_temp);
+    R_same = R_temp + gIIR * (R_same - R_temp);
+
+
+    /*
+     * Left -&gt; Wall -&gt; Right Reflection
+     */
+    L_temp = ReadReverbWork(zm_Rdiff);
+    R_temp = ReadReverbWork(zm_Ldiff);
+    L_diff = L_in + gWALL * L_temp;
+    R_diff = R_in + gWALL * R_temp;
+    L_temp = ReadReverbWork(z1_Ldiff);
+    R_temp = ReadReverbWork(z1_Rdiff);
+    L_diff = L_temp + gIIR * (L_diff - L_temp);
+    R_diff = R_temp + gIIR * (R_diff - R_temp);
+
+
+    /*
+     * Early Echo(Comb Filter)
+     */
+    L_in = gCOMB1 * ReadReverbWork(m1_Lcomb) + gCOMB2 *ReadReverbWork(m2_Lcomb) + gCOMB3 *ReadReverbWork(m3_Lcomb) + gCOMB4 *ReadReverbWork(m4_Lcomb);
+    R_in = gCOMB1 * ReadReverbWork(m1_Rcomb) + gCOMB2 *ReadReverbWork(m2_Rcomb) + gCOMB3 *ReadReverbWork(m3_Rcomb) + gCOMB4 *ReadReverbWork(m4_Rcomb);
+
+
+    /*
+     * Late Reverb(Two All Pass Filters)
+     */
+    L_temp = ReadReverbWork(zm_Lapf1);
+    R_temp = ReadReverbWork(zm_Rapf1);
+    L_apf1 = L_in - gAPF1 * L_temp;
+    R_apf1 = R_in - gAPF1 * R_temp;
+    L_in   = L_temp + gAPF1 * L_apf1;
+    R_in   = R_temp + gAPF1 * R_apf1;
+    L_temp = ReadReverbWork(zm_Lapf2);
+    R_temp = ReadReverbWork(zm_Rapf2);
+    L_apf2 = L_in - gAPF2 * L_temp;
+    R_apf2 = R_in - gAPF2 * R_temp;
+    L_in   = L_temp + gAPF2 * L_apf2;
+    R_in   = R_temp + gAPF2 * R_apf2;
+
+
+    /*
+     * Output
+     */
+    SetOutputL(L_in);
+    SetOutputR(R_in);
+
+
+    /*
+     * Write Buffer
+     */
+    WriteReverbWork(z0_Lsame, L_same);
+    WriteReverbWork(z0_Rsame, R_same);
+    WriteReverbWork(z0_Ldiff, L_diff);
+    WriteReverbWork(z0_Rdiff, R_diff);
+    WriteReverbWork(z0_Lapf1, L_apf1);
+    WriteReverbWork(z0_Rapf1, R_apf1);
+    WriteReverbWork(z0_Lapf2, L_apf2);
+    WriteReverbWork(z0_Rapf2, R_apf2);
+
+
+    /*
+     * Update Circular Buffer
+     */
+    UpdateReverbWork();
+}
+</pre>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>CD(コンパクトディスク読込み装置)</h1>
+
+  <h2>CDコマンド</h2>
+
+  <div style="margin-left: 2em">
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. CDコマンドの引数</b>
+      </caption>
+
+      <tr>
+        <th>番号</th>
+
+        <th>コマンド名</th>
+
+        <th>数</th>
+
+        <th>1</th>
+
+        <th>2</th>
+
+        <th>3</th>
+      </tr>
+
+      <tr>
+        <td>0x00</td>
+
+        <td>Sync</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x01</td>
+
+        <td>Nop</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x02</td>
+
+        <td>Setloc</td>
+
+        <td>3</td>
+
+        <td>AMin</td>
+
+        <td>ASec</td>
+
+        <td>AFrac</td>
+      </tr>
+
+      <tr>
+        <td>0x03</td>
+
+        <td>Play</td>
+
+        <td>0/1</td>
+
+        <td>Track</td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x04</td>
+
+        <td>Forward</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x05</td>
+
+        <td>Backward</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x06</td>
+
+        <td>ReadN</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x07</td>
+
+        <td>Standby</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x08</td>
+
+        <td>Stop</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x09</td>
+
+        <td>Pause</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0A</td>
+
+        <td>Reset</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0B</td>
+
+        <td>Mute</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0C</td>
+
+        <td>Demute</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0D</td>
+
+        <td>Setfilter</td>
+
+        <td>2</td>
+
+        <td>File</td>
+
+        <td>Chan</td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0E</td>
+
+        <td>Setmode</td>
+
+        <td>1</td>
+
+        <td>Mode</td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0F</td>
+
+        <td>Getparam</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x10</td>
+
+        <td>GetlocL</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x11</td>
+
+        <td>GetlocP</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x12</td>
+
+        <td>ReadT</td>
+
+        <td>1</td>
+
+        <td>0x01</td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x13</td>
+
+        <td>GetTN</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x14</td>
+
+        <td>GetTD</td>
+
+        <td>1</td>
+
+        <td>Track</td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x15</td>
+
+        <td>SeekL</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x16</td>
+
+        <td>SeekP</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x17</td>
+
+        <td>Setclock</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x18</td>
+
+        <td>Getclock</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x19</td>
+
+        <td>Test</td>
+
+        <td>1</td>
+
+        <td>Num</td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1A</td>
+
+        <td>Id</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1B</td>
+
+        <td>ReadS</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1C</td>
+
+        <td>Init</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1D</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1E</td>
+
+        <td>ReadTOC</td>
+
+        <td>0</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. CDコマンドの結果(一次)</b>
+      </caption>
+
+      <tr>
+        <th>番号</th>
+
+        <th>コマンド名</th>
+
+        <th>所要<br>
+        クロック</th>
+
+        <th>σ%</th>
+
+        <th>割り<br>
+        込み</th>
+
+        <th>数</th>
+
+        <th>1</th>
+
+        <th>2</th>
+
+        <th>3</th>
+
+        <th>4</th>
+
+        <th>5</th>
+
+        <th>6</th>
+
+        <th>7</th>
+
+        <th>8</th>
+      </tr>
+
+      <tr>
+        <td>0x00</td>
+
+        <td>Sync</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x01</td>
+
+        <td>Nop</td>
+
+        <td>30547</td>
+
+        <td>23</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x02</td>
+
+        <td>Setloc</td>
+
+        <td>31557</td>
+
+        <td>7</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x03</td>
+
+        <td>Play</td>
+
+        <td>51444</td>
+
+        <td><br></td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x04</td>
+
+        <td>Forward</td>
+
+        <td>193250</td>
+
+        <td>12</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x05</td>
+
+        <td>Backward</td>
+
+        <td>125119</td>
+
+        <td>0</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x06</td>
+
+        <td>ReadN</td>
+
+        <td>75701</td>
+
+        <td>7</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x07</td>
+
+        <td>Standby</td>
+
+        <td>74753</td>
+
+        <td>5</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x08</td>
+
+        <td>Stop</td>
+
+        <td>43503</td>
+
+        <td>13</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x09</td>
+
+        <td>Pause</td>
+
+        <td>27648</td>
+
+        <td>24</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0A</td>
+
+        <td>Reset</td>
+
+        <td>80295</td>
+
+        <td>12</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0B</td>
+
+        <td>Mute</td>
+
+        <td>36114</td>
+
+        <td>41</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0C</td>
+
+        <td>Demute</td>
+
+        <td>32768</td>
+
+        <td>10</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0D</td>
+
+        <td>Setfilter</td>
+
+        <td>39105</td>
+
+        <td>48</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0E</td>
+
+        <td>Setmode</td>
+
+        <td>41082</td>
+
+        <td>52</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0F</td>
+
+        <td>Getparam</td>
+
+        <td>40163</td>
+
+        <td>25</td>
+
+        <td>0x03</td>
+
+        <td>5</td>
+
+        <td>Stat</td>
+
+        <td>Mode</td>
+
+        <td>0x00</td>
+
+        <td>File</td>
+
+        <td>Chan</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x10</td>
+
+        <td>GetlocL</td>
+
+        <td>43335</td>
+
+        <td>20</td>
+
+        <td>0x03</td>
+
+        <td>8</td>
+
+        <td colspan="8">
+        セクタの13番目～20番目のデータ(つまりRead,SeekLが必要)</td>
+      </tr>
+
+      <tr>
+        <td>0x11</td>
+
+        <td>GetlocP</td>
+
+        <td>37937</td>
+
+        <td>17</td>
+
+        <td>0x03</td>
+
+        <td>8</td>
+
+        <td>Track</td>
+
+        <td>Index</td>
+
+        <td>Min</td>
+
+        <td>Sec</td>
+
+        <td>Frac</td>
+
+        <td>AMin</td>
+
+        <td>ASec</td>
+
+        <td>AFrac</td>
+      </tr>
+
+      <tr>
+        <td>0x12</td>
+
+        <td>ReadT</td>
+
+        <td>98762</td>
+
+        <td>13</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x13</td>
+
+        <td>GetTN</td>
+
+        <td>40833</td>
+
+        <td><br></td>
+
+        <td>0x03</td>
+
+        <td>3</td>
+
+        <td>Stat</td>
+
+        <td>Begin</td>
+
+        <td>End</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x14</td>
+
+        <td>GetTD</td>
+
+        <td>39091</td>
+
+        <td><br></td>
+
+        <td>0x03</td>
+
+        <td>3</td>
+
+        <td>Stat</td>
+
+        <td>AMin</td>
+
+        <td>ASec</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x15</td>
+
+        <td>SeekL</td>
+
+        <td>41771</td>
+
+        <td>25</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x16</td>
+
+        <td>SeekP</td>
+
+        <td>62041</td>
+
+        <td>40</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x17</td>
+
+        <td>Setclock</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x18</td>
+
+        <td>Getclock</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x19</td>
+
+        <td>Test(0x20)</td>
+
+        <td>40864</td>
+
+        <td>14</td>
+
+        <td>0x03</td>
+
+        <td>4</td>
+
+        <td>Year</td>
+
+        <td>Mon</td>
+
+        <td>Day</td>
+
+        <td>Ver</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1A</td>
+
+        <td>Id</td>
+
+        <td>30980</td>
+
+        <td>22</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1B</td>
+
+        <td>ReadS</td>
+
+        <td>81925</td>
+
+        <td>2</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1C</td>
+
+        <td>Init</td>
+
+        <td>25847</td>
+
+        <td>29</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1D</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1E</td>
+
+        <td>ReadTOC</td>
+
+        <td>73292</td>
+
+        <td>10</td>
+
+        <td>0x03</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. CDコマンドの結果(二次以降)</b>
+      </caption>
+
+      <tr>
+        <th>番号</th>
+
+        <th>コマンド名</th>
+
+        <th>所要<br>
+        クロック</th>
+
+        <th>σ%</th>
+
+        <th>割り<br>
+        込み</th>
+
+        <th>数</th>
+
+        <th>1</th>
+
+        <th>2</th>
+
+        <th>3</th>
+
+        <th>4</th>
+
+        <th>5</th>
+
+        <th>6</th>
+
+        <th>7</th>
+
+        <th>8</th>
+      </tr>
+
+      <tr>
+        <td>0x00</td>
+
+        <td>Sync</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x01</td>
+
+        <td>Nop</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x02</td>
+
+        <td>Setloc</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x03</td>
+
+        <td>Play</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td>0x01</td>
+
+        <td>8</td>
+
+        <td>Stat</td>
+
+        <td>Track</td>
+
+        <td>Index</td>
+
+        <td>A/Min</td>
+
+        <td>A/Sec</td>
+
+        <td>A/Frac</td>
+
+        <td>LvHi</td>
+
+        <td>LvLo</td>
+      </tr>
+
+      <tr>
+        <td>0x04</td>
+
+        <td>Forward</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x05</td>
+
+        <td>Backward</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x06</td>
+
+        <td>ReadN</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td>0x01</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x07</td>
+
+        <td>Standby</td>
+
+        <td>51429486</td>
+
+        <td>55</td>
+
+        <td>0x02</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x08</td>
+
+        <td>Stop</td>
+
+        <td>12767194</td>
+
+        <td>2</td>
+
+        <td>0x02</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x09</td>
+
+        <td>Pause</td>
+
+        <td>3665794</td>
+
+        <td>0</td>
+
+        <td>0x02</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0A</td>
+
+        <td>Reset</td>
+
+        <td>3656479</td>
+
+        <td>6</td>
+
+        <td>0x02</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0B</td>
+
+        <td>Mute</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0C</td>
+
+        <td>Demute</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0D</td>
+
+        <td>Setfilter</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0E</td>
+
+        <td>Setmode</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x0F</td>
+
+        <td>Getparam</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x10</td>
+
+        <td>GetlocL</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x11</td>
+
+        <td>GetlocP</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x12</td>
+
+        <td>ReadT</td>
+
+        <td>57701665</td>
+
+        <td>0</td>
+
+        <td>0x02</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x13</td>
+
+        <td>GetTN</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x14</td>
+
+        <td>GetTD</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x15</td>
+
+        <td>SeekL</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td>0x02</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x16</td>
+
+        <td>SeekP</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td>0x02</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x17</td>
+
+        <td>Setclock</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x18</td>
+
+        <td>Getclock</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x19</td>
+
+        <td>Test(0x20)</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1A</td>
+
+        <td>Id</td>
+
+        <td>19658</td>
+
+        <td>1</td>
+
+        <td>0x02</td>
+
+        <td>8</td>
+
+        <td>0x02</td>
+
+        <td>0x00</td>
+
+        <td>0x20</td>
+
+        <td>0x00</td>
+
+        <td>'S'</td>
+
+        <td>'C'</td>
+
+        <td>'E'</td>
+
+        <td>'I'</td>
+      </tr>
+
+      <tr>
+        <td>0x1B</td>
+
+        <td>ReadS</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td>0x01</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1C</td>
+
+        <td>Init</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1D</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1E</td>
+
+        <td>ReadTOC</td>
+
+        <td>31330364</td>
+
+        <td>14</td>
+
+        <td>0x02</td>
+
+        <td>1</td>
+
+        <td>Stat</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+
+      <tr>
+        <td>0x1F</td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+
+        <td><br></td>
+      </tr>
+    </table><br>
+
+    <table cellspacing="0" cellpadding="3" width="768" bgcolor=
+    "#FFFFFF" summary="" border="1">
+      <caption>
+        <b>表. コマンドの補足事項</b>
+      </caption>
+
+      <tr>
+        <th>コマンド名</th>
+
+        <th>補足事項</th>
+      </tr>
+
+      <tr>
+        <td>Play</td>
+
+        <td>
+        Setmodeで0x04を立てると、AFrac(BCD)の下位4ビットが0の時にレポートを返す。上位が奇数の時は位置情報がトラック相対になるが、その際フラグとしてSec(BCD)の0x80が立つ。</td>
+      </tr>
+
+      <tr>
+        <td>Reset</td>
+
+        <td>位置もホームポジションに戻る。</td>
+      </tr>
+
+      <tr>
+        <td>ReadT</td>
+
+        <td>そろそろ公表してもよかろう。こちらが本当の意味でのTOC更新コマンドである。引数は0x01以外上手くいかない。</td>
+      </tr>
+
+      <tr>
+        <td>ReadTOC</td>
+
+        <td>そろそろ公表してもよかろう。TOC更新はディスク入れ替えや電源ON時にシステムが自動でやるか、上記のReadTで行う。
+こいつは例のプロテクト情報を読みにいくだけでTOCの更新は行わない。実機能としてはReadMAGICとでも呼ぶべきもの。これがどういうことを意味するか...</td>
+      </tr>
+
+      <tr>
+        <td>GetTD</td>
+
+        <td>
+        引数を0x00にすると全トラックの合計になる。</td>
+      </tr>
+
+      <tr>
+        <td>Init</td>
+
+        <td>承認後も暫く時間をあける必要がある。</td>
+      </tr>
+    </table>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>通信デバイス(Comms Device or COMA)</h1>
+
+  <div style="margin-left: 2em">
+    <p>準備中</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>独自解析プログラム群</h1>
+
+  <div style="margin-left: 2em">
+    <p>準備中</p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+
+  <h1>エミゅってしまうま</h1>
+
+  <div style="margin-left: 2em">
+    <p>
+    実践結果としてのエミュレータ「エミゅってしまうま(略称XEBRA/ARBEX)」を公開する。</p>
+
+    <p><a href="xebra151011.zip"><img alt="" src=
+    "xebra.png"></a></p>
+    <p><a href="https://play.google.com/store/apps/details?id=com.dokutajigokusai.xebra"><img alt="" src=
+    "xebra.jpg"></a></p>
+  </div>
+  <hr>
+  <!-- ============================================================= -->
+<script type="text/javascript"><!--
+var fc2footerparam = 'charset=' + (document.charset ? document.charset : document.characterSet) + '&url=' + document.location + '&service=0&r=' + Math.floor(Math.random()*99999999999);
+var fc2footertag = '<' + 'script src="http://vip.chps-api.fc2.com/apis/footer/?' + fc2footerparam + '" charset="UTF-8"><' + '/script>';
+document.write(fc2footertag);
+//--></script>
+<!-- FC2, inc.-->
+<img src="http://media.fc2.com/counter_img.php?id=50" style="visibility:hidden" alt="inserted by FC2 system" width="0" height="0">
+<!-- FC2, inc.-->
+</body>
+</html>

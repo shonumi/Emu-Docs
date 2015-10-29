@@ -1,0 +1,389 @@
+<html>
+<head>
+<title>...just another vision... Studios - [Your first NES Demo]</title>
+<link rel=stylesheet type=text/css href=javs.css>
+<style>
+pre {font: 8pt courier new; color: #00ffff; background: #004040}
+</style>
+</head>
+<body bgcolor=black text=white style="font-family: tahoma">
+<table width=100% border=0 cellpadding=0 cellspacing=0><tr>
+<td><a href=index.html><img src=jav_logo.gif alt="...just another vision... Studios"></a></td>
+<td><a href=http://smb3c.darkmazda.com><img name=cg src=cg1.gif onmouseover=cg.src='cg2.gif' onmouseout=cg.src='cg1.gif' alt="Return to Challenge Games"></a></td></tr></table><hr>
+<font style="font-size: 8pt">
+This will be a very simple demo, in which you'll have a small object on-screen which will move around when you push the directional buttons on the controller.
+<ul>Here are some of the things that will be put into this:
+<li>Relative movement (when you press a direction, the ball will accelerate in that direction; when you release the direction, the ball keeps moving. Push the other direction and the ball decelerates and eventually starts moving the other direction)
+<li>Manipulation of 16-bit variables (X/Y movement and X/Y coordinates)
+<li>Reading and reacting to joystick input
+<li>Usage of Sprite DMA ($4014)
+</ul>
+The ROM will feature one (1) 16K PRG-ROM and one (1) 8K CHR-ROM (VROM) bank, for a grand total of 24KB of ROM (most of which will be blank space anyway).<br><br>
+Have you read up on the documents in the main page yet? If so, let's get this shindig rolling!<hr>
+<font size=2><b>Step 1: Creating the VROM</b></font><br><br>
+This is where you create the graphics file. Until it is embedded into the ROM, the graphics will exist on your computer in a .CHR file.<br>
+Personally, I use <a href=8k_blank.tmp>this</a> (right-click, "save target as...") as a "blank slate" for creating CHR files. In DOS, I copy that file ("8k_blank.tmp") to the name of the CHR file (eg. "file.chr"), and then edit it. (Note: Switch Tile Layer to NES display mode before editing it, obviously).<br><br>
+You'll need Tile Layer to edit it. You can use either the DOS one, or Tile Layer Pro (v1.0, <i>not</i> v1.1).<br><br>
+However, I've spared you this (relatively simple) step, and prepared a ready-made .CHR file. All it has is just a regular old ball-shaped sprite. Right-click on <a href=demo.chr>this</a> and select "save target as...".
+<hr>
+<font size=2><b>Step 2: Assembler</b></font><br><br>
+You then need an assembler. I use NESASM v2.0.<br><br>
+Go to <a href=http://nesdev.parodius.com>nesdev.parodius.com</a> (hell, bookmark it), and somewhere in there should be a link to the "Magic Kit" (if using IE5+, press Ctrl+F and type that in). Inside the "NES" directory (within the archive) is the assembler and another demo. (Unlike THAT demo, I'm actually walking you through the process, instead of just making it myself and giving you the code and letting you sink or swim). The rest of the archive is nothing to be interested in. But, be sure to take all the stuff out of the NES directory (documents and everything).<hr>
+<font size=2><b>Step 3: Setting up the header and parameters</b></font><br><br>
+Now we're ready to start typing. I personally use DOS edit, and I recommend you do as well. Use the /h switch (eg. "edit /h" at the prompt) to give yourself more viewing room. (Note: you may want to print this page out for reference; be sure to tell the browser not to print images or the background (or foreground) colour).<br><br>
+Okay. First, the header. I'll give you how it should look first, and then explain the significance of each:
+<pre>
+	.inesprg 1
+	.ineschr 1
+	.inesmir 0
+	.inesmap 0
+</pre>
+".inesprg" is a directive that tells NESASM how many 16K ROM pages to specify in the iNES header.<br>
+".ineschr" is a directive that tells NESASM how many 8K VROM pages to specify in the iNES header.<br>
+".inesmir" is a directive that tells NESASM what type of mirroring to use (0=horizontal 1=vertical). This makes no difference for the demo we're doing, so just leave it at zero.<br>
+".inesmap" is a directive that tells NESASM the iNES mapper ID# (ie. mapper #) for the iNES header. We're not using a mapper, so just leave it zero.<br>
+It doesn't matter in what order you specify them. In fact, for .inesmir and .inesmap, you can probably omit them altogether (you DO need to specify the other two, though).<br><br>
+Now, we can start allocating memory (ie., defining labels). In order for NESASM to recognize this as memory allocation, you have to specify either the .zp or .bss directive. You use .zp for zero-page ($0000-$00FF) and .bss for non-zero-page allocation. Before we start allocating stuff, we need to keep track of just what we need to allocate. Here's a list:
+<ul>
+<li>X and Y movement (16-bit)
+<li>X and Y coordinates (16-bit)
+<li>Joystick input (see below)
+<li>A Sprite-DMA table</ul>
+For Joystick input, I personally allocate one byte per button (A.READ, B.READ, etc), and for simplicity's sake I suggest you do so too.<br><br>
+Okay. The Sprite-DMA table cannot be in zero-page (since it is $100 bytes, which would take up the entire zero page), but everything else can.<br><br>
+Now, for the 16-bit variables, you should (for reference) tag each label with .LO or .HI. Note that you do not have to organize them; they just all have to be present.<br><br>
+One last note: in case you didn't figure it out by now, whenever you place a semicolon (;) on a line, everything after it is disregarded by the assembler; one would use this to add comments to the file without interfering with the code itself. It is good practice to add comments to the code to improve readability and to explain the function of various sections of code (ie. "; this writes the value to the screen").<br>
+Sometimes you may want to disable a section of code without actually removing it from the code. You can do this by "commenting-out" this section. You do this by sticking semicolons in front of each line to be disabled, like so:
+<pre>
+	LDA #$00
+	STA $2006
+;	 LDA #$00
+	STA $2006
+</pre>
+In this example, you don't need the second LDA since A already contains that value.<br><br>
+Okay? Let's setup the zero-page stuff. Here's how it should look (if I were doing it):
+<pre>
+	.zp		;zero page memory
+POS.Y.LO = $00		;Y-coordinate
+POS.Y.HI = $01
+POS.X.LO = $02		;X-coordinate
+POS.X.HI = $03
+MOV.Y.LO = $04		;Y velocity
+MOV.Y.HI = $05
+MOV.X.LO = $06		;X velocity
+MOV.X.HI = $07
+A.READ = $08	;A-Button status ($01 = pressed, $00 = not pressed)
+B.READ = $09	;B-Button
+SEL.READ = $0A	;Select Button
+STA.READ = $0B	;Start Button
+UP.READ = $0C	;Up arrow
+DOWN.READ = $0D	;Down arrow
+LEFT.READ = $0E	;Left arrow
+RIGHT.READ = $0F	;Right arrow
+</pre>
+Notice that the .zp line is indented, but the others are not. As a rule of thumb, anything except labels are to be indented at LEAST one space from the far-left column. This includes directives (assembler commands; they all start with a period).<br><br>
+Okay, there's the zero-page allocation. Now let's do the Sprite-DMA allocation. This will be even easier; there's only four bytes to be defined, corresponding to the four bytes for each sprite's data (one sprite x 4 bytes).<br><br>
+IMPORTANT: You should organize the A.READ, B.READ, etc., labels as they are here. You can position them elsewhere, but they should all be adjacent and <i>in that order</i>. You're probably writing them into your code exactly as they appear here anyway, but I just want to drive that point home.<br><br>
+Anyhow, each sprite's data is, as I said, four bytes, in this order:
+<ul>
+<li>Y-coordinate. This is it's up/down position, starting at the top edge of the sprite.
+<li>Tile Index #. This is the tile number from the pattern tables ($0xx0 or $1xx0 depending on PPU settings; $0xx0 by default)
+<li>Properties/Status. This is a bitwise indication of stuff to do to the sprite. For now, just leave it zero.
+<li>X-coordinate. This is it's left/right position, starting at the left edge of the sprite.</ul>
+I personally use Page 7 ($0700-$07FF) for Sprite DMA.<br><br>
+Anyhow, let's define it:
+<pre>
+	.bss		;non-ZP memory
+BALL.Y = $700		;Y-coordinate
+BALL.T = $701		;Tile Index #
+BALL.S = $702		;Status
+BALL.X = $703		;X-coordinate
+</pre>
+So, pop quiz: what is the exact address of, say, the high byte of the ball's Y velocity? If you can't answer it off the top of your head, then that's OK. All you would need to remember is the label "MOV.Y.HI". That's the whole point to using labels!<hr>
+<font size=2><b>Step 4: Getting Started</b></font><br><br>
+Now let's setup a framework for the actual code.<br><br>
+First, let's save your work. Go to File -&gt; Save, and save it with the extension .ASM (eg. "demo.asm"). The extension is not mandatory, but it's the default extension for source code files. You should save your work from time to time.<br><br>
+Next, we need to tell NESASM that we're done allocating memory. You do this with the ".code" directive, which tells NESASM that we're now doing the actual code.<br><br>
+Second, we need to define the "Origin". This is the starting address used to calculate code labels. Remember that the ROM is loaded into the $8000-$FFFF region, so addresses that refer to parts of the code need to address this region. Since we are using only one 16K segment of ROM, the same section is loaded twice ($8000 and $C000). Generally, for 16K-ROM games, the origin is specified starting at $C000. You define the origin with the ".org" directive.
+<pre>
+	.code
+	.org $C000
+</pre>
+You don't really need to understand this thoroughly, but just do it or NESASM will give you a bunch of "directive not allowed in this section" errors (if you omit .code) or the game just won't work (if you omit .org).<br><br>
+Okay. Next, let's setup the interrupt vectors. Actually recording the vectors will be the last thing done, but for now let's define the actual vector areas.<br>
+There are three vectors: NMI, RESET, and IRQ/BRK. The NMI vector is where most of the code (in this demo) will be done. The RESET vector is where the code will start execution (ie., the beginning of the code). You won't need IRQ/BRK for this demo (I've actually never found a use for it). Let's set it up, then:
+<pre>
+nmi:
+	;{insert NMI code here}
+main:
+	;{this is where it begins}
+int:
+	rti	;dummy routine (just returns)
+</pre>
+We now have a framework setup.<br><br>
+Note that the labels I've used are not the "default" labels, but are just the naming convention I use. You can name them whatever you want, as long as you give the correct names when specifying the actual vector table.<hr>
+<font size=2><b>Step 5: Initialization</b></font><br><br>
+Now let's get started!<br><br>
+At the start of the reset routine (the "main" label), remove the comment (if you're just copying/pasting this stuff into a file). You'll want to open with a few commands to set some flags and reset the stack pointer, then turn off the screen (or at least, make sure it's off, for now):
+<pre>
+main:
+	sei	;Set Interrupt-Disable (block IRQs)
+	cld	;Clear Decimal Mode setting (the NES doesn't jive with it)
+	ldx #$ff
+	txs	;reset stack pointer to the top of the stack
+	inx	;X = 0
+	stx $2000
+	stx $2001
+</pre>
+What this does is make sure IRQs are off, Decimal mode is off, the Stack Pointer is reset, and the PPU is told to not update the screen (by writing zeroes to $2000 and $2001). Once this is done, you're ready to start with the opening code.<br><br>
+First, let's clear the Sprite DMA table:
+<pre>
+	jsr clr_sprram
+
+clr_sprram:
+	lda #0
+	tay
+clr2_sprram:
+	sta $700,y
+	iny
+	bne clr2_sprram
+	rts
+</pre>
+You would add the JSR line to the end of what's currently in the "main" routine. You then hit Enter a few times and start writing the "clr_sprram" routine. When you want to add more stuff to the "main" routine, do so after the JSR routine.<br><br>
+Next, let's define the palette. You should put this either before or after the "main" routine (at least, not IN it).<br>
+Instead of a regular $20-byte VRAM transfer, let's define only four bytes and have it repeated throughout the palette:
+<pre>
+	jsr palette
+
+paldata:
+	.db $0f,$00,$10,$30	;(BG),Dark Gray, Light Gray, White
+
+palette:
+	jsr wait_vblank
+	lda #$3f
+	sta $2006
+	lda #0
+	sta $2006
+	tay
+	ldx #$20		;the # of bytes to transfer (used as a countdown)
+do_palette:
+	lda paldata,y
+	sta $2007		;read and record the data
+	iny		;increment read offset...
+	tya
+	and #3		;mask out all but the last two bits ($03 = %00000011)
+	tay
+	dex		;decrement countdown
+	bne do_palette	;continue until finished
+	rts
+
+wait_vblank:
+	bit $2002
+	bpl wait_vblank
+	rts
+</pre>
+This works by using both X and Y. Y is used as the read offset; every four reads, it is reset to zero, so the 4-byte array is repeated over and over. X is used to keep track of exactly how long the routine has been running.<br>
+Remember to add the wait_vblank routine.<br><br>
+Now let's define the initial sprite data:
+<pre>
+	jsr spriteinit
+
+sprite_init:
+	lda #128
+	sta &lt;POS.X.HI
+	sta &lt;POS.Y.HI
+	sta BALL.Y
+	sta BALL.X
+	lda #0
+	sta &lt;POS.X.LO
+	sta &lt;POS.Y.LO
+	sta &lt;MOV.Y.LO
+	sta &lt;MOV.Y.HI
+	sta &lt;MOV.X.LO
+	sta &lt;MOV.X.HI
+	sta BALL.S
+	lda #1
+	sta BALL.T
+	rts
+</pre>
+You're probably wondering what's up with the &lt;'s in front of some of the labels. Well, in NESASM, apparently have to place a &lt; before zero-page addresses, or else it interprets it as a full 16-bit address. Failure to do so will not fuck up the code, but will waste space:
+<pre>
+	LDA MOV.X.LO	; generates three bytes of code (absolute addressing)
+	LDA &lt;MOV.X.LO	; generates two bytes of code (zero-page addressing)
+</pre>
+For non-zero-page addresses (such as the Sprite DMA labels), don't use &lt;.<hr>
+That should be it for the setup. Now let's turn on the screen and then end the "main" routine:
+<pre>
+	lda #%10000000
+	sta $2000
+	lda #%00010000
+	sta $2001
+end:
+	jmp end
+</pre>
+The value written to $2000 tells the PPU to generate an NMI interrupt when VBlank begins. While the NMI routine is normally used only to refresh the screen, the function of this demo is compact enough to put the entire body of the code in the NMI routine. It will be run exactly once per frame.<br>
+The value written to $2001 tells the PPU to display Sprites but not the Background, and to "clip" both.<br>
+And the "end" part simply loops forever; the NMI interrupt will take the 6502 to the NMI routine, and drop it off back at the "end" routine when finished.<hr>
+<font size=2><b>Step 6: The Body of the Code</b></font><br><br>
+Think we're done? We're just getting started, baby.<br><br>
+You should save your work at this point.<br><br>
+<font color=red>NOTE: You may want to make sure your code works up to this point. If it does so far, then it will display the sprite at the center of the screen, but nothing else. If you want to test it, skip to Step 8, and return here later.</font><br><br>
+Now, let's define the NMI routine. First, I'll point out that NORMALLY, at the start of the NMI routine, the programmer would backup A, X, and Y (since the NMI can, for all intents and purposes, occur at any time, such as when the values of A/X/Y are critical), and restore them at the end. But, this isn't a normal code section (everything occurs in NMI), so don't worry about it. However, for the record, here's how you would back up A/X/Y at the <i>very</i> start of NMI:
+<pre>
+	pha	;push A
+	txa	;transfer X to A
+	pha	;and push it
+	tya	;transfer Y to A
+	pha	;and push it
+</pre>
+You can backup Y before X if you want, but you must push A first, as TXA and TYA overwrite A. If you do backup Y first, remember to restore in the correct order. Assuming you backed-up X first, here's how to restore them at the very end:
+<pre>
+	pla	;pull Y...
+	tay	;and put in Y
+	pla	;pull X
+	tax	;and put in X
+	pla	;pull A
+</pre>
+Then RTI to end it.<br><br>
+Anyhow, here are the steps that need to be taken in this NMI routine:
+<ol>
+<li>Read the Joystick input.
+<li>Update the movement variables based on the input.
+<li>Apply the movement to the position variables.
+<li>Update Sprite-DMA data with the results, and initiate DMA transfer to update the screen.
+</ol>
+<hr>
+<font size=2><b>Step 7 (1 of 4): Reading Joystick input</b></font><br><br>
+You read the joystick input by writing $01, then $00, to $4016, then reading $4016, which returns the button status one button at a time, in the lowest bit of $4016. Here is a compact, efficient method I came up with to make this happen very quickly:
+<pre>
+nmi:
+	jsr readjoy
+
+readjoy:
+	ldx #1		;writing a $01...
+	stx $4016
+	dex		;writing a $00...
+	stx $4016
+	ldy #0		;reset indexer
+do_readjoy:
+	ldx $4016		;read joystick data
+	stx &lt;A.READ,y	;store to joystick data array (A.READ is the start of it)
+	iny		;increment indexer
+	cpy #8		;see if we've done all eight reads yet
+	bne do_readjoy	;resume if not...
+	rts		;...or return if so
+</pre>
+Once you've done that, all the button statuses will be lined up nice and neat in the A.READ, B.READ, SEL.READ, etc., labels.<hr>
+<font size=2><b>Step 7 (2 of 4): Updating velocity based on Joystick input</b></font><br><br>
+Now we react to the joystick input.<br><br>
+Here is the method I use:
+<ol>
+<li>Do an EOR (exclusive-OR) between each pair of directions (UP-DOWN or LEFT-RIGHT). If neither- or both- are pressed, skip calculations for that pair.
+<li>For Up/Down, Up will decrease the Y-velocity, Down will increase it.
+<li>For Left/Right, Left will decrease the X-velocity, Right will increase it.
+</ol>
+I'll do the up/down pair first:
+<pre>
+	jsr process_velocity
+
+process_velocity:
+	lda &lt;UP.READ	;get up button status
+	eor &lt;DOWN.READ	;EOR with down button status
+	beq no_down_read	;skip to bottom of calculations if neither/both pressed
+
+	lda &lt;UP.READ	;check up button status
+	beq no_up_read	;if not pressed, skip calculations
+	sec		;perform 16-bit subtraction
+	lda &lt;MOV.Y.LO
+	sbc #3
+	sta &lt;MOV.Y.LO
+	lda &lt;MOV.Y.HI
+	sbc #0		;subtract 0 plus any borrow
+	sta &lt;MOV.Y.HI
+no_up_read:
+	lda &lt;DOWN.READ	;check down button status
+	beq no_down_read	;if not pressed, skip calculations
+	clc		;perform 16-bit addition
+	lda &lt;MOV.Y.LO
+	adc #3
+	sta &lt;MOV.Y.LO
+	lda &lt;MOV.Y.HI
+	adc #0		;add 0 plus any carry
+	sta &lt;MOV.Y.HI
+no_down_read:
+</pre>
+This should be self-explanatory. The EOR is there to make sure both buttons aren't pressed. Truth be told, it doesn't really matter; the EOR will force them to "cancel-out" if both are pressed, but then again, if both were pressed, the same value would be both added to and subtracted from the velocity. <i>n</i> + 2 - 2 = <i>n</i>, right? Oh well.<br><br>
+The left/right routine is exactly the same (except it reads LEFT.READ and RIGHT.READ, and modifies MOV.X instead of MOV.Y), and starts at the no_down_read label.<br>
+So, instead of giving you all the code for free, I'll let you handle that yourself. I'll make it easy for you: replace all references to "up" (&lt;UP.READ, no_up_read, etc) with "left", all references to "down" with "right", and MOV.Y with MOV.X.<hr>
+<font size=2><b>Step 7 (3 of 4): Applying velocity to position<br>
+Step 7 (4 of 4): Updating Sprite-DMA table and initiating DMA</b></font><br><br>
+These two sections pretty much go together, so I'm doing them both in one shot. It's not that tough:
+<ol>
+<li>Take current positions, add velocity, and record new positions (this is basically just a pair of 16-bit addition routines)
+<li>Take the high bytes of the updated positions, and use them for the sprite coordinates
+<li>Write $07 to $4014
+</ol>
+Not only that, but "record new positions" and step #2 can be done simultaneously!<br><br>
+So, let's do it!
+<pre>
+	jsr process_positions
+	rti
+
+process_positions:
+	clc		;do Y
+	lda &lt;POS.Y.LO
+	adc &lt;MOV.Y.LO
+	sta &lt;POS.Y.LO
+	lda &lt;POS.Y.HI
+	adc &lt;MOV.Y.HI
+	sta &lt;POS.Y.HI
+	sta BALL.Y	;high byte of position = on-screen coordinate
+
+	clc		;do X
+	lda &lt;POS.X.LO
+	adc &lt;MOV.X.LO
+	sta &lt;POS.X.LO
+	lda &lt;POS.X.HI
+	adc &lt;MOV.X.HI
+	sta &lt;POS.X.HI
+	sta BALL.X	;high byte of position = on-screen coordinate
+
+	lda #7		;do Sprite-DMA transfer
+	sta $4014		;done
+	rts
+</pre>
+That's it!<hr>
+<font size=2><b>Step 8: Wrapping it up</b></font><br><br>
+The meat of the code is out of the way. Now we just have to round it all out. We still need to define the vector table, as well as include the .CHR file. Save your work.<br><br>
+Now I'll introduce the .bank directive. This basically tells NESASM how far into the ROM to be. Each bank represents 8K ($2000 bytes) of data (each PRG-ROM bank is two NESASM banks). The vector table is located at the very end of the PRG-ROM. There's 16K of PRG-ROM, so it's at the end of the second bank.<br><br>
+Basically, just do this:
+<pre>
+	.bank 1	;second bank (bank 0 is the first one)
+	.org $fffa		;vector table starts at $FFFA
+	.dw nmi	;NMI vector
+	.dw main	;RESET vector (ie., the start of the program)
+	.dw int	;IRQ/BRK vector
+</pre>
+Voilà!<br><br>
+The last step is embedding the .CHR file. If you used the one I provided for you, the filename is "demo.chr". In an iNES ROM, the VROM is located immediately after the PRG-ROM. This is at the start of Bank #2. One last directive to learn for now is the .incbin directive, which includes a binary file into the ROM:
+<pre>
+	.bank 2	;third bank
+	.org 0	;(you can omit that if you want)
+	.incbin "demo.chr"		;remember to put quotes around the filename
+</pre>
+And, god willing, the whole thing will work (but it's not like She cares anyway). ;)<hr>
+<font size=2><b>Step 9: Assembly</b></font><br><br>
+Save the file, and exit. Type this at the DOS prompt (adjust the filename accordingly):
+<pre>
+nesasm demo.asm
+</pre>
+You can omit the .asm extension if you saved it with the .asm extension like I told you to in the first place ;)<br><br>
+Now, NESASM may or may not spit something back out at you. If everything went right, it'll just sit there for a second or so, and return you to the prompt. If that's the case, the ROM is ready, under the same filename as the source code, but with the .NES extension (eg., "demo.asm" will generate the ROM "demo.nes"). (Be aware that the ROM may not work at all even if NESASM didn't detect an error. It's just like the sentence "walk bit jump yes" being run through a spell-checker: it won't return an error, because it doesn't check syntax, only the spelling of each word). Be aware that if it assembles without no errors, the ROM it generates will overwrite any existing ROM (with the same filename) without asking for confirmation.<br><br>
+If it DID spit something back out at you, look at it to see what's up. If you got "directive not allowed in this section", you forgot the ".code" directive (insert it between the parameters and the first .org); for other things, look at it. The number on the far left is the line # in the file. If it encounters an error, NESASM will not generate a ROM.<hr>
+Run it now. If you get only a blank gray screen, then you probably forgot to define the vector table, or used the wrong labels and/or put them in the wrong spot.<br><br>
+Other than that, I can't really help you if it doesn't work... this is what you get for taking an impersonal, online tutorial. However, it should give you a decent idea of what to expect. This is just a tiny little demo!<br><br>
+If it DID work, congratulations, you've just cut-and-pasted your very first NES demo! ;)<hr>
+I have an idea... instead of just trying to account for every error, I've typed up this thing into one complete source code that assembles and plays as intended. If you get an error (in your code) or otherwise it just doesn't work, open both of them in DOS Edit, and compare the two (use split-screen (Alt, V, S)) to see what's up. Get it <a href=demo.asm>here</a> (as usual, right-click, "save target as..."). There is virtually no commentary in it except at the start of the NMI routine so I could remember what I had to do. Hey, I typed it up in, like, five minutes, so what do you expect? All the commentary is HERE, anyway. ;)<br>
+If you want, you can also get the ROM of it <a href=demo.nes>here</a>.<hr>
+I hope you've learned something from this. As I've said, this is about the simplest thing I could think of for a NES Development newbie to tackle. THIS is to NES development as using NESticle to alter the VROM is to ROM hacking. Trust me, a full-size game takes a damn sight longer than five minutes to type up even if you have all the code memorized. Hehe.<hr>
+So there you go. Return to the main JAVS' NESDEV page <a href=nesdev.html>here</a>.</body></html>

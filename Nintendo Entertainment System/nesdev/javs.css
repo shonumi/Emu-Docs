@@ -1,0 +1,6 @@
+A:link {text-decoration: none; color: #8080ff; background: #000030}
+A:visited {text-decoration: none; color: #8080c0; background: none}
+A:hover {text-decoration: none; color: #80ffff; background: #000050}
+A:active {text-decoration: none; color: black; background: white}
+
+img {border: none}

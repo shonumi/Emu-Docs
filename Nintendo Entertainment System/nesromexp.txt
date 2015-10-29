@@ -1,0 +1,179 @@
+NES Rom Expansion 101 
+by: TFG (palacios_barreda!at!yahoo!dot!com!dot!mx)
+-------------------------------------------------
+
+Prerequisites
+-------------
+
+        - Being familiar with 6502 assembly
+        - Have, at least, basic NES hardware knowledge.
+          (common  registers, I/O  ports and  such)
+        - Have used an NES debugger before.
+        - Reference  documents: Nintendo  Entertainment System
+	  Documentation (compiled by: Yoshi), General Mapper Docs (by \Firebug\)
+
+Introduction
+------------
+
+A lot of pepole believe that NES rom expansion is either immpossible or so  hard
+it's not worth the effort (some  don't even know what's  it for).  Rom expansion
+can be  one powerful ally in  your romhacking projects.  It's definitely not  as
+hard as people  tend to portrait it  (you'll  figure it out  by the end  of this
+document) and it opens a  lot   of  potential  resources that are waiting  to be
+exploited.
+
+
+What's NES rom expansion?
+-------------------------
+
+NES rom expansion involves (mainly) three elements: 
+
+	PRG-ROM Program rom. Physical area where your code/data is stored.
+
+	CHR-ROM 		Character rom. (Graphics)
+
+	MMC  Multi-Memory  Controller  (aka Mapper)  Chips  (not  native to  the
+	original  NES'   hardware  set)   created  to   extend  this   console's
+	capabilities.
+
+
+The NES was meant to have 32K of PRG-ROM and 8K of CHR-ROM space. This proved to 
+be insufficient as the gaming market started to grow.
+
+
+Let's take a a look at Yoshi's fine NES CPU Memory map.
+  
+    +---------+-------+-------+-----------------------+
+    | Address | Size  | Flags | Description           |
+    +---------+-------+-------+-----------------------+
+    | $0000   | $800  |       | RAM                   |
+    | $0800   | $800  | M     | RAM                   |
+    | $1000   | $800  | M     | RAM                   |
+    | $1800   | $800  | M     | RAM                   |
+    | $2000   | 8     |       | Registers             |
+    | $2008   | $1FF8 |  R    | Registers             |
+    | $4000   | $20   |       | Registers             |
+    | $4020   | $1FDF |       | Expansion ROM         |
+    | $6000   | $2000 |       | SRAM                  |
+    | $8000   | $4000 |       | PRG-ROM               |---> This is the area we
+    | $C000   | $4000 |       | PRG-ROM               |     are going to be 
+    +---------+-------+-------+-----------------------+     working with.
+
+After taking a quick peep  at this chart we can  deduce that the nes had  64K of
+64K of Addressable  CPU Memory (which  also implies that  the NES is  capable of
+handling 16-bit addresses).
+
+So, how is rom expansion going to overcome that 64K barrier? Via a third party 
+electronic device that swaps in and out that portion of CPU memory ($8000-$FFFF).
+
+iNES
+----
+
+iNES is the most common NES rom format avaliable. Get a reference document on 
+this, there's no need to explain it.
+
+
+MMCs
+----
+
+All these chips have two common characteristics: 
+
+	- They allow you to replace the contents of the section of CPU memory 
+	  that holds your PRG-ROM and/or allow you (in a similar fashion) to 
+	  swap in and out CHR-ROM.
+
+	- MMC Registers. Of course, we need a medium to "tell" the chip what 
+	  to do.
+
+
+Interrupt Table (aka Vector Table)
+----------------------------------
+
+As almost every computer architecture in existance, the NES has a reserved 
+area in the CPU's memory designated for allocating three pointers:
+
+	- NMI
+	- RESET
+	- IRQ/BRK
+
+Each one  of these  16-bit "slots"  holds the  CPU address  of its corresponding
+interrupt.  An  interrupt,  as the  word  states,  is a  signal  that  tells the
+processor to pause everything it's doing to attend the interrupt sub-routine (id
+est, everytime you move your mouse, an interruption is generated. Your processor
+immediately jumps to the memory area that holds the routine designated to handle
+such event and resumes its previous work right after that).
+
+It's mandatory that you tattoo those concepts in the back of your brain.  You'll
+be using them a lot for the next 20 minutes or so.
+
+
+
+Exmaple 1: Expanding a mapper 0 rom with 16K of PRG-ROM
+-------------------------------------------------------
+
+You'll need a Donkey Kong iNES rom for this example.
+
+According to DK's iNES header:
+
+	- Mapper #0 (in other words, it doesn't use an MMC) 
+	- 16K of PRG-ROM
+	- 8K of CHR-ROM
+
+Since the NES supports 32K of PRG-ROM by default, it's going to be uber-easy to
+"expand" this rom. We just have to slap an empty 16K PRG-ROM bank to it.
+
+	- Open up your favorite hex editor, load the rom in and insert $4000 
+	  bytes (16 K) of 0's at address 10h (right after the header).
+
+	- Update the iNES PRG-ROM space flag. Change address 04h from 0x01 
+	  to 0x02 (since we just inserted one 16K bank of PRG-ROM)
+
+	- Test the rom.
+
+Bam! There you go, 16K of free unused space waiting to be utilized. If a rom has
+only  1 page  of 16K  of PRG-ROM, the NES puts it at $C000 by default. Obviously, 
+if we have 32K, it will move our two banks to $8000.
+
+Ok, you have your free space. Now, how do you use it? I cooked up a small "hack"
+to test our expansion.
+
+Assemble with x816
+------------------------------------------
+
+.MEM 8
+.INDEX 8
+.BASE $8000
+
+new_reset:
+	lda #$00
+	sta $2001
+get_key:	
+	lda #$01
+	sta $4016
+	lda #$00
+	sta $4016
+	ldy #$08
+-	lda $4016
+	and #$01
+	bne go_back	
+	dey
+	bne -
+	jmp get_key
+	
+go_back:	
+	jmp $c79e
+
+.END
+------------------------------------------
+
+Insert that code at 10h (rom address). Manually change the address of the RESET
+interrupt to $8000 (our address). The interrupt table is located at the end of 
+the last 16K bank (in this particular case).
+
+You might want to get the second part of this article.
+	
+	http://tfg.panicus.org/docs/nes_rom_exp102.zip
+	
+Thanks to Disch for pointing out an error in the code (regarding joypad strobbing).
+	
+eof.

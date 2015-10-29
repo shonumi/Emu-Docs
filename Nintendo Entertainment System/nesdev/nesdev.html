@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>...just another vision... Studios - [Intro to NES Development]</title>
+<link rel=stylesheet type=text/css href=javs.css>
+<meta name=generator content="Windows Notepad">
+<meta name=description content="...just another vision... Studios is a non-profit, underground ROM Hacking and NES development group created by zero soul.">
+<meta name=keywords content="rom,hacking,nes,development,zero,soul">
+<body bgcolor=black text=white style="font-family: tahoma,verdana,arial">
+<table width=100% border=0>
+<tr><td align=left valign=top>
+<a href=index.html><img src=jav_logo.gif alt="...just another vision... Studios"></a>
+</td><td align=right valign=top>
+<a href=http://smb3c.darkmazda.com><img name=cg src=cg1.gif onmouseover=cg.src='cg2.gif' onmouseout=cg.src='cg1.gif' alt="Return to Challenge Games"></a></td></tr></table>
+<hr>
+<img src=nesdev.gif align=left>
+<font style="font: 8pt tahoma,verdana,arial">
+I was originally going to do a guide to ROM Hacking, but I've decided that, since this site is hosted by a ROM-hacking group, there are enough hacking tutorials out there. So, instead I've decided to give you all a little introduction to the "other" side of emulation: NES Development.<br><br>
+If you want to become an NES Developer, here are some things I <i>highly</i> recommend you know before attempting this:<br>
+1) Knowledge of the Hexadecimal number system is critical. You don't have to be proficient at it; as long as you can perform simple Hex arithmetic (eg., $100 / 2 = $80, not $50), you'll be OK.<br>
+2) I recommend a good deal of ROM Hacking experience (at least up to Pointer hacking) for knowledge of how a game stores data.<br>
+3) If you've had previous programming experience (even QuickBASIC), you'll have a head start in this, but be aware that 6502 Assembly is <i>much</i> different than Basic or C.<br>
+4) Don't think you're gonna read this guide and start churning out commercial-quality games. The most you're ever likely to get is making demos or simple games. However, if you take this seriously, stick with it and you'll get better over time.<br>
+5) And finally, you need <i>patience</i>. ROM Hacking is nothing compared to NES development, to test your patience. Trust me.<br><br>
+You will need a couple of tools in order to create ROMs. First and foremost, you'll need an Assembler. This is the program that takes the code and generates the "binary" (the actual ROM data). This is as basic to NES Development as a car is to auto racing. You'll also want Tile Layer for graphics. Get the DOS version! If you get the "Pro" version, <i>don't</i> get v1.1, since it has some "features" which will only be a hassle for messing with .CHR files.<br><br>
+You can get Tile Layer from <a href=http://www.zophar.net>Zophar's Domain</a>. You can find a number of assemblers at <a href=http://nesdev.parodius.com>NESDEV</a>; there are also a lot of tutorials and technical documents there.<br><br>
+There are a lot of Assemblers to choose from. I personally use NESASM v2.0. It is an NES-specific 6502 assembler, and includes features to automatically setup the iNES ROM header and include binary files (such as the .CHR file(s)), which makes assembly a one-step process (run the source through NESASM and it will generate the complete, ready-to-go ROM, as opposed to assembling the code and manually creating and attaching the header and .CHR file(s)), which will make the transition into NES Assembly a less daunting task than it already is. It is avaliable at <a href=http://nesdev.parodius.com>the NESDEV site</a> (look for the "Magic Kit", which contains NESASM as well as a similar assembler for the TurboGrafx-16 (which I don't use); in the NES directory of the archive, it includes a sample demo ROM and it's source code).<br><br>
+I highly recommend downloading the various pages and images of this site for offline reference. You should make a new directory on your hard drive for them (or put them in an existing directory - such as your NES directory - if there are no filename conflicts). Here are the files to get; for each, right-click on them and select "save target as...":
+<ul>
+<li><a href=nesdev.html>nesdev.html</a> (this page)
+<li><a href=6502.html>6502.html</a> (crash course in 6502 assembly)
+<li><a href=nesmap.html>nesmap.html</a> (a road map to the various CPU registers)
+<li><a href=6502_2.html>6502_2.html</a> (a few 6502 routines and tricks)
+<li><a href=nesdev_tutorial.html>nesdev_tutorial.html</a> (a tutorial for making a simple NES demo)
+<li><a href=javs.css>javs.css</a> (the HTML stylesheet)
+<li><a href=nespal.gif>nespal.gif</a> (the NES palette)
+<li><a href=name-attr.gif>name-attr.gif</a> (used in a side note in nesmap.html)
+<li><a href=demo.asm>demo.asm</a> (my version of the source code in the tutorial)
+<li><a href=demo.chr>demo.chr</a> (the .CHR file for the demo)
+<li><a href=demo.nes>demo.nes</a> (the ROM of the demo)
+<li><a href=8k_blank.tmp>8k_blank.tmp</a> (a blank-slate 8K file for creating new .CHR files)
+</ul>
+Alternately, just download <a href=nesdev.zip>this</a>, which contains all the above files in one .zip archive.<br><br>
+The images at the top of this (and each subsequent) page(s) will then no longer work, but that's not important.<hr>
+Before I introduce the basics of the 6502 Assembly language (the programming language you will be using), I will give a glossary of terms. There's a lot here, so you should probably just skim through it and refer to it later as needed:<br>
+<ul>
+<li>CHR: CHaRacter file. This is a file that contains all the graphics of the game. A standard CHR file is exactly 8,192 bytes (8 KB); this is the largest size CHR file you can use in an NES ROM without having to use a mapper. It is also the minimum size for games that use VROM. The CHR is known as "VROM" when present in an NES ROM. (For hackers, this is what you see when you look at the "Pattern Tables" in NESticle). <i>Note:</i> VROM is *optional* for NES demos; however, VROM is much easier to deal with, and thus I will be using it for the simple demo I will have you make.
+<li>VROM: Video ROM (Read-Only Memory). This is the static (unchanging) graphic data in a ROM. The VROM is always a multiple of 8KB. In an iNES ROM, the VROM is located immediately after the PRG-ROM (the code). On a real NES cartridge, this is kept on a separate ROM chip. VROM is also known as CHR-ROM. The NES can natively support one 8K bank of VROM; anything more requires a mapper to swap sections of it in and out of the pattern tables.
+<li>CHR-RAM: for games that do NOT use VROM, instead of a ROM chip for CHR-ROM, there is instead a 8K RAM chip. The graphics data are kept in the game's PRG-ROM (see below) and it is up to the game to manually copy the needed data to CHR-RAM. The advantage to this is that it gives absolute control of the pattern table's contents (such as the ability to "generate" graphics (eg., the map screen in Final Fantasy)).
+<li>PRG-ROM: This is the actual code and data of the ROM. The PRG-ROM is always a multiple of 16,384 bytes (16KB), and is mandatory for NES games. The NES can natively support a maximum of 32KB of PRG-ROM, but some smaller demos use only 16KB. Anything more requires a mapper to swap sections of it in and out of the avaliable 32K address space (for the ROM).
+<li>RP2A03G: The technical name of the NES' Central Processing Unit. It is a customized 8-bit 6502 Processor with a 16-bit Addressing range (read: it can address 64K of RAM/ROM. Half of this space is reserved for the ROM). It's primary customization adds native support for audio.
+<li>PPU: The Picture Processing Unit of the NES. Your relationship with this device will be antagonistic at best, but necessary (think of it as two enemies stranded at sea, who must work together or die). It is the device that controls <i>all</i> display functions. An NES game communicates with the PPU through CPU registers mapped in the $2000-$2007 range.
+<li>pAPU: pseudo-Audio Processing Unit. All audio controls and waveform generation is done native to the CPU. An NES game communiates with the pAPU through CPU registers mapped in the $4000-$4015 range. (Note: I have done very little with NES Audio, so I won't be able to assist you with it).
+<li>MMC: Multi-Memory Controller. This is the name given to memory mappers (see below) that were made by Nintendo.
+<li>Mapper: a device that allows an NES game to swap sections of PRG-ROM and/or VROM in and out of usable space. Many mappers give extra features such as on-the-fly Mirroring selection.
+<li>Name Tables: the PPU natively supports two name tables. Each name table is a matrix of 32x30 tiles, which controls which tiles go where on-screen (except sprites). You can view the Name Tables in NESticle by switching to at least 512x384 resolution, and pressing F3.
+<li>Attribute Tables: this is $40 bytes that controls which colours are used where on the background.
+<li>Mirroring: the PPU natively supports two name tables, right? Mirroring refers to whether the two are aligned horizontally (vertical mirroring) or vertically (horizontal mirroring).
+<li>Vectors: the 6502 processor requires three addresses, called "Vectors" to be present in address space from $FFFA-$FFFF. There are three such vectors: NMI, Reset, and IRQ/BRK.
+</ul>
+
+As stated earlier, there's no need to memorize all of these ("Now you tell me!"). Just glance over them and refer to them as needed later; you'll memorize this stuff as you go along anyway.<hr>
+Now, before you can mingle with the natives, you'll need to <a href=6502.html>learn the language</a>. Then, you'll want to <a href=nesmap.html>know your way around</a>. You may also want to <a href=6502_2.html>learn some slang</a> so as to sound more natural.<hr>
+At this point, all that's left is getting better at actually doing it. The first step is to <a href=nesdev_tutorial.html>make your first demo</a>! After that, you're on your own, hotshot. Drop by the <a href=http://nesdev.parodius.com>NESDEV</a> message boards every week or so (that's about how often anybody posts there) if you need help on something. The guys there are very tolerant of newbies (let's face it: we all were newbies at some point), so don't be afraid to drop in. I check it every time I do my usual rounds on the 'net (once or twice a day) so I can help you out too.<hr>
+If you have anything to add, <a href=mailto:cr_3xs@hotmail.com>e-mail me</a> and I'll add it.<hr>
+<a href=http://smb3c.darkmazda.com/zerosoul>Return to ...just another vision... Studios</a>
+</body></html>

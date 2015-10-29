@@ -1,0 +1,167 @@
+<html>
+<head>
+<title>...just another vision... Studios - [6502 Routines and tricks]</title>
+<link rel=stylesheet type=text/css href=javs.css>
+<style>
+pre {font: 8pt courier new; color: #00ffff; background: #004040}
+</style>
+</head>
+<body bgcolor=black text=white style="font-family: tahoma">
+<table width=100% border=0><tr><td align=left valign=top><a href=index.html><img src=jav_logo.gif alt="...just another vision... Studios"></a></td><td align=right valign=top><a href=http://smb3c.darkmazda.com><img name=cg src=cg1.gif onmouseover=cg.src='cg2.gif' onmouseout=cg.src='cg1.gif' alt="Return to Challenge Games"></a></td></tr></table>
+<hr>
+<font size=3><b>6502 Routines and Tricks</b></font><br><br>
+<font style="font: 8pt tahoma">Here are some routines which may be of use. If you haven't learned 6502 yet, <a href=6502.html>do so</a>. These routines were written for real world&trade; use in 6502 Assembly on the NES.<br><br>
+Note: I will use a more casual style of writing the code, in this document. For instance, I will not capitalize everything (hitting Caps-lock every other word gets to be a pain in the ass after a while), or ALWAYS use hexadecimal (for instance, "LDA #$01" will become "lda #1").
+<hr>
+<b>Transfer of a database (less than $100 bytes) to VRAM</b><br>
+This type of routine will be used a <i>lot</i>, such as to transfer palette data or text to VRAM. This is very basic to 6502 Assembly, and thus it will be critical that you understand how it works.<br><br>
+Practice: copy a palette array ($20 bytes) to VRAM.
+<pre>
+paldata:	.db $0f,$06,$00,$36,$0f,$30,$11,$36,$0f,$00,$0c,$30,$0f,$30,$36,$00
+	.db $0f,$06,$00,$36,$0f,$30,$11,$36,$0f,$00,$0c,$30,$0f,$30,$36,$00
+
+palette:	jsr wait_vblank	;you should always wait for VBlank before accessing VRAM
+	lda #$3f		;set VRAM address to $3F00
+	sta $2006
+	lda #0
+	sta $2006
+	tay		;quicker than LDY #$00
+do_palette:
+	lda paldata,y	;read from paldata + Y
+	sta $2007		;record to VRAM
+	iny		;increment read index
+	cpy #$20		;compare to $20 (reads were $00-$1F)
+	bne do_palette	;if not done, continue until it is
+	rts		;done- return from whence you came
+
+wait_vblank:		;waits for VBlank
+	bit $2002
+	bpl wait_vblank
+	rts
+</pre>
+Note that the 'wait_vblank' routine can be easily recycled. You can call it from anywhere, and saves space ("bit $2002 / bpl wait_vblank" takes five bytes; "jsr wait_vblank" takes three).<br><br>
+You can make a routine that transfers exactly $100 bytes by simply removing the CPY line; when Y reaches $FF and is then incremented, it will wrap back around to $00, and the BNE will not branch.
+<hr>
+<b>Transfer of a database of a multiple of $100 bytes, to VRAM</b><br>
+You probably won't encounter a use of this until you start building name tables (or using CHR-RAM), but understanding the concept will make you that much better at 6502 assembly.<br><br>
+This routine makes use of a pointer to the data in question. This will enable you to understand the rather complex function of LDA ($xx),Y. In this routine, I will use $00 and $01 as the pointer.
+Practice: copy $400 bytes to VRAM $2000:
+<pre>
+name:	.incbin "file.nam"	;includes the name table file as a database
+name_point:
+	.dw name		;scribes the address (low byte first) of 'name'
+
+routine:
+	jsr wait_vblank
+	lda #$20		;set VRAM write address
+	sta $2006
+	lda #0
+	sta $2006
+	tay		;(easier than LDY #$00)
+	ldx #4		;$100 x 4
+	lda name_point	;get the low byte of the pointer
+	sta $00		;store to the low byte of the pointer in memory
+	lda name_point+1	;get the high byte (right after the low byte)
+	sta $01		;store to the high byte of the pointer in memory
+do_routine:
+	lda ($00),y	;read the data through the pointer
+	sta $2007		;store to VRAM
+	iny		;increment index
+	bne do_routine	;repeat if not done
+	inc $01		;$100 bytes done; increment high byte of pointer
+	dex		;decrement page counter
+	bne do_routine	;resume if not done
+	rts
+</pre>
+As I said, this should explain the indirect-indexed addressing mode. The address of the data in question is copied to memory ($00 low, $01 high). When you run "LDA ($00),Y", it reads that address, adds Y to that for reference, then fetches the byte from there.<br><br>
+When it reads $100 bytes, Y will be $00 again; the high byte of the pointer is incremented, so the next read will be $100 bytes later, which works perfectly. It doesn't matter if the <i>low</i> byte of the pointer is $00 or not.<br><br>
+You can easily modify this to transfer databases up to 64KB in size (read: it can take anything you throw at it); just replace the "LDX #$04" line with the # of pages (the xx in $xx00) to be transferred.<br><br>
+For efficient usage, if you use transfers like this a lot, you can have each routine only have the first part (before 'do_routine'), and then JMP to 'do_routine' (since it would be common for each such tranfer). The reason you JMP instead of JSR is because you already have the return address on the stack; if you JSR, it pushes another, useless one. The RTS is at the end of 'do_routine', so just JMP there; the return address will still be on the stack.<hr>
+<b>Stall for a specified number of frames</b><br>
+This can be useful to time display things. I used this system in the Challenge Games 2-year anniversary demo. It makes use of NMI, which is executed exactly once on every frame.<br><br>
+I set aside one byte of memory, labelled "TIMER", as well as a temporary storage space labelled "TEMP". In the NMI routine, I simply increment it, and RTI.<br><br>
+To use this, load A with the # of frames to stall (Note: there are sixty (60) frames per second), then JSR to "stall".
+<pre>
+TIMER = $00	;declare the TIMER label
+TEMP = $01	;declare the TEMP label
+
+nmi:		;this is the NMI routine
+	inc TIMER	;increment timer
+	rti	;return
+
+stall:		;stall	IN: A (number of frames)
+	clc
+	adc TIMER		;add # of frames to stall, to current TIMER status
+	sta TEMP		;store in temporary memory
+	lda #%10000000	;set the high bit of $2000
+	sta $2000		;(to make sure NMIs are activated)
+stall2:
+	lda TIMER		;compare TIMER with TIMER + frames
+	cmp TEMP		;(you can do it the other way around, too)
+	bne stall2	
+	rts
+</pre>
+WARNING: If you do not have NMIs enabled, this routine will stall forever!<br><br>
+This works by basically taking TIMER, adding to it the # of frames to wait, and then just stalls until TIMER catches up.<br><br>
+For instance, to stall for exactly one second:
+<pre>
+	lda #60		;sixty frames per second
+	jsr stall
+</pre>
+<hr>
+<b>Writing text to the screen</b><br>
+This is a simplified version of writing a single, one-line string to the screen. This assumes you already have an ASCII font table in VROM, and that the intended writing-to address is VRAM $2200 (approximately the center of the screen).<br><br>
+For this routine, you terminate the string with $00.
+<pre>
+text:	.db "mein Herz brennt",0	;the text, followed by a zero
+
+do_text:
+	jsr wait_vblank
+	lda #$22		;set VRAM write address
+	sta $2006
+	lda #0
+	sta $2006
+	tay
+do2_text:
+	lda text,y	;read the next byte
+	bne do3_text	;if not zero, write it and continue
+	rts		;else RTS
+do3_text:
+	sta $2007		;write value to VRAM
+	jmp do2_text	;and resume
+</pre>
+It's pretty basic, but with a few modifications. For instance, the RTS is in the middle of the routine instead of at the end. The main change is that this routine not only transfers data, but also is dynamic; that is, the size of the data transfer is determined by the data that's actually being transferred; it looks at every byte read, and then boots out of the loop only when it has read a $00. (Note: if the string is longer than 256 bytes, it will loop infinetely, since the index register wraps around to $00).<hr>
+<b>Reading from an index of pointers</b><br>
+To expand on the above routine, you can write a routine that reads a single text string among a group of strings. Each one has it's own pointer. These pointers are grouped together.<br><br>
+To use this routine, load A with the text string # to display (starting at $00 for the first string, $01 for the second, etc) and call "do_text".
+<pre>
+POINT.LO = $00	;declare labels
+POINT.HI = $01
+
+text_point:	.dw text0,text1,text2,text3, . . .	;the pointer table
+text0:	.db "1) Mein Herz brennt",0	;string #0
+text1:	.db "2) Nebel",0		;string #1
+text2:	.db "3) Sonne",0		;string #2
+text3:	.db "4) Zwitter",0		;string #3
+
+do_text:
+	asl a		;double the string # (see below)
+	tay		;transfer to index
+	lda text_point,y	;get low byte of pointer
+	sta POINT.LO	;record to memory
+	lda text_point+1,y	;get high byte of pointer
+	sta POINT.HI	;record to memory
+	jsr wait_vblank
+	lda #$22		;set VRAM address
+	sta $2006
+	lda #0
+	sta $2006
+	tay		;reset indexer
+do2_text:
+	lda (POINT.LO),y	;read text through pointer
+	bne do3_text
+	rts
+do3_text:
+	sta $2007
+	jmp do2_text
+</pre>

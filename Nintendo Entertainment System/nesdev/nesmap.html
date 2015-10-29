@@ -1,0 +1,386 @@
+<html>
+<head>
+<title>...just another vision... Studios - [NES register map]</title>
+<link rel=stylesheet type=text/css href=javs.css>
+<style>
+pre {font: 8pt courier new; color: #00ffff; background: #004040}
+</style>
+<body bgcolor=black text=white style="font-family: tahoma">
+<table width=100% border=0 cellpadding=0 cellspacing=0><tr>
+<td align=left valign=top><a href=http://smb3c.darkmazda.com/zerosoul><img src=jav_logo.gif alt="...just another vision... Studios"></a></td>
+<td align=right valign=top><a href=http://smb3c.darkmazda.com><img name=cg src=cg1.gif onmouseover=cg.src='cg2.gif' onmouseout=cg.src='cg1.gif' alt="Return to Challenge Games"></a></td></tr></table>
+<hr>
+<font style="font: 8pt tahoma">
+This is a road map to the NES' address space ($0000-$FFFF).
+<hr>
+First, here is a simplified map:
+<table width=100% border=1 cellpadding=1 cellspacing=1 style="font: 8pt tahoma">
+<tr><th>ADDRESS</th><th>FUNCTION</th></tr>
+<tr><td>$0000-$07FF</td><td>RAM</td></tr>
+<tr><td>$2000-$2007</td><td>PPU communication registers</td></tr>
+<tr><td>$4000-$4013</td><td>pAPU communication registers</td></tr>
+<tr><td>$4014-$4017</td><td>Miscellaneous registers</td></tr>
+<tr><td>$5000-$5FFF</td><td>MMC5 Expansion RAM and registers</td></tr>
+<tr><td>$6000-$7FFF</td><td>Save RAM</td></tr>
+<tr><td>$8000-$FFFF</td><td>ROM</td></tr>
+<tr><td>$FFF9-$FFFF</td><td>(6502 vectors)</td></tr>
+</table>
+<hr>
+And now, the hitchhiker's guide to the NES galaxy:<br><br>
+<table width=100% border=1 cellpadding=1 cellspacing=1 style="font: 8pt tahoma">
+<tr><th>ADDRESS</th><th>USAGE</th><th>FUNCTION</th></tr>
+<tr valign=top><td>$0000-$07FF</td><td>Read/ Write</td>
+<td><b>RAM</b><br>
+You are given a mere Two Kilobytes of RAM to work with (and an eighth of it is stack space). Use it well!</td></tr>
+<tr valign=top><td>$0800-$1FFF</td><td>n/a</td>
+<td><b>Shadow RAM</b><br>
+Every $400 bytes of this is simply a duplicate of $0000-$07FF. Yes, it's stupid.</td></tr>
+<tr><td colspan=3>The following are used to communicate with the PPU</td></tr>
+<tr valign=top>
+<td>$2000</td><td>Write</td>
+<td><b>PPU Control Register #1</b><br>
+This is used to control PPU Functions. It is a bitwise register.
+<pre>
+NMSbsATT
+||||||++--- Name Table Address
+||||||      (I'm not sure what this represents)
+|||||+----- PPU Address Increment (on read/write of $2007)
+|||||       0 = Increment by 1
+|||||       1 = Increment by $20 (32)
+||||+------ Sprite Pattern Table Address
+||||        0 = VRAM $0000 ("left" half)
+||||        1 = VRAM $1000 ("right" half)
+|||+------- Background Pattern Table Address
+|||         0 = VRAM $0000 ("left" half)
+|||         1 = VRAM $1000 ("right" half)
+||+-------- Sprite Size
+||          0 = 8x8 pixels
+||          1 = 8x16 pixels
+|+--------- (unused; leave it at 0)
++---------- Execute NMI on VBlank
+            0 = Disabled
+            1 = Enabled
+</pre>
+</td></tr>
+
+<tr valign=top>
+<td>$2001</td><td>Write</td>
+<td><b>PPU Control Register #2</b><br>
+This is used to control display settings
+<pre>
+CCCSBsbT
+|||||||+--- Colour mode
+|||||||     0 = Colour (normal palette)
+|||||||     1 = Monochrome (all palette entries mapped to $x0)
+||||||+---- Background Clipping
+||||||      0 = BG not displayed in left-/right-hand 8-pixel column
+||||||      1 = No clipping
+|||||+----- Sprite Clipping
+|||||       0 = (as above, but for Sprites)
+|||||       1 = No clipping
+||||+------ Background visibility
+||||        0 = Background not displayed (all black)
+||||        1 = Background visible
+|||+------- Sprite visibility
+|||         0 = Sprites invisible
+|||         1 = Sprites visible
++++-------- CMYK colour mask
+            000 = do not alter colours
+            001 = darken Magenta (make palette Greener)
+            010 = darken Yellow (make palette Bluer)
+            100 = darken Cyan (make palette Redder)
+</pre>
+Notes:
+<ul><li>The colour mask settings can be combined, but doing so will make the display even darker. If you set all three, the display will lose 75% of it's brightness.
+<li>Clipping is useful for masking glitches that occur on the edges of the screen. BG Clipping can be used to mask tile changes when Scrolling horizontally (see Ultima: Exodus to see what I mean); Sprite Clipping can be used so Sprites that move off-screen (left/right) will disappear normally (without it, they will just suddenly blink out of existence and reappear on the other side of the screen).
+</td></tr>
+<tr valign=top>
+<td>$2002</td><td>Read</td>
+<td>
+<b>PPU Status Register</b><br>
+This register reports the PPU Status
+<pre>
+V08W....
+|||+------- VRAM Write Flag
+|||         0 = Writes to VRAM Respected
+|||         1 = Writes to VRAM Ignored
+||+-------- Scanline sprite count
+||          0 = Eight or fewer Sprites are on the current scanline
+||          1 = More than eight Sprites on the current scanline
+|+--------- Sprite #0 Occurence
+|           0 = Sprite #0 not found
+|           1 = PPU Has hit Sprite #0
+|           (see below)
++---------- Vertical Blanking Impulse (VBlank) status
+            0 = Not occuring
+            1 = PPU is in VBlank
+</pre>
+Notes:
+<ul>
+<li>The highest bit is reset to 0 when you read $2002.
+<li>The function of the Sprite #0 hit flag is not completely understood. Here is the generally accepted description:<br>
+When the PPU encounters a non-transparent sprite pixel that overlaps a non-transparent background pixel, this flag is set.
+<li>I'm not sure what the VRAM Write Flag means.
+<li>$2005 and $2006 are reset when you read $2002, so the next write to $2005 will be Horizontal, and the next write to $2006 will be the High byte.
+</ul>
+</td></tr>
+<tr valign=top><td>$2003</td><td>Write</td>
+<td><b>Sprite-RAM Address Register</b><br>
+Use this to set the address to start I/O for Sprite-RAM.</td></tr>
+<tr valign=top><td>$2004</td><td>Write</td>
+<td><b>Sprite-RAM I/O Register</b><br>
+This is where you write data to Sprite-RAM (set the starting address via $2003).<br>
+I do not know if you can also <i>read</i> data through this. I've never needed to.</td></tr>
+<tr valign=top><td>$2005</td><td>Write x2</td>
+<td><b>VRAM Address Register #1</b><br>
+This controls PPU Addressing lines. It is generally used (by you) to pan/scroll the background display. The first write is Horizontal, and the second write is Vertical. I do not completely understand this register, so I will leave it at that. For more information, consult <a href=http://nesdev.parodius.com>the NESDEV site</a>.</td></tr>
+
+<tr valign=top><td>$2006</td><td>Write x2</td>
+<td><b>VRAM Address Register #2</b><br>
+This is used to specify the 16-bit address in VRAM to access via $2007. It also controls PPU Addressing Lines, so unless you know what you're doing, you should first wait for VBlank before setting this.<br><br>
+You write the high byte FIRST, and then the low byte.</td></tr>
+
+<tr valign=top><td>$2007</td><td>Read/ Write</td>
+<td><b>VRAM I/O Register</b><br>
+This is where you will access VRAM (read/write). The VRAM address is auto-incremented (by either 1 or 32, set via $2000) upon each access.<br><br>
+Notes:
+<ul>
+<li>When reading from VRAM, the correct data will be returned starting with the <i>second</i> read. Therefore, when reading from VRAM, you should conduct a "throw-away" read first, before performing the main read.
+<li>This does not apply to VRAM $3F00-$3F1F (which is where the palettes are located), and does not apply to writes to VRAM.
+</ul>
+</td></tr>
+<tr valign=top><td>$2008-$3FFF</td><td>n/a</td>
+<td><b>Shadow PPU Registers</b><br>
+Every eight bytes is a mirror of $2000-$2007. Yes, it's stupid.</td></tr>
+<tr><td colspan=3>The following are pAPU (audio) registers. This information taken nearly verbatim from Y0sHi's document.</td></tr>
+<tr><td>$4000</td><td>Write</td><td><b>Pulse #1 Control Register</b></td></tr>
+<tr><td>$4001</td><td>Write</td><td><b>Pulse #1 Ramp Control Register</b></td></tr>
+<tr><td>$4002</td><td>Write</td><td><b>Pulse #1 Fine-Tune Register</b></td></tr>
+<tr><td>$4003</td><td>Write</td><td><b>Pulse #1 Coarse-Tune Register</b></td></tr>
+<tr><td>$4004</td><td>Write</td><td><b>Pulse #2 Control Register</b></td></tr>
+<tr><td>$4005</td><td>Write</td><td><b>Pulse #2 Ramp Control Register</b></td></tr>
+<tr><td>$4006</td><td>Write</td><td><b>Pulse #2 Fine-Tune Register</b></td></tr>
+<tr><td>$4007</td><td>Write</td><td><b>Pulse #2 Coarse-Tune Register</b></td></tr>
+<tr><td>$4008</td><td>Write</td><td><b>Triangle Control Register #1</b></td></tr>
+<tr><td>$4009</td><td>"?"</td><td><b>Triangle Control Register #2</b></td></tr>
+<tr><td>$400A</td><td>Write</td><td><b>Triangle Frequency Register #1</b></td></tr>
+<tr><td>$400B</td><td>Write</td><td><b>Triangle Frequency Register #2</b></td></tr>
+<tr><td>$400C</td><td>Write</td><td><b>Noise Control Register #1</b></td></tr>
+<tr><td>$400D</td><td>???</td><td><b>"Unused (???)"</b></td></tr>
+<tr><td>$400E</td><td>Write</td><td><b>Noise Frequency Register #1</b></td></tr>
+<tr><td>$400F</td><td>Write</td><td><b>Noise Frequency Register #2</b></td></tr>
+<tr><td>$4010</td><td>Write</td><td><b>Delta Modulation Control Register</b></td></tr>
+<tr><td>$4011</td><td>Write</td><td><b>Delta Modulation "D/A" Register</b></td></tr>
+<tr><td>$4012</td><td>Write</td><td><b>Delta Modulation Address Register</b></td></tr>
+<tr><td>$4013</td><td>Write</td><td><b>Delta Modulation Data Length Register</b></td></tr>
+
+<tr><td colspan=3>The following are "miscellaneous" registers.</td></tr>
+
+<tr valign=top><td>$4014</td><td>Write</td>
+<td><b>Sprite-RAM DMA Register</b><br>
+This is a very handy way to deal with Sprites. When you write a value here, 256 bytes are automagically transferred to Sprite-RAM. The address read from is $xx00-$xxFF, where xx is the value written.<br>
+You can make the most of this by setting aside $100 bytes of RAM (such as $0700-$07FF) as a Sprite DMA table. You can then modify the data there instead of manually via $2003/$2004. When everything's ready, just write the page number (in this case, $07) to $4014. <i>Einfach!</i> (Nothing to it!)</td></tr>
+
+<tr valign=top><td>$4015</td><td>Read/ Write</td>
+<td><b>pAPU Master Control</b><br>
+On read:
+<pre>
+..IDNT21
+  |||||+--- Pulse #1 ---------+
+  ||||+---- Pulse #2          |
+  |||+----- Triangle          +-- 0 = Not in use
+  ||+------ Noise             |   1 = In use
+  |+------- Delta Modulation -+
+  +-------- "Vertical Clock Signal IRQ Avaliability"
+            0 = One frame occuring, thus IRQ cannot occur
+            1 = One frame is being interrupted via IRQ
+</pre>
+On write:
+<pre>
+...DNT21
+   ||||+--- Pulse #1 ---------+
+   |||+---- Pulse #2          |
+   ||+----- Triangle          +-- 0 = Disabled
+   |+------ Noise             |   1 = Enabled
+   +------- Delta Modulation -+
+</pre>
+(This information taken nearly verbatim from Y0sHi's NESTECH.TXT document)
+</td></tr>
+
+<tr valign=top><td>$4016</td><td>Read/ Write</td>
+<td><b>Joystick #1</b><br>
+On read:
+<pre>
+...TS..D
+   ||  +--- Joystick data (see below)
+   |+------ Zapper Sprite Detection
+   |        0 = Sprite not in position
+   |        1 = Sprite in front of cross-hair
+   +------- Zapper Trigger
+            0 = Pulled
+            1 = Released
+</pre>
+On write:
+<pre>
+.......S
+       +--- Joystick strobe
+            0 = Clear strobe
+            1 = Reset strobe
+</pre>
+Notes:
+<ul>
+<li>You must "strobe" the joystick before attempting to read the data. This is done by resetting, then clearing the strobe. You do this by writing $01 and then $00 to $4016. This resets the joystick hardware and it will begin sending out the button-press status one bit at a time.
+<li>Once you've strobed the joystick, you can start reading the data. On each read, the joystick will return the status one button at a time in the lowest bit of $4016. On each successive read, it will return the status of the successive buttons. The button status is returned <i>in this order</i>:
+<ol>
+<li>A Button
+<li>B Button
+<li>Select
+<li>Start
+<li>Up arrow
+<li>Down arrow
+<li>Left arrow
+<li>Right arrow
+</ol>
+</ul>
+Sample joystick-reading routine:
+<pre>
+a.read = $00
+b.read = $01
+.
+.
+.
+right.read = $07
+
+readjoy:    LDX #$01
+            STX $4016
+            DEX
+            STX $4016
+            LDY #$00
+do_readjoy: LDX $4016
+            STX a.read,Y
+            INY
+            CPY #$08
+            BNE do_readjoy
+            RTS
+</pre>
+</td></tr>
+<tr valign=top><td>$4017</td><td>Read/ Write</td>
+<td><b>Joystick #2</b><br>
+This works essentially the same as for Joystick #1.</td></tr>
+
+<tr valign=top><td>$5000-$5FFF</td><td>Read/ Write</td>
+<td><b>MMC5 Registers and Expansion RAM</b><br>
+This section of memory is only used with the Nintendo MMC5 memory mapper.</td></tr>
+<tr valign=top><td>$6000-$7FFF</td><td>Read/ Write</td>
+<td><b>Save-RAM</b><br>
+This is where saved games live and frolick and make merry, assuming the cardridge supports it. If it does, you may as well use this as an extension to the regular work RAM. I mean, you're born with 2K, and here's 8K of space (minus whatever you use for the actual saved games) right here!</td></tr>
+<tr valign=top><td>$8000-$FFFF</td><td>Read</td>
+<td><b>ROM</b><br>
+This is the area in which the game ROM is loaded.<br><br>
+Notes:
+<ul>
+<li>If the game uses a mapper (ie., if there's more than 32K of PRG-ROM), it varies which sections are mapped into this space. For games with 32K PRG-ROM space, then simply all of it is mapped into this space. For games with only 16K of PRG-ROM space, it is mapped to both the $8000-$BFFF and $C000-$FFFF regions.
+<li>For all mappers except MMC5, you communicate with it by writing values to mapper registers mapped in the $8000-$FFFF. The actual registers, their locations, and their functions vary from mapper to mapper, of course.
+<li>Writing values to the $8000-$FFFF area does not affect the ROM. After all, it's <u>R</u>ead-<u>O</u>nly <u>M</u>emory, right?
+</ul>
+</td></tr>
+
+<tr><td colspan=3>The following are 6502 Vectors.</td></tr>
+
+<tr valign=top><td>$FFFA-$FFFB</td><td rowspan=3>n/a</td>
+<td><b>Non-Maskable Interrupt (NMI) Vector</b><br>
+This contains the address to jump to when the PPU generates a Vertical Blanking Impulse.<br><br>
+Notes:
+<ul><li>You can control whether or not the PPU generates NMI on VBlank, via the highest bit of $2000
+<li>You cannot mask an NMI by executing the SEI instruction, thus the name "Non-maskable".
+</ul></td></tr>
+
+<tr valign=top><td>$FFFC-$FFFD</td>
+<td><b>Reset Vector</b><br>
+This contains the address to jump to when the 6502 hardware is initialized. This occurs when you first turn on the power, or when you press the Reset button. In other words, this contains the address of the "start" of the program.</td></tr>
+
+<tr valign=top><td>$FFFE-$FFFF</td>
+<td><b>Interrupt Request / CPU Break (IRQ/BRK) Vector</b><br>
+This contains the address to jump to when a hardware interrupt (IRQ) or software interrupt (BRK) is executed.</td></tr>
+</table>
+<hr>
+The PPU has it's own 16K area, known as VRAM. It is accessed by writing the address (high byte first) to $2006, then accessing the data in question via $2007. So, here is a PPU Memory map:<br><br>
+<table width=100% border=1 cellpadding=1 cellspacing=1 style="font: 8pt tahoma">
+<tr><th>ADDRESS</th><th>FUNCTION</th></tr>
+
+<tr valign=top><td>$0000-$1FFF</td>
+<td><b>Pattern Tables</b><br>
+This is where the graphic tiles are stored. You can view these in NESticle by pressing F2.<br><br>
+Notes:
+<ul><li>Bits 3 and 4 (---XX---) of $2000 control which half of the Pattern Table is used by the Sprites and the Background. For the tile index numbers used for Sprites/BG, they refer to that half of the pattern tables. You <i>can</i> map both the Sprites and the Background to the same half (such as the controls screen of Chris Covell's <i>Solar Wars</i>).
+<li>For CHR-RAM based games, this is where you access CHR-RAM.
+<li>Each tile is $10 bytes in size; each row of 16 tiles is $100 bytes.
+</ul>
+</td></tr>
+<tr valign=top><td>$2000-$23BF</td>
+<td><b>Name Table #0 (lower-left)</b><br>
+The Name Table data controls which tiles go where in the Background. It starts with the upper-left tile, and each successive byte represents the next tile. Each byte represents the tile number in the pattern tables ($0xx0 or $1xx0 depending on PPU Control Register #1 ($2000)).<br><br>
+The background (per name table) is 32x30 tiles in size.</td></tr>
+<tr valign=top><td>$23C0-$23FF</td>
+<td><b>Attribute Table #0 (lower-left)</b><br>
+The Attribute Table data controls which set of colours is used where. Each Attr. Table byte covers a 4x4-tile area, and these areas are laid out left-to-right, top-to-bottom. Each such section is divided into 2x2-tile areas, which is the finest resolution of Attribute Table data. Now, for each byte:
+<pre>
+44332211
+||||||++--- Upper-left 2x2-tile section
+||||++----- Upper-right 2x2-tile section
+||++------- Lower-left 2x2-tile section
+++--------- Lower-right 2x2-tile section
+</pre>
+For each:
+<pre>
+00 = First set of four colours (of the BG palette)
+01 = Second set of four colours
+10 = Third set of four colours
+11 = Fourth set of four colours
+</pre>
+Notes:
+<ul>
+<li>There are only tiles defined for a 32x30-tile area (in the Name Table), but the Attribute Table data is treated as covering a complete 32x32-tile area. It's a bit confusing, perhaps a diagram may help:<br><br>
+<img src=name-attr.gif align=left> Each light/dark area represents a different tile; the differently-coloured areas represent each 2x2-tile part of the Attribute Tables.<br clear=all>
+<li>The same phenomenon occurs at the bottom of the screen.
+</ul>
+</td></tr>
+<tr valign=top><td>$2400-$27BF</td><td><b>Name Table #1 (lower-right)</b></td></tr>
+<tr valign=top><td>$27C0-$27FF</td><td><b>Attribute Table #1 (lower-right)</b></td></tr>
+<tr valign=top><td>$2800-$2BBF</td><td><b>Name Table #2 (upper-left)</b></td></tr>
+<tr valign=top><td>$2BC0-$2BFF</td><td><b>Attribute Table #2 (upper-left)</b></td></tr>
+<tr valign=top><td>$2C00-$2FBF</td><td><b>Name Table #3 (upper-right)</b></td></tr>
+<tr valign=top><td>$2FC0-$2FFF</td><td><b>Attribute Table #3 (upper-right)</b></td></tr>
+
+<tr valign=top><td>$3000-$3EFF</td><td><b>Unknown</b><br>
+This is probably mirrored from something. Whoever laid out the NES memory map sure likes to waste space with "mirroring", doesn't he?</td></tr>
+<tr valign=top><td>$3F00-$3F0F</td>
+<td><b>Background Colour-Index Array (ie. Palette)</b><br>
+Each byte written here is not an absolute colour value, but rather an offset in the colour index used by the PPU to draw the screen. This image will serve as a very valuable reference:<br><br>
+<img width=272 height=80 src=nespal.gif align=left>$0F is generally used to represent the colour Black.<br clear=all>
+Feel free to download and save that image. Right-click on it and select "Save Image As...".<br><br>
+Notes:
+<ul>
+<li>$3F00 controls the screen background colour. This colour is mirrored every four bytes in the $3F00-$3F1C range. (However, if (via PPU Control Register #2 ($2001)) you tell the PPU not to display the background, it will still always display Black, regardless of the palette BG colour).
+<li>You can read the palette data from VRAM without having to conduct a "throw-away" read. I think it has something to do with where the palette data is physically stored in relation to the PPU. Regardless of why, it just IS. I remember that there's a document at <a href=http://nesdev.parodius.com>the NESDEV site</a> explaining why, if you're interested.
+</ul>
+</td></tr>
+<tr valign=top><td>$3F10-$3F1F</td>
+<td><b>Sprite Colour-Index Array (ie. Palette)</b><br>
+This is the same as the Background palette, except it's used for Sprites.<br><br>
+Notes:
+<ul><li>The background colour ($3F00) does not affect sprite display at all; colour #0 of any Sprite tile is simply not drawn at all (it is transparent).
+</ul>
+</td></tr>
+
+<tr valign=top><td>$3F20-$3FFF</td>
+<td><b>Shadow Palette</b><br>
+Every $20 bytes of this is simply a mirror of $3F00-$3F1F.</td></tr>
+
+<tr valign=top><td>$4000-$FFFF</td>
+<td><b>Shadow VRAM</b><br>
+Every $4000 bytes of this is simply a mirror of $0000-$3FFF.</td></tr>
+</table>
+<hr>
+<a href=index.html>Return to JAVS NES Development page</a>
+</body></html>

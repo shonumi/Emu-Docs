@@ -1,0 +1,401 @@
+<html>
+<head>
+<title>...just another vision... Studios - [Intro to 6502 Assembly]</title>
+<link rel=stylesheet type=text/css href=javs.css>
+<style>
+pre {font: 8pt courier new; color: #00ffff; background: #004040}
+</style>
+<meta name=generator content="Windows Notepad">
+<meta name=description content="...just another vision... Studios is a non-profit, underground ROM Hacking and NES development group created by zero soul.">
+<meta name=keywords content="rom,hacking,nes,development,zero,soul">
+<body bgcolor=black text=white style="font-family: tahoma,verdana,arial">
+<table width=100% border=0>
+<tr><td align=left valign=top>
+<a href=index.html><img src=jav_logo.gif alt="...just another vision... Studios"></a>
+</td><td align=right valign=top>
+<a href=http://smb3c.darkmazda.com><img name=cg src=cg1.gif onmouseover=cg.src='cg2.gif' onmouseout=cg.src='cg1.gif' alt="Return to Challenge Games"></a></td></tr></table>
+<hr>
+<font size=3><b>6502 101</b></font><br>
+<font style="font: 8pt tahoma,verdana,arial">
+This will introduce the 6502 architecture, addressing modes, and instruction set.<br><br>
+A number of coding samples (the blue-text areas) are scattered throughout this document, to illustrate the basics of coding in 6502. Unless otherwise stated, it'll do you the most good to understand completely each example given, before moving on to the next section.<br><br>
+Alternately, you may want to skim through this entire document, and then go through it again more slowly.
+<hr>
+<font size=2><b>Introduction to Assembly</b></font><br><br>
+"Assembly" refers to a programming language that represents exact CPU instructions. Assembly-language programs are platform-specific by their very nature (every different CPU has it's own instruction set, and thus it's own Assembly language), which is different than "universal" languages such as Basic or C, which can be compiled on many different platforms. Then again, Basic and C (and other such languages) are not compiled "directly", but are rather translated into the Assembly language of the target platform (Windows, Mac, etc).<br><br>
+Assembly has a number of advantages (as well as disadvantages) in comparison to Basic or C:<br>
+<ul><b>PROS</b>
+<li>Programs written in Assembly are always much faster than ones written in Basic or C, just like web pages coded directly in HTML are always much smaller (in terms of download size) and much more cohesive and presentable than pages written in FrontPage or whatever. ;)
+<li>Assembly-written programs are also smaller, so you can fit in more stuff than Basic or C, into a given size.
+<li>When you code in Assembly, you have absolute control over the CPU's every move, so you (should) know <i>exactly</i> what a particular section of code will do and how it will be executed (assuming you didn't fuck it up).</ul>
+<ul><b>CONS</b>
+<li>Assembly is harder to learn than Basic or C. In Basic/C, you can- for instance- print something on-screen with one simple command. In Assembly, you have to do it manually.
+<li>Assembly-written programs are much harder to "port" to other systems. You should use Assembly for programs which you know will be used on only one system (such as the NES).
+</ul>
+<hr>
+<font size=2><b>The 6502's internal architecure</b></font><br><br>
+The 6502 is an 8-bit processor with a 16-bit address space.<br><br>
+The 6502 handles words (16-bit values) in LSB (Least-Significant Byte) format; that is, the low byte comes first. The word $1234 would be stored as $34,$12. When dealing with numbers on a per-byte basis this is not important, but keep it in mind when manipulating things such as addresses and pointers.<br><br>
+The 6502 has a number of internal registers which are not addressable by any 6502 instruction, but are an actual part of the CPU. These include the Accumulator, the X- and Y-Index Registers, the Stack Pointer, the Program Counter, and Processor Status Register.
+<ul>
+<li>The <b>Accumulator</b> (A for short) is the heart and soul of the 6502. All arithmetic and logical operations work with data in the Accumulator, and the majority of memory transfers will take place through the Accumulator. As far as you (as an NES programmer) should be concerned, the Accumulator <i>is</i> the 6502.
+<li>The <b>X-</b> and <b>Y-Index Registers</b> (X and Y for short) are important registers. They can be used for memory transfer (like the Accumulator) and for holding temporary values, but their primary purpose will be in assisting the Accumulator in memory transfers by acting as a read/write offset (ie., index). This is a very important feature. Note that you cannot perform arithmetic or logical operations on X or Y.
+<li>The <b>Stack Pointer</b> (SP for short) acts as an offset to "The Stack" (explained later). It points to the next free space on the Stack, which can be considered synonymous with $01xx, where xx is the value in SP.
+<li>The <b>Program Counter</b> (PC for short) is the only 16-bit register in the 6502. It contains the address of the current instruction being executed, ie., where the 6502 "is" in the program.
+<li>The <b>Processor Status Register</b> (P for short) contains a series of "flags" (a flag = an indication of whether something has or has not taken place) that reflect the result of the 6502's operations. This is absolutely critical to controlling program flow, since the Branch-on-Condition instructions use the data contained in P. Here are it's flags, from right to left:
+<ol><li><b>Carry</b> (C) - this holds the "carry" out of the most significant bit of the last addition/subtraction/shift/rotate instruction. If an addition produces a result greaater than 255, this is set. If a subtraction produces a result less than zero, this is <i>cleared</i> (Subtract operations use the opposite of the Carry (1=0, 0=1)).
+<li><b>Zero</b> (Z) - this is set if the last operation returned a result of zero.
+<li><b>Decimal</b> (D) - if set, all Addition/Subtraction operations will be calculated using "Binary-coded Decimal"-formatted values (eg., $69 = 69), and will return a BCD value. Decimal mode is unavaliable on the NES' 6502, which is just as well.
+<li><b>Interrupt Disable</b> (I) - if set, IRQ interrupts will be disabled.
+<li><b>Breakpoint</b> (B) - this is set only if the BRK instruction is executed.
+<li>The third-highest bit is unused; it is supposed to be a logical 1 at all times. (I don't know why either).
+<li><b>Overflow</b> (V) - This is set if the last operation resulted in a sign change (see below).
+<li><b>Negative/Sign</b> (N) - This is simply a reflection of the highest bit of the result of the last operation. A number with it's high bit set is considered to be negative ($FF = -1); they are called "Signed" numbers.
+</ol>
+</ul>
+There are a few areas of memory ($0000-$FFFF) that have a special function under the 6502:
+<ul>
+<li>The $0000-$00FF area is known as the <b>Zero Page</b> (ZP for short). This is special because some addressing modes take advantage of it's location by not having to specify the high byte ($00), thus saving space. On a more practical level, some addressing modes (such as Indirect Addressing (used for Pointers)) can operate only on data in the Zero Page. On any 6502-based system, the Zero Page is prime Real Estate.
+<li>The $0100-$01FF area is known as <b>The Stack</b>. This is a special memory area that is used by the CPU and by the programmer (via the CPU) for temporary storage. The most common usage is with the JSR (Jump to Subroutine) and RTS (Return from Subroutine) instructions: when JSR is executed, the 6502 needs to know to where to return when finished (when it encounters RTS); this data is kept on the Stack. The Stack starts at $01FF and grows down from there. The Stack Pointer records the low byte of the next free space on the Stack.<br>
+To transfer something to the stack is called "pushing" on the stack, and transferring something from the stack is called "pulling" from or "popping" from the stack.
+<li>On the NES, the $2000-$4FFF region is where the CPU registers are (used to communicate with the PPU and pAPU).
+<li>The $FFFA-$FFFF region is where the Vectors are kept. They contain the addresses of three Interrupt locations: NMI, RESET, and IRQ/BRK:
+<ol><li>NMI (Non-Maskable Interrupt) is an interrupt generated by the PPU (if you tell it to) when it has finished drawing the current display frame. This is when the so-called "Vertical Blanking" period, or VBlank, starts. This is critical time because it is the only period in which the game can write data to the PPU without risk of causing graphical glitches.
+<li>RESET is generated when the NES is powered-on and when you hit "Reset" (which are the same thing, except that pressing Reset does not clear RAM). This is of critical importance because the Reset Vector contains the address of the "start" of the program!
+<li>IRQ/BRK (Interrupt Request / Break) share the same vector. IRQs can only be generated by mapper hardware (as far as I know). A CPU Break (the BRK instruction) occurs when the 6502 encounters opcode $00 (BRK). It is rarely used.
+</ol>
+</ul>
+<hr>
+<font size=2><b>Addressing Modes</b></font><br><br>
+6502 Operations need operands to work on. There are seven methods for the CPU to acquire these operands. These methods are called Addressing Modes.
+<ul><li>DIRECT - The operand is contained in the instruction itself.<br><tt>LDA #$3F</tt> (place the value $3F into the Accumulator)<br>
+Syntax: place "#" before the operand
+<li>MEMORY - The operand's address is given in the instruction. This can be either 8- or 16-bits (distinguished by opcode).<br>
+<tt>STA $2007</tt> (store the value in the Accumulator, at $2007)<br>
+Syntax: none
+<li>MEMORY INDEXED - The operand's address is given in the instruction. The given address then has the value of either X or Y added to it, to yield the final address.<br>
+<tt>LDA $8000,X</tt> (if X = $20, then the value at $8020 is loaded into the Accumulator)<br>
+Syntax: place ",X" or ",Y" (depending on which index register you want to use) after the operand<br>
+<i>Note:</i> You can load and store X and Y using the other as an index (to a limited extent), but cannot load/store one using itself as an index. In addition, you cannot use A to index.
+<li>INDIRECT - The address <i>of</i> the operand's address is given in the instruction. The 6502 fetches the 16-bit value at the given address, and goes to the address contained in that value, and fetches the operand. (This is only used with the JMP instruction).<br>
+<tt>JMP ($FFFC)</tt> (Sets PC ("Jumps") to the address contained at $FFFC). Suppose there is $00 at $FFFC and $C0 at $FFFD. Executing <tt>JMP ($FFFC)</tt> will ultimately set the PC to the value $C000 (remember, the 6502 stores 16-bit values with the low byte first).<br>
+Syntax: Place ()'s around the operand
+<li>INDIRECT INDEXED - Same as indirect, but the value of X or Y is added to either the given or the taken address, to yield the final address. The given address can only be zero-page.<br>
+<tt>LDA ($00),Y</tt> (reads the 16-bit address at $00 and the following byte ($01), adds Y to that address, fetches the value at <i>that</i> address, and places it in the Accumulator. This addressing mode is used for Pointers.)<br>
+Syntax: Place ()'s around the part that does the indirection
+<li>REGISTER - The operation operates on CPU Registers; no argument is needed.<br>
+<tt>TXA</tt> (copies the value in X, to the Accumulator.)<br>
+Syntax: none
+<li>IMPLIED - The NOP and BRK instructions operate on nothing.<br>
+<tt>NOP</tt> (No Operation)<br>
+<tt>BRK</tt> (generate a software interrupt (CPU Break))
+</ul>
+<hr>
+<font size=2><b>6502 Instruction Set</b></font><br><br>
+Up to this point I have covered the mechanics behind 6502 Assembly. Now I will cover the actual instruction set, grouped by function.<br><br>
+<ul><b>LOAD AND STORE INSTRUCTIONS</b>
+<li>LDA (Load the Accumulator)
+<li>LDX (Load X)
+<li>LDY (Load Y)
+<li>STA (Store the Accumulator in Memory)
+<li>STX (Store X in Memory)
+<li>STY (Store Y in Memory)
+</ul>
+These are the basic instructions in 6502 Assembly. LDA is the most-often used instruction. These are used for memory transfers. To Store a register's contents is synonymous with "Writing" it.<br>
+For those accustomed to Basic or C, you may be used to assigning a value to a register like this:<br>
+<tt>num = 5</tt><br>
+In 6502 Assembly, this is a two-step process:<br>
+<tt>LDA #$05</tt> (load A with the value $05)<br>
+<tt>STA NUM</tt> (store A at "num")<br>
+In practice, the value "NUM" would have been assigned a label by you. When the Assembler encounters this label later, it substitutes it's value. Suppose you declared "NUM = $00" at the beginning of the code; the Assembler would assemble the <tt>STA NUM</tt> line as <tt>STA $00</tt>.<br><br>
+Practice:<br>
+The register pair $2006 and $2007 are used to access VRAM. VRAM is the video memory internal to the PPU. VRAM contains the pattern tables (VRAM $0000-$1FFF), name and attribute tables (VRAM $2000-$2FFF), and Palette data (VRAM $3F00-$3F1F). In short, it contains all the information- except sprites- to generate the display. To access VRAM, you:
+<ol>
+<li>Write the 16-bit address to access, high byte first, to $2006.
+<li>Write the data to $2007
+</ol>
+So, for example, suppose we wanted to write the value $0F to VRAM $3F00 (ie., set the background colour to Black). You would do this by:<br>
+<pre>
+	LDA #$3F	;the high byte of the address
+	STA $2006	;write it to $2006
+	LDA #$00	;the low byte of the address
+	STA $2006	;write it to $2006
+	LDA #$0F	;the data to be written
+	STA $2007	;write it to $2007
+</pre>
+Note: For reference, when you write (or read) a value to/from $2007, the VRAM address is automatically incremented by one.
+<hr width=50%>
+<ul><b>ARITHMETIC INSTRUCTIONS</b>
+<li>ADC (Add to the Accumulator, with Carry)
+<li>SBC (Subtract from the Accumulator, with Borrow)
+</ul>
+These should be self-explanatory. When you ADC, the value of the Carry flag is also added. This is to enable you to perform multi-byte arithmetic with ease. When you SBC, the OPPOSITE of the Carry flag is also subtracted from A; again, this is to enable easy multi-byte arithmetic.<br>
+Before performing ADC, you will want to clear the carry flag first; this is done by the CLC instruction. Before performing SBC, you will want to set the carry flag first; this is done by the SEC instruction.<br>
+To perform multi-byte additions, you CLC at the beginning, and then add from the bottom up. Multi-byte subtractions work the same, except you SEC instead of CLC. Remember to subtract in the right order (2-1 is not 1-2).<br><br>
+Practice:<br>
+Add one to the value at $00 (low) and $01 (high)
+<pre>
+	CLC		;clear carry flag
+	LDA $00		;get low byte to modify
+	ADC #$01		;add $01
+	STA $00		;store result
+	LDA $01		;get high byte to modify
+	ADC #$00		;adds zero, as well as any carry
+	STA $01		;store result
+</pre>
+<hr width=50%>
+<ul><b>INCREMENT AND DECREMENT INSTRUCTIONS</b><br>
+To increment is to add 1 to, and to decrement is to subtract 1 from.
+<li>INX (Increment X)
+<li>INY (Increment Y)
+<li>INC (Increment a memory location)
+<li>DEX (Decrement X)
+<li>DEY (Decrement Y)
+<li>DEC (Decrement a memory location)
+</ul>
+Increment/Decrement is a useful way to update X/Y or a memory location's value. The arithmetic operation does not affect and is not affected by the carry flag; to INX when X = $FF will simply result in X=0, regardless of the carry flag's status, and it will not affect the carry flag.<br>
+You may notice that there is no Increment or Decrement instruction that operates on the Accumulator. This oversight was rectified in a later version of the 6502 called the 65c02 (it was not used in the NES), but for NES programming you'll have to deal with it manually.<br><br>
+Practice:<br>
+A simple 16-bit countdown loop.
+<pre>
+	LDY #$00		;clear Y
+label_a:	LDX #$00		;clear X
+label_b:	DEX		;decrement X
+	BNE label_b	;(if result not zero, then branch to label_b)
+	DEY		;decrement Y
+	BNE label_a	;(if result not zero, then branch to label_a)
+</pre>
+<hr width=50%>
+<ul><b>ROUTINE INSTRUCTIONS</b>
+<li>JMP (sets PC)
+<li>JSR (pushes PC, then sets PC to the given value)
+<li>RTS (pops PC)
+<li>RTI (pops P, then PC)
+</ul>
+These are used to control program flow on a larger scale. JSR and RTS are symbiotic pairs (they work together); you would use them to go to "detour" to a particular routine (JSR) and return later (RTS). This has other advantages: you can JSR to a given routine from *anywhere* in the program, so you can reuse one routine and only have to define it once.<br>
+JMP and JSR are used to set the PC. Which one you use depends on whether you intend to return or not. Use JMP if you do not intend to return; use JSR if you do.<br>
+RTI is similar to RTS, but it first pulls the processor status (P), and then PC. It also doesn't increment PC after popping it like RTS does, but that's not important for the purpose of understanding the general function of RTI/RTS. You would use RTI to end an interrupt (NMI or IRQ/BRK) routine.<br><br>
+Practice:<br>
+Write a series of values to the BG palette colour register ($3F00 of VRAM).
+<pre>
+values:	.db $0f,$00,$10,$30,$10,$00,$0f	;these are the values to write
+
+fadeinout:	LDX #$00			;reset index register
+fadeinout_2:	LDA values,X		;read from the database using X
+		JSR write_bg_colour	;write it to the BG register
+		INX			;increment index register
+		CPX #$07		;(compare X to $07 (there are seven entries))
+		BNE fadeinout_2		;(return if not done)
+		RTS			;done- return
+
+write_bg_colour:	LDY #$3F			;use Y to set the VRAM address
+		STY $2006
+		LDY #$00
+		STY $2006
+		STA $2007		;..and store the read value to $2007
+		RTS			;..and return
+</pre>
+NOTE: In the above routine, the subroutine ('write_bg_colour') was actually completely unnecessary and just slows it down; you could replace the JSR with the subroutine itself (sans RTS). HOWEVER, it is much more efficient if you <i>reuse</i> it. You could, for instance, have one set of values to fade in, and another to fade out, and have them JSR to the same routine that actually writes the value. These sort of tricks help make your code very efficient, and (as in the above example), help make it more "readable" (so you or others don't get lost when looking over the source code).
+<hr width=50%>
+<ul><b>BRANCH-ON-CONDITION INSTRUCTIONS</b><br>
+These are critically important instructions. A few have been used in a few of the above examples.
+<li>BEQ (Branch if Zero Flag set ("Branch on result EQual"))
+<li>BNE (Branch if Zero Flag clear ("Branch on result Not Equal"))
+<li>BCS (Branch if Carry set)
+<li>BCC (Branch if Carry clear)
+<li>BVS (Branch if Overflow set)
+<li>BVC (Branch if Overflow clear)
+<li>BMI (Branch if Negative sign set ("Branch on result MInus"))
+<li>BPL (Branch if Negative sign clear ("Branch on result PLus"))
+</ul>
+These refer to the flags in the Processor Status Register to determine whether or not to branch.<br>
+All branch-on-condition instructions use what is called "Relative" addressing. The operand is a signed 8-bit value that indicates the displacement from the start of the *next* instruction (assuming the condition is met and the branch takes place). If the displacement values is in the range of $00-$7F, it is simply that many bytes forward; if not, then you can find the reverse displacement by:
+<ol><li>Inverting the bits (1 -&gt; 0, 0 -&gt; 1)
+<li>Adding one</ol>
+This means that you cannot branch farther than 127 bytes forward or 128 bytes backwards. If you find you need to branch farther, use the opposite branch-on-condition and JMP to the destination instead (or, if it's a loop, take a portion of the loop and move it somewhere else, and reroute to it using a JSR (be sure to RTS at the end of the section)).<br>
+Fortunately, there's no need to calculate the displacements yourself ("Now you tell me!"): you will type up your code using labels. When you want to branch, you specify the label as the destination, and the Assembler will calculate the displacement automagically (but will report an error if it's too far to branch).<br><br>
+Practice:<br>
+Wait for VBlank on an NES unit.<br><br>
+On the NES, the PPU is in constant action. It is, generally speaking, doing one of two things: drawing the current frame, or waiting for the display device's screen-drawing mechanism to return to the top of the display to begin drawing the next frame. The time spent waiting between frames is critical. This is known as the "Vertical Blanking" period, or VBlank. What makes it so important is that a game can safely write values to the display registers without fear of glitching the display, since the PPU isn't doing anything. If a game attempted to update the display while the PPU is drawing the frame, it will interfere with the PPU's addressing lines and glitch the display. (But, if you know what you're doing, you could systematically write certain values to certain registers (such as scroll registers) mid-frame to create special effects such as wavy effects, but that's beyond the scope of this document).<br>
+Anyhow, when the PPU has finished drawing the current frame, it will raise a flag in the PPU Status Register ($2002) indicating thus. The game programmer can use this to stall the program until VBlank has begun, to ensure all writes to VRAM are done safely.<br>
+The PPU will raise the highest bit of $2002 when VBlank begins.
+<pre>
+wait_vblank:	BIT $2002		;(see next section for an explanation of this)
+		BPL wait_vblank		;branches on negative sign clear
+</pre>
+<hr width=50%>
+<ul><b>COMPARE AND LOGIC INSTRUCTIONS</b>
+<li>CMP (Compare A and memory)
+<li>CPX (Compare X and memory)
+<li>CPY (Compare Y and memory)
+<li>BIT (same as AND (below) except it doesn't modify either A or memory, and will copy the upper two bits of the addressed memory to the Processor Status Register (into the Overflow and Negative flags))
+<li>AND (perform bitwise logical AND between A and memory)
+<li>ORA (perform bitwise logical inclusive OR between A and memory)
+<li>EOR (perform bitwise logical exclusive OR between A and memory)
+</ul>
+CMP, CPX and CPY work by subtracting the addressed value from the associated register (A/X/Y) and updating the processor status register accordingly. A/X/Y are *not* modified by this action. Also, the Carry flag does not affect the comparison but will be altered accordingly, as if a real subtraction (SBC) took place. Thus, if you LDA #$05 then CMP #$04, the carry is SET (subtraction uses the opposite of the carry).<br>
+BIT is a bit complex (no pun intended). It will perform a bitwise logical AND between A and memory, but modify neither. If the result of the AND is zero, the zero flag is set. The upper two bits of the addressed memory are copied into the processor status register.<br>
+Now to explain the BIT $2002 / BPL wait_vblank routine above: as I've said, the highest bit of $2002 is set when the PPU enters VBlank. When you BIT $2002, it compares A and $2002 (but modifies neither), and copies the upper two bits of $2002 to the processor status. The upper bit of $2002 is copied to the upper bit of P (the Negative flag). Since we want to wait until it's set, we want to branch to the start of the stall loop when it's NOT set, right? The BPL instruction will do just that.<br>
+Moving along... the AND, ORA and EOR instructions will perform a comparison between each bit of A and the associated bit of the addressed memory, and return the result to A. Here is a table showing what comparisons return what:
+<table align=center style="font-size: 10pt" border=1><tr>
+<th>LOGIC</th><th>BIT 1</th><th>BIT 2</th><th>RESULT</th><th>METHOD</th></tr><tr>
+<td rowspan=3>AND</td><td>1</td><td>1</td><td>1</td><td rowspan=3>If bit 1 AND bit 2 are set, return 1, else return 0.</td></tr><tr>
+<td>1</td><td>0</td><td>0</td></tr><tr>
+<td>0</td><td>0</td><td>0</td></tr><tr>
+<td rowspan=3>ORA</td><td>1</td><td>1</td><td>1</td><td rowspan=3>If either bit is set, return 1, else return 0.</td></tr><tr>
+<td>1</td><td>0</td><td>1</td></tr><tr>
+<td>0</td><td>0</td><td>0</td></tr><tr>
+<td rowspan=3>EOR</td><td>1</td><td>1</td><td>0</td><td rowspan=3>If one OR the other, but not both, is set, return 1, else return 0.</td></tr><tr>
+<td>1</td><td>0</td><td>1</td></tr><tr>
+<td>0</td><td>0</td><td>0</td></tr></table>
+(Note: Comparing 1 to 0 is the same as comparing 0 to 1, so I have not bothered to list both)<br>
+<br>
+AND is useful for masking bits. Here's an alternate way to wait for VBlank, which is less efficient but easier to explain:
+<pre>
+wait_vblank:	LDA $2002		;get PPU status
+		AND #%10000000	;mask-out all but the highest bit
+		BNE wait_vblank
+</pre>
+ORA is useful for force-setting bits. Suppose you wanted to set the next-to-highest bit of a memory location:
+<pre>
+	LDA num		;get the value at the location
+	ORA #%01000000	;set the next-to-highest bit and don't touch the rest
+	STA num		;store it
+</pre>
+EOR is useful for inverting bits. Suppose you wanted to take a negative number ( &gt;= $80) and make it positive. This is done by inverting all the bits and adding one:
+<pre>
+	LDA num
+	EOR #%11111111	;invert every bit
+	CLC
+	ADC #$01	;(there's no Increment for A)
+	STA num
+</pre>
+<hr width=50%>
+<ul><b>SHIFT AND ROTATE INSTRUCTIONS</b>
+<li>ASL (Arithemetic Shift Left - Shift left one bit)
+<li>LSR (Logical Shift Right - Shift right one bit)
+<li>ROL (Rotate Left one bit)
+<li>ROR (Rorate Right one bit)
+</ul>
+In all of these, the bit that is moved "out" of the byte is copied to the Carry flag. What makes them different is what is moved "in". In the Shift (ASL/LSR) instructions, a zero is moved in. In the Rotate instructions, instead the Carry flag is moved in.<br>
+It should be noted that shifting left is the same as multiplying by two, and shifting right is the same as dividing by two (with the carry set if it was an odd number).<br><br>
+Practice 1 of 2:<br>
+Divide a 32-bit number ($00 (low) - $03 (high)) in half (shift all 32 bits right one bit)
+<pre>
+	LSR $03		;shift right the highest number (low bit -&gt; carry)
+	ROR $02		;rotate right (carry -&gt; $02 -&gt; carry)
+	ROR $01		;..and for $01
+	ROR $00		;..and for $00
+</pre>
+Practice 2 of 2:<br>
+16-bit multiply with 32-bit product<br>
+<font color=red><i>Note:</i> You do not need to review this to get <i>started</i> with NES development. This is a fairly advanced technique.</font><br>
+($00,$01) x ($02,$03) = ($04-$07) [in low-high order]<br>
+Note: To make the code below more readable, I will use labels instead of addresses for each number:<br>
+num1(.lo/.hi) x num2(.lo/.hi) = res(.0/.1/.2/.3)<br>
+(eg., NUM1.LO is the low byte of NUM1; RES.0 is the low byte of RES, then RES.1, RES.2, and RES.3)<br>
+I've also written the labels in lower-case to distinguish them.<br>
+This is what is called "shift-add" multiplication. It is a <i>very</i> efficient method of multiplication. Normal, recursive multiplication is based on the principle that 7n = n+n+n+n+n+n+n, whereas shift-add multiplication is a binary method that reduces it to it's most basic elements, and is based on the principle that 7n = 4n + 2n + 1n. It's harder to grasp but once you do, it'll hit you like a brick wall: "oh, that's all there is to it?". Take some time to study it. Don't worry if you don't get it right away; it took me a while to figure it out too.
+<pre>
+	LDX #$00		;reset index and store zeroes too!
+        STX res.0       ;clear result field
+        STX res.1
+        STX res.2
+        STX res.3
+mult:   LSR num1.hi     ;get next bit of multiplicand ($00,$01)
+        ROR num1.lo
+	BCC no_add	;if bit not set, skip additions
+	CLC		;perform 16-bit addition
+        LDA res.2
+        ADC num2.lo
+        STA res.2
+        LDA res.3
+        ADC num2.hi
+        STA res.3
+no_add: ROR res.3       ;rotate result field right
+        ROR res.2
+        ROR res.1
+        ROR res.0
+	INX		;increment counter
+	CPX #$10
+	BNE mult
+	RTS
+</pre>
+That routine can be easily modified to work with larger numbers (for instance, 32-bit multiply with 64-bit product).
+<hr width=50%>
+<ul><b>STACK AND TRANSFER INSTRUCTIONS</b>
+<li>PHA (Push A)
+<li>PHP (Push Processor status)
+<li>PLA (Pop A)
+<li>PLP (Pop Processor status)
+<li>TAX (A -&gt; X)
+<li>TXA (X -&gt; A)
+<li>TAY (A -&gt; Y)
+<li>TYA (Y -&gt; A)
+<li>TXS (X -&gt; Stack Pointer)
+<li>TSX (Stack Pointer -&gt; X)
+</ul>
+Note that the transfer instructions do not SWAP their associated register, but copy one to the other. The value in the destination register will be overwritten. This is similar to:
+<pre>
+    LDA spirit_of_final_fantasy
+    LDY money
+    LDX idealism,Y
+    TXA
+</pre>
+After which, A will contain Final Fantasy VIII.<br><br>
+The Push/Pull instructions should be self-explanatory.<br><br>
+TXS and TSX make manipulation of the Stack possible. A good idea at or near the start of a 6502 program would be to reset the stack pointer, like so:
+<pre>
+    LDX #$FF    ;stack pointer should point to the top of the stack
+    TXS
+</pre>
+
+
+<hr width=50%>
+<ul><b>STATUS REGISTER COMMANDS</b>
+<li>CLC (Clear Carry)
+<li>SEC (Set Carry)
+<li>CLD (Clear Decimal Mode bit)
+<li>SED (Set Decimal Mode bit)
+<li>CLV (Clear Overflow flag)
+<li>SEI (Set Interrupt Disable bit)
+<li>CLI (Clear Interrupt Disable bit)
+</ul>
+These should be self-explanatory. There is no SEV (Set Overflow) command despite the existence of CLV, but hell if I know why you'd need it. ;)<br><br>
+CLC and SEC are important in arithmetic operations, as described in that section.<br><br>
+The NES' 6502 does not support Decimal mode. No great loss as far as I'm concerned. Still, I usually CLD before running code, just to be sure.<br><br>
+Practice:<br>Quick initialization code<br><br>
+This is not "initialization" in the sense of activation, but simply a few commands to be run at the start of the program, to ensure all actors are in place before you begin filming:
+<pre>
+    SEI     ;set Interrupt-Disable
+    CLD     ;deactivate Decimal mode
+    LDX #$FF
+    TXS
+    INX     ;X = zero
+    STX ...     ;use this to clear out whatever you need
+</pre>
+
+<hr width=50%>
+<ul><b>OTHER INSTRUCTIONS</b>
+<li>NOP (No Operation)
+<li>BRK (generate a Software Interrupt (CPU Break))</ul>
+NOP is self-explanatory: it does nothing. It's use is limited: you could use it if you were hacking code in a pre-existing ROM and wanted to remove a part of the code, or to add weight to a slowdown routine. It's most highfalutin use is in careful CPU timing loops.<br>
+<pre>
+stall:	LDY #$00
+stall_a:	LDX #$00
+stall_b:	NOP
+	DEX
+	BNE stall_b
+	DEY
+	BNE stall_a
+	RTS
+</pre>
+(alternately, you could create a dynamic (variable) stall effect by LDY'ing a number (the higher the number, the more it stalls) and JSR'ing to "stall_a" instead of "stall").<br><br>
+BRK is the hardest to define. I won't cover it here because you simply won't need it.
+<hr>
+So, there's your crash course in 6502 Assembly. This document is by no means complete, but should be more than enough to keep you busy for a while. ;) However, except for BRK, I have covered the <i>entire</i> 6502 Instruction set!<br><br>
+Here's some food for thought: if making a full-size NES game is writing a novel, then you've just learned the alphabet.<br><br>
+What I recommend doing is saving this document onto your hard drive. Goto File -&gt; Save As and save it wherever. You can open it later; the images at the top of the page won't work, but that's not important. You may also want to grab the <a href=javs.css>stylesheet</a> (Right-click and select "Save target as...") so the links, etc, look the same as they are here.
+<hr>
+<a href=http://smb3c.darkmazda.com/zerosoul/nesdev.html>Return to JAVS' NES Development page</a>
+</body></html>

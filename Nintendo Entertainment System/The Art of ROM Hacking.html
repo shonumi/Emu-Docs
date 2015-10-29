@@ -1,0 +1,626 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>The Art of ROM Hacking</title>
+<style type="text/css">
+a:link,a:active,a:visited {color: #770000;font-family: verdana;font-size: 12px;text-decoration: none;font-weight: bold;border-bottom: 1px dashed}
+a:hover {color: #447744;border-bottom: 2px}
+li {color: #566797}
+hr {color: #566797;border-bottom: 2px dashed;border-top: 2px dashed}
+p {font-family: arial;color: #002002;font-size: 12px;font-weight: normal}
+h1 {color: #566797;font-family: arial;font-size: 21px}
+h2 {color: #566797;font-family: arial;font-size: 14px}
+b {color: #433523}
+</style>
+
+</head>
+
+<body>
+<H1>The Art of ROM Hacking</h3><p>
+Version 1.00<br>
+Written by <a href="mailto:vagla@NOSPAM.hotmail.com">Vagla</a> (vagla@NOSPAM.hotmail.com)<br>
+<a href="http://www.dragoneyestudios.net/">Dragon Eye Studios</a> (http://www.dragoneyestudios.net/)<br>
+<a href="http://forums.dragoneyestudios.net/">DESnet Forums</a> (http://forums.dragoneyestudios.net/)<P>
+
+<font face="courier"><hr><P></font>
+<ul>
+<li><a href=#sI>I. Introduction</a>
+<li><a href=#sII>II. Graphics Editing</a>
+<li><a href=#sIII>III. Hex Editing</a>
+<li><a href=#sIV>IV. Palette Editing</a>
+<li><a href=#sV>V. Text Editing</a>
+<li><a href=#sVI>VI. Pointers</a>
+<li><a href=#sVII>VII. Level Editing</a>
+<li><a href=#sVIII>VIII. TSA Editing</a>
+<li><a href=#sIX>IX. Data Locating</a>
+<li><a href=#sX>X. Compression</a>
+<li><a href=#sXI>XI. The ROM Hacking Dictionary</a>- <-<a href=##>#</a>-<a href=#a>A</a>-<a href=#b>B</a>-<a href=#c>C</a>-<a href=#d>D</a>-<a href=#e>E</a>-<a href=#f>F</a>-<a href=#g>G</a>-<a href=#h>H</a>-<a href=#i>I</a>-<a href=#j>J</a>-<a href=#k>K</a>-<a href=#l>L</a>-<a href=#m>M</a>-<a href=#n>N</a>-<a href=#o>O</a>-<a href=#p>P</a>-<a href=#q>Q</a>-<a href=#r>R</a>-<a href=#s>S</a>-<a href=#t>T</a>-<a href=#u>U</a>-<a href=#v>V</a>-<a href=#w>W</a>-<a href=#x>X</a>-<a href=#y>Y</a>-<a href=#z>Z</a>->
+</ul>
+<hr><P>
+
+<a name=#sI><H2>I. Introduction</h2></a><P>
+
+At the time of this writing, I've been in the ROM hacking scene for over 3 years, and during that time, I've picked up many tricks that most people don't know about. The goal of this document is to teach people how to ROM hack for the <B>NES console</B>, from beginning to end, including many of the tricks I've learned; note, though, that many of these methods can be used for other consoles, as well, which is why I didn't name this document "The Art of NES ROM Hacking." Please, read this document <b>thoroughly</B> before emailing me any
+questions you may have about it. I don't want any questions which are clearly answered in a section of this.<P>
+
+As for finding data using ASM tactics, I didn't cover any of that in this document. I'm fairly certain there are good documents regarding that elsewhere, and I honestly didn't want to spend the time writing all that ASM schtuff; I wrote all of this throughout the course of over half a year, and didn't want to work on it any longer (also note that if there are any discrepancies between different areas of the document, like term usage or something, that is because of this).<P>
+
+One final note, I wrote this document with newbies in mind, which is why it starts out so simple. However, I think most everyone can learn something from this document, so it might be good to give at least some of it a read through.<P>
+<hr><P>
+
+<a name=#sII><H2>II. Graphics Editing</H2></a><P>
+
+Graphics editing can be the most simple part of ROM hacking, at least for the NES. The NES tends to have non-compressed graphics data. For those of you who don't know, compression means to take data and make it as small as possible. There are many formats that games tend to use, though there is a cornacopia of games that use their own unique formats, or variations of common formats. If you want to edit the
+graphics in a game that has compression, you'll probably want to hack a different game, for now. Compression is not something to be tackled by complete noobies.<P>
+
+There are many tools that one can use to hack the graphics of an NES game. The two most popular programs are Tile Layer and Tile Layer Pro, both made by SnowBro. Both of these tools can be downloaded from <a href=http://www.zophar.net>Zophar's Domain</a>, as well as at many other ROM hacking web sites. Tile Layer is my favorite of the two, due to its superior clip board option, but it runs in DOS and doesn't support many of the things that TLP supports; I'll be explaining how to use TLP for graphics editing due to its being more used
+than TL, so you might as well get that. Also note that SnowBro has written yet another graphics editing program, called Tile Molester. I hear it's a pretty good utility, but I have yet to use it, so I really don't have an opinion on it yet.<P>
+
+So how do graphics work? Graphics are set up in tiles. Sprites and backgrounds are all tiles that are drawn onto the screen. Each tile is 8x8 pixels. For the NES, you can use four colors per tile. Three of these colors are actual colors, while the fourth is transparent (for backgrounds, this generally means that black will appear there. For sprites, it means that you'll see the background whereever there is a
+transparent pixel). As for how many graphics can be loaded up, there is a limit of 256 (16x16) tiles that can be loaded at once for the background, and an additional 256 (16x16) that can be loaded for sprites, for a total of 512 tiles. They are split into two tables with 256 in each; you can use an emulator called NESticle to view the NES pattern tables, as these are called, during play. Only 64
+sprite tiles can be displayed onscreen at once due to the fact that there are only 256 bytes in RAM devoted to sprites, and each tile requires four of those bytes. Generally, flickering will be caused if the tile amount surpasses 64, or if more than 8 sprite tiles are on the same row onscreen. As for palettes, there are two sets of palettes, one used for the background and one used for the sprites. Each set
+contains four palettes, and each palette, as described above, contains four colors, one of which is transparent. For backgrounds, each set of 2x2 tiles can have one of the four background palettes assigned to it. For sprites, each tile (1x1) can have one of the four assigned to it. Once you're done figuring out all of what I just said (I guess it was a lot to pack into a paragraph so early on, eh?), we can move on, heh.<P>
+
+Make a copy of a ROM and call it clipboard.nes. Now open this in TLP and change all of what you see to black. Simply select a tile, edit it so it is completely black, and then drag that black tile onto other tiles around it. Make a large block of black tiles, and then right click on one of the corners and highlight the entire block. Copy this block (ctrl+c) and paste it (ctrl+v) over other tiles to speed up
+the process. You can copy and paste larger and larger sections in order to finish this faster. What was the purpose of doing this, you ask? The clipboard in TLP (that window on the right that you can paste tiles into) is very annoying to use; by creating a blank ROM, you can simply paste whatever graphics you want to work on into the window with the blank rom and edit them there; when you're done, you can paste
+them back. It's as easy as that. For those of you who are more advanced (considering that there are complete newbies reading this, heh), you can use a hex editor to create a blank ROM (all 00's) and get the same effect.<P>
+
+Now that you have your clipboard ROM (which you should save right now it so you don't have to remake it every time you need a clipboard), you can begin to edit graphics. If the graphics in the game you want to hack are uncompressed, you won't have a problem. Just open the ROM and look through the editor until you see something that looks like graphics, but in the wrong palette. That's what you'll be editing. It is impossible for TLP to read the colors that the game uses, so if you want to see the graphics in a different color, you'll have to manually set the RGB values for each of the four colors using the color window. When you save the ROM, the palette will not be saved, for much the same reasons as TLP not being able to read the palette from the ROM. If you don't find any graphics in your ROM, then your ROM is probably compressed. If you find graphics, but they look really weird, try pressing +/- to view them correctly.<P>
+
+You may find duplicate graphics of some things in a ROM. This is the case in games like Zelda 2 and Mega Man 3. There are multiple sets of identical graphics used for the sprites in different areas, so if you want a change to the graphics to appear everywhere, you must make the change to all copies of the sprite. You can also take advantage of the different sets of graphics and have the graphics different depending on the area, but don't do this unless you have a damn good reason. It's dumb to just see your sprite's graphics change for seemingly no reason.<P>
+
+One question that I commonly hear on message boards is "How do I add more tiles to a sprite?" While it is possible to do this, it's not something that you should be tackling at this stage. You'd have to find the data for the sprite frames in the ROM, and figure out how to change them, which may be a bit out of your league at this point; wait until you reach the section on TSA, heh.<P>
+
+[Curious as to how the actual graphics work? An explanation of the graphics format for NES (and Game Boy, but you'll need to refer to the NES section for it) is available in the dictionary below, under NES Graphics Format. This is incredibly useful information if you plan on writing editors for NES/GB games.]<P>
+<hr><P>
+
+<a name=#sIII><H2>III. Hex Editing</H2></a><P>
+
+Hex editing is something that I've seen really confuse people who are new to hacking. It's actually pretty simple, though, and is essential to being a good hacker.<P>
+
+Go to <a href=http://www.zophar.net>Zophar's Domain</a> and pick up a hex editor. I use Hex Workshop for nearly all of my hex value hacking, but it doesn't support table files, an essential part of text hacking to be explained later, so you probably should get something else. I haven't used it before, but Thingy is a popular hex editor that I assume is good. There are many others, though, so you shouldn't feel limited in terms of a selection.<P>
+
+Hexadecimal, or hex for short, is a numbering system, much like our own decimal system. It's in base 16, meaning that there are 16 different numbers before you reach 10, as opposed to in the decimal system, where there are ten numbers before you reach 10. It's easiest to just make a table showing this, so here it is:<P>
+
+<font face=courier>Dec | Hex<br>
+---------<br>
+ 0  | 00<br>
+ 1  | 01<br>
+ 2  | 02<br>
+ 3  | 03<br>
+ 4  | 04<br>
+ 5  | 05<br>
+ 6  | 06<br>
+ 7  | 07<br>
+ 8  | 08<br>
+ 9  | 09<br>
+ 10 | 0A<br>
+ 11 | 0B<br>
+ 12 | 0C<br>
+ 13 | 0D<br>
+ 14 | 0E<br>
+ 15 | 0F<br>
+ 16 | 10<br>
+ 17 | 11<br>
+ ...|...<br>
+ 159| 9F<br>
+ 160| A0<br>
+ ...|...<br>
+ 255| FF<P></font>
+
+And so on. Hex values in games range between 00 and FF, so each byte has a total of 256 possible values; these values can define level data, palette data, graphics data, statistical data, and anything else a game needs. But how do you know what hex value means what? That's what most of the rest of this document will be dealing with.<P>
+
+<hr><P>
+
+<a name=#sIV><H2>IV. Palette Editing</h2><P>
+
+This is one of the simpler parts of hex editing. Palettes are usually stored in standard ways. If you have NESticle, you can go to the part of the game with the palette that you want to change and open up the palette window. Click on the color that you want to edit, and a new window will appear. This one displays the color, along with RGB bars for how NESticle displays this color, and a hex value representing the color. The RGB bars will only change how <b>NESticle</b> displays that particular color. Saving the palette will not change that color in the ROM at all. Note that FCE Ultra Debug (FCEUd) has a pattern table viewer and a palette viewer, so if you're computer is fast enough to run FCEU well, you should definitely use this instead of Nesticle because FCEU is a much better emulator..<P>
+
+Okay, so you know which palette you want to change. Click on all of the four colors in that palette and write down, in order, the hex value that is displayed inside the color box. Now, open the ROM in a hex editor and do a search for those four hex values using the Find Hex option, or whatever it happens to be called in your hex editor. The editor <I>should</I> come up with at least one result, if you searched for the correct hex values (the only reason you would have searched for something wrong was if you had written down the wrong numbers,
+which I trust you didn't do, heh). Now change the hex values to the values of the colors you want to use (look below for a color table); it's as simple as that. Multiple results means that either that palette appears more than once in the ROM, or there happens to be other data that is exactly the same as that palette data, which isn't that common an occurrence. Also, sometimes you won't get any matches. This means that the palette is stored in a different way. Many times, you can drop off the first color from the palette (which is usually 0F) and you'll find it. Other times, it's due to palette changes. Metroid and Kid Icarus are good examples of this. Both Samus and Pit's palettes change in the game from having different suits or weapons enabled (as in Samus' case) or being on different power levels (as in Pit's case). If you compare the different palettes for these two sprites, you'll see that two of the colors remain the same, while the other two differ depending on the palette. So, what does this mean? It means that you should try searching for the colors seperately. Because two of the colors are always constant, search for those two, in order. If it was the first and third colors, for example, and they were 0F and 30, you'd search for 0F30. As for the changing colors, do the same thing as you just did with the constant colors; search for the varying colors in groups. If it's the second and fourth colors that change, search for the first set of them (if they were 35 and 1D, you'd search for 351D), then the second, etc. Note that this doesn't work for all games because palettes can be stored in other ways.<P>
+
+What if a palette is animated? There really is no set way for games to set up their animated palettes. Sometimes they switch one of the palettes with other palettes, which would mean you could pause the game, get that palette, pause it while another palette is being used, get that, etc. Other times, they have wacky systems that make it a pain to find the palette. One such system is in Mega Man 1, where the animated lava in Fire Man's stage uses a system where it has 5 bytes defining the colors it uses in its palette animation cycle.<P>
+
+If you can't find a palette, then you might want to give up on it for now, since it may be stored in some wacky format like some of the palettes in Mega Man 6. You could also try thinking up other formats that it could use, and search for those, or you could learn how to use ROM corruption well and try to find it with that.<P>
+
+What about knowing what value is what color, you ask? Here is an <b>accurate</b> table of all of the NES colors, made by Fx3 using Rockman Complete Works for PSX:<P>
+<table cellpadding=0 cellspacing=0><tr>
+<td bgcolor=788084 width=30 height=30><font face=courier color=FFFFFF><center>00</td>
+<td bgcolor=0000FC width=30 height=30><font face=courier color=FFFFFF><center>01</td>
+<td bgcolor=0000C4 width=30 height=30><font face=courier color=FFFFFF><center>02</td>
+<td bgcolor=4028C4 width=30 height=30><font face=courier color=FFFFFF><center>03</td>
+<td bgcolor=94008C width=30 height=30><font face=courier color=FFFFFF><center>04</td>
+<td bgcolor=AC0028 width=30 height=30><font face=courier color=FFFFFF><center>05</td>
+<td bgcolor=AC1000 width=30 height=30><font face=courier color=FFFFFF><center>06</td>
+<td bgcolor=8C1800 width=30 height=30><font face=courier color=FFFFFF><center>07</td>
+<td bgcolor=503000 width=30 height=30><font face=courier color=FFFFFF><center>08</td>
+<td bgcolor=007800 width=30 height=30><font face=courier color=FFFFFF><center>09</td>
+<td bgcolor=006800 width=30 height=30><font face=courier color=FFFFFF><center>0A</td>
+<td bgcolor=005800 width=30 height=30><font face=courier color=FFFFFF><center>0B</td>
+<td bgcolor=004058 width=30 height=30><font face=courier color=FFFFFF><center>0C</td>
+<td bgcolor=000000 width=30 height=30><font face=courier color=FFFFFF><center>0D</td>
+<td bgcolor=000000 width=30 height=30><font face=courier color=FFFFFF><center>0E</td>
+<td bgcolor=000008 width=30 height=30><font face=courier color=FFFFFF><center>0F</td></tr><tr>
+<td bgcolor=BCC0C4 width=30 height=30><font face=courier><center>10</td>
+<td bgcolor=0078FC width=30 height=30><font face=courier><center>11</td>
+<td bgcolor=0088FC width=30 height=30><font face=courier><center>12</td>
+<td bgcolor=6848FC width=30 height=30><font face=courier><center>13</td>
+<td bgcolor=DC00D4 width=30 height=30><font face=courier><center>14</td>
+<td bgcolor=E40060 width=30 height=30><font face=courier><center>15</td>
+<td bgcolor=FC3800 width=30 height=30><font face=courier><center>16</td>
+<td bgcolor=E46018 width=30 height=30><font face=courier><center>17</td>
+<td bgcolor=AC8000 width=30 height=30><font face=courier><center>18</td>
+<td bgcolor=00B800 width=30 height=30><font face=courier><center>19</td>
+<td bgcolor=00A800 width=30 height=30><font face=courier><center>1A</td>
+<td bgcolor=00A848 width=30 height=30><font face=courier><center>1B</td>
+<td bgcolor=008894 width=30 height=30><font face=courier><center>1C</td>
+<td bgcolor=2C2C2C width=30 height=30><font face=courier color=FFFFFF><center>1D</td>
+<td bgcolor=000000 width=30 height=30><font face=courier color=FFFFFF><center>1E</td>
+<td bgcolor=000000 width=30 height=30><font face=courier color=FFFFFF><center>1F</td></tr><tr>
+<td bgcolor=FCF8FC width=30 height=30><font face=courier><center>20</td>
+<td bgcolor=38C0FC width=30 height=30><font face=courier><center>21</td>
+<td bgcolor=6888FC width=30 height=30><font face=courier><center>22</td>
+<td bgcolor=9C78FC width=30 height=30><font face=courier><center>23</td>
+<td bgcolor=FC78FC width=30 height=30><font face=courier><center>24</td>
+<td bgcolor=FC589C width=30 height=30><font face=courier><center>25</td>
+<td bgcolor=FC7858 width=30 height=30><font face=courier><center>26</td>
+<td bgcolor=FCA048 width=30 height=30><font face=courier><center>27</td>
+<td bgcolor=FCB800 width=30 height=30><font face=courier><center>28</td>
+<td bgcolor=BCF818 width=30 height=30><font face=courier><center>29</td>
+<td bgcolor=58D858 width=30 height=30><font face=courier><center>2A</td>
+<td bgcolor=58F89C width=30 height=30><font face=courier><center>2B</td>
+<td bgcolor=00E8E4 width=30 height=30><font face=courier><center>2C</td>
+<td bgcolor=606060 width=30 height=30><font face=courier color=FFFFFF><center>2D</td>
+<td bgcolor=000000 width=30 height=30><font face=courier color=FFFFFF><center>2E</td>
+<td bgcolor=000000 width=30 height=30><font face=courier color=FFFFFF><center>2F</td></tr><tr>
+<td bgcolor=FCF8FC width=30 height=30><font face=courier><center>30</td>
+<td bgcolor=A4E8FC width=30 height=30><font face=courier><center>31</td>
+<td bgcolor=BCB8FC width=30 height=30><font face=courier><center>32</td>
+<td bgcolor=DCB8FC width=30 height=30><font face=courier><center>33</td>
+<td bgcolor=FCB8FC width=30 height=30><font face=courier><center>34</td>
+<td bgcolor=F4C0E0 width=30 height=30><font face=courier><center>35</td>
+<td bgcolor=F4D0B4 width=30 height=30><font face=courier><center>36</td>
+<td bgcolor=FCE0B4 width=30 height=30><font face=courier><center>37</td>
+<td bgcolor=FCD884 width=30 height=30><font face=courier><center>38</td>
+<td bgcolor=DCF878 width=30 height=30><font face=courier><center>39</td>
+<td bgcolor=B8F878 width=30 height=30><font face=courier><center>3A</td>
+<td bgcolor=B0F0D8 width=30 height=30><font face=courier><center>3B</td>
+<td bgcolor=00F8FC width=30 height=30><font face=courier><center>3C</td>
+<td bgcolor=C8C0C0 width=30 height=30><font face=courier><center>3D</td>
+<td bgcolor=000000 width=30 hEight=30><font face=courier color=FFFFFF><center>3E</td>
+<td bgcolor=000000 width=30 height=30><font face=courier color=FFFFFF><center>3F</td>
+</tr></table><P>
+
+<hr><P>
+
+<a name=#sV><H2>V. Text Editing</H2><P>
+
+For the most part, text editing is pretty easy. As with many other parts of ROMhacking, though, it <i>can</i> be hard due to compression, but you probably won't have to deal with compression too much, and if you do, it's probably something that's not too hard; if you need more information on compression, be sure to jump down to the Compression section of this document, though it doesn't contain any text compression formats.<P>
+
+So, for text hacking, first grab a hex editor that supports tables, such as Thingy or Hexposure (aka Hexpose); my recommendation is Hexposure, but since it's a DOS application, some of you will may to use a different editor.<P>
+
+The key to hacking NES text is creating a table. A table is a file that contains a all of the letter equivalents of the hex values in a ROM (though some games require multiple tables due to different values being different letters at different parts of the game). The format that these files use is pretty simple. First, you have a hex value, then a space, and then what that hex represents (I've also seen = used in place of a space, but back in my day, there were no equal signs on keyboards! Well, no, but still, heh). Yes, you can have more than 1 character for what a hex represents (such as <I>r.</I>, which is used in Mega Man games), but keep in mind that it will off set the following characters on the row.
+
+Here is an example of a table file you'd use for Metroid:<P>
+
+<font face=courier>00 0<br>
+01 1<br>
+02 2<br>
+03 3<br>
+04 4<br>
+05 5<br>
+06 6<br>
+07 7<br>
+08 8<br>
+09 9<br>
+0A A<br>
+0B B<br>
+0C C<br>
+0D D<br>
+0E E<br>
+0F F<br>
+10 G<br>
+11 H<br>
+12 I<br>
+13 J<br>
+14 K<br>
+15 L<br>
+16 M<br>
+17 N<br>
+18 O<br>
+19 P<br>
+1A Q<br>
+1B R<br>
+1C S<br>
+1D T<br>
+1E U<br>
+1F V<br>
+20 W<br>
+21 X<br>
+22 Y<br>
+23 Z<br>
+24 a<br>
+25 b<br>
+26 c<br>
+27 d<br>
+28 e<br>
+29 f<br>
+2A g<br>
+2B h<br>
+2C i<br>
+2D j<br>
+2E k<br>
+2F l<br>
+30 m<br>
+31 n<br>
+32 o<br>
+33 p<br>
+34 q<br>
+35 r<br>
+36 s<br>
+37 t<br>
+38 u<br>
+39 v<br>
+3A w<br>
+3B x<br>
+3C y<br>
+3D z<br>
+3E ?<br>
+3F -<br>
+8F ©<br>
+FF  <P></font>
+
+The above table is pretty simple; it has the alphabet (in both cases), the numbers, some punctuation/symbols, and a space. Well, that's all good and dandy, but how do you make your own tables? It's really very easy...<P>
+
+Open the ROM you want to hack the text of in NESticle of FCEUd and view the pattern tables (though this section was written for Nesticle, since FCEUd didn't have a pattern table viewer at the time). If you are in an area of the game where text is used, you should see an alphabet somewhere in there; it could be neat and organized like in Mega Man games, or horridly mixed up with the rest of the tiles like in Adventures of Lolo. When you click on one of the letters (or any tile on the pattern tables, for that matter), a window will appear that displays the tile's ID. This is the hex value you're going to use in your table file. For example, if you clicked on A and it displayed 4A, then you would put <B>4A A</B> into your table; it's as simple as that. Repeat that for every character you will want to see and use (which is usually all of them), and then save your table file. The filename should be identical to that of the ROM you want to use it for, except that it should have an extension of .tbl.<P>
+
+Now you have a .tbl file... How do you use it, you ask? Simply open the ROM in a hex editor, and because the table has the same name as the ROM, it will be loaded, as well. Now, the window on the right of the editor, which displays the ASCII translations of the hex values, is where you'll be doing your text editing; you can access this part of the editor usually by pressing tab or, in many cases, simply clicking in that window. Finding the text is your next task; you'll want to use the option that allows you to search for text strings (in Hexposure, it's called Find Text). Type in one or a few words of the text you want to edit exactly as it appears in-game, and then do a search; for example, if I wanted to find the string "FIGHT,MEGAMAN,FOR EVERLASTING PEACE!" I would search for something like "FIGHT,MEGAMAN" just as it looks there, all in caps, no spaces after the commas, etc. You should get at least one result; now you can simply overwrite the text by typing into the ASCII window. So, wasn't that pretty simple? Heh.<P>
+
+If you didn't come up with any results, chances are the game uses compression for its text, such as DTE (Dual-Type Encoding). While compression should probably be avoided until you're a tad better, feel free to experiment with them, since it'll help give you useful experience for later on.<P>
+
+<hr><P>
+
+<a name=#sVI><H2>VI. Pointers</H2><P>
+
+There's really not a whole lot to say about pointers. Simply put, pointers tell the game where specific information is in RAM so it can access this data. Editing pointers can be fairly useful if you're trying to open up unused space or transfer space from one use to another (maybe you didn't use all of the available space for level data, so you want to enlarge the enemy data area so you can make use of this extra space).<P>
+
+Pointers have a pretty simple format. When you view them in the ROM, the bytes are backwards; that is, if you find a pointer in the ROM such as 5C82, this pointer actually points at 825C in the RAM.<P>
+
+Okay, so say the level data in a ROM starts at 0x1826C and ends at 0x18B42. From 0x18B43 and on is the enemy data, and the pointer for this is 338B in ROM (8B33). You edited the level in such a way that it ends at 0x18A63. Well, because of this, there's now a bunch of empty space from 0x18A64-18B42. Maybe you'd like to have more enemies in these stages than the game normally allows, so what do you do? Why, you edit pointers, of course (hey, this is a section on pointers, isn't it? Hehe)! The enemy data starts at 0x18B43, with a pointer of 8B33. You want to move it to 0x18A64. You can edit the pointer to 548A (8A54) and voila: the enemy data starts at 0x18A64 now.<P>
+
+One thing you may notice is that the tens digit of the offset was 10 more than the pointers in the example above. This is because ROMs have a 10 byte header at the start for emulation purposes; this is ignored by the actual game code, so whenever you address data in the game, you need to take the header into account.<P>
+
+<hr><P>
+
+<a name=#sVII><H2>VII. Level Editing</H2><P>
+
+While it is a hassle without an editor, level editing through hex is really a simple process much of the time. Levels in NES games usually use an uncompressed format in which one byte translates into one block in the game. The type of block it places isn't always the same depending on the game, however.<P>
+
+Usually, games will use blocks of size 2x2 or 4x4 tiles. Having it so the data is one byte per 1x1 tile is simply inefficient and overall more difficult than it would otherwise be, so you'll essentially never see such a format.<P>
+
+Okay, so you have the location of level data in the ROM, and are prepared to begin editing the levels. One of the things you'll need to know is what byte translates into what block. There are a few ways in which you can go about gathering this information. You could replace a few screens with consecutive byte values and then take screenshots of them; you can use these as block indexes to refer to when you are making your level. You could also do it a little bit more professionally by using TSA, which is explained in the next section; using TSA overall allows you to have better levels because it gives you control over what makes up the building blocks of a stage.<P>
+
+Once you have all that data, you can simply go about editing the stages by putting in the hex values for blocks as you see fit. There's really nothing to it, you just have to be able to visualize the hex values as a screen instead of simply as hex.<P>
+
+If the blocks that make up a stage are 2x2 tiles in size, your job may take longer but will be much easier. In a hex editor, usually the left side of the screen will start on the left side of a row and the right side will be end of a row, since there are 16 2x2 tile blocks in each row on a screen. This makes it much easier to visualize a stage, since you can actually make out what's what moreso than otherwise because you can see the patterns that similar bytes make. You'll be able to tell platforms from plain backgrounds and all that neat stuff.<P>
+
+4x4 tile blocks are a little more cumbersome. Two rows of these blocks fit into each row of 16 bytes, so visualizing the stage becomes a challenge. Also, the blocks themselves are larger, also contributing to the difficulty of telling how the stage looks simply by viewing the raw hex values.<P>
+
+Because it's such a minor difference in format, I'm going to go ahead and explain Nybble Encoding here instead of in the compression section. When Nybble Encoding is used as a level data format, you can basically break every hex value in half and use each half as its own 2x2 tile block. There are only 16 different block types with Nybble Encoding as opposed to the potential 256 blocks that the normal format can have, so the programmers sacrificed a lot when going with this format, but it cuts the level data down to half the size it would otherwise be. With NE, if you had 8C as a byte in the level data, it would translate into two blocks in the actual level: block 8 and block C.<P>
+
+Level data, unfortunately for hackers, is one type of data that is commonly compressed in games. Read up on the Compression section below if you're trying to figure out how to hack the stages in a game that uses level compression.<P>
+
+<hr><P>
+
+<a name=#sVIII><H2>VIII. TSA Editing</H2><P>
+
+TSA (Tiles Squaroid Assembler) is resposible for all of those blocks that levels are built out of. Essentially, it takes the 256 currently loaded background tiles and builds blocks of sizes 2x2 (we'll refer to it as a micro from now on) and sometimes even 4x4 tiles (a macro) out of them. Formats vary, but most of them are relatively simple, both to find and edit.<P>
+
+Imagine that this is a micro:<P>
+
+<font face=courier>AB<br>
+CD<P></font>
+
+Normally, the data responsible for building one of these micros would be the tile ID's for A, B, C, and D, respectively. Usually tiles that build a block are located relatively close to themselves on the pattern table, sometimes even already in the shape of the block if you were to view the pattern table in NESticle or FCEUd. So, say the tile ID's for the tiles were D3, D4, E3, E4, respectively. Well, usually you can search for them in that order (ABCD) and find it, so you'd search for D3D4E3E4 in the ROM. If you turn up empty handed, don't worry; there's still some formats which are fairly easy. The data might simply be in a different order; if this were the case, it would probably be ACBD. If that doesn't work, try search for it in other orders, but chances are those won't work.<P>
+
+Sometimes the tiles are split up according to if the tile is A, B, C, or D. If this is the case, usually the game will have all of the A tiles in a 256 byte-long section, then all of the B tiles, then all of the C tiles, etc. Unless you have the level data for a game that uses this TSA format, it's truly hell to find this data, and you'll probably have to reply on corrupting or ASM. Otherwise, you can just search for the values of the A tiles for the first four or so micros and find the start of the data.<P>
+
+If the game uses macros, there's two ways in which it will usually define this data. The first is to build micros using one of the formats above, and then build macros using that very same format, but with the micros instead of simply using 1x1 tiles. The second one is a format used in Castlevania, among other games. It defines the macros directly, without the micros, by having 16 bytes in a row for each block. Imagine that the first row of a macro was ABCD, the next was EFGH, etc. The hex in the ROM would simply be the tile values for ABCDEFGHIJKLMNOP, respectively.<P>
+
+There is a variation of TSA called VSSA (Variable Sized Structure Arrays) that's used in Kid Icarus and Metroid (I haven't looked into the SMB games for NES, so I don't know how they define their data, but it's possible they use this type of format, as well). The format is pretty simple; it uses standard TSA to create micros, which is normal, but then it creates odd-shaped structures out of these. In Metroid and Kid Icarus, each VSSA structure has a length byte that tells it how many blocks are in that row of the structure, and then a series of micro ID's that tell it which blocks are in that row. When there are enough ID's to fit how long the row is based off of the length byte, it either has another length byte which serves as another row of the structure (it's added beneath the previous row) or an FF, which serves to end the structure.<P>
+
+Next on the agenda for TSA is block attributes. The attributes (atts, for short) are used to tell the game which of the four palette a block will use. The NES is capable of having only four colors dedicated to each group of 2x2 tiles; only with sprites can each individual tile use its own palette. Anyway, the way in which a game defines the atts for a block can vary quite a bit. Sometimes, there's a fifth byte (or even more bytes, but they all have different purposes) added on to the TSA data for micros that tells it which of the four palettes that block will use, or the attribute bytes could all be grouped together elsewhere in the ROM. If the TSA data uses the format where all of the A tiles are grouped, all the B tiles are grouped, etc, then all of the att bytes will usually be grouped together after the D tiles. Att data only requires two of the eight bits in a byte, so sometimes a game will combine the att data for four blocks into a single byte. This saves on space, but can make hacking (and finding) the data a tad more troublesome.<P>
+
+If a game uses macros, then the way in which it defines its atts might be a little different. Either it will have each micro have its own predefined atts (in which case, all occurrences of a specific micro will use the same palette, no matter which macro it is in), or it will define the atts for all four of the micros of a macro in a single byte that either comes after the TSA data for each of the blocks or in its own section where the att data for all of the blocks are grouped together.<P>
+
+Block properties is another TSA-defined property. Whether a block is solid, air, spikes, water, or whatever, is all defined by TSA. With micros, this data might be with the rest of the block TSA, or seperated into its own group like the att data might be. As for macros, the block properties might be pre-applied to each block like the att data might be (as explained above), or it might be on a block-by-block basis where the same micro could be used in different macros but with different properties each time. Usually, the data for that will be a single byte per block or will use Nybble Encoding.<P>
+
+A good example of block attributes and block properties can be found in the game Kickle Cubicle. The TSA data (0x1FBD0) uses the 2x2 ACBD format explained at the start of this section, but it has an extra 4 bytes after every block. The first of these bytes (the fifth for the block) is the att data, and the next byte is the block property data. The following two bytes are nothing of major importance; they're just a few special properties that you can apply to blocks. The thing that makes this such a good example is that it has all of the data right there, using 8 bytes in the TSA per block to get all of the info needed when that block is used in the game. TSA such as this is usually a cinch to hack.<P>
+
+Sprites tend to not use very standard TSA formats. If you're lucky, the sprites will be defined kind of like the 2x2 TSA, but with an extra byte after each tile ID that tells it which of the four sprite palettes that tile uses. The Bugs Bunny Crazy Castle is a good example of sprite TSA. Every sprite frame starts off with a size byte, telling it the dimensions of the sprite. Usually it'll just be 23, meaning 2x3. Next, it will have the data telling it which tiles to use and the att data for each tile, starting at the top left of the sprite and following the pattern left to right, top to bottom. Here's the data for the Gray Sylvester: 23 5600 5700 6800 6900 7800 7900. The 23 means it's a 2x3 sprite, for a total of 6 tiles. The first byte of the sets of two that follow the 23 are the tile ID's to use, and the second byte of the sets are which palette to use for those tiles. For this sprite, every tile uses the first sprite palette, 00. So the sprite would look like so:<P>
+
+<font face=courier>56 57<br>
+68 69<br>
+78 79<P></font>
+
+Simple, yes? Hehe. There's not really much in terms of other standard sprite formats... One example of a non standard format is the format used in Milon's Secret Castle. For the most part, it simply has 2x2 tile sprites, so it has the four tiles that make up the sprite without att bytes after them, and just has a single att byte that applies to every tile elsewhere in the ROM. This is a good format when there's no point in having more than one palette per sprite, but it can be pretty limiting.<P>
+
+For the sprite att data, the lowest 2 bits handle which of the four palettes are used for the sprite (000000xx); this byte also contains data for horizontal and vertical sprite mirroring, as well as z-position (if it's in front or behind the background).<P>
+
+Note that there is a TSA editor called UniTSA that can be used for most all your TSA editing needs. Made by Dan, this spiffy program will load up graphics from a ROM and display blocks using the ROM's TSA data, and even allow you to edit those blocks by pasting in different tiles from the pattern table. The only catch, though, is that you need to supply all of the addresses yourself. You don't expect a program to be able to automatically figure all this stuff out, do you? Hehe. Anyways, you can grab this program from the Dragon Eye Studios homepage; if you're going to be hacking TSA, you should find it very useful.<P>
+
+<hr><P>
+
+<a name=#sIX><H2>IX. Data Locating</H2><P>
+
+Being able to effectively locate data without corruption is a very useful skill, since it allows you to usually find data faster than you normally would. In a future version of this document, I may go into how to find data using ASM and a 6502 debugger like that found in FCEUd, but it might be better if you simply looked at Parasyte's FCEUd tutorials instead.<P>
+
+Let's start with level data. If level data in a game is uncompressed, you can usually easily find it simply by scrolling through the ROM in a hex editor and looking for patterns of bytes that you would consider level data (it helps to have worked with such data in a hex editor before). Some games can be very simple, like Milon's Secret Castle (NES). I'd be surprised if you could scroll through that ROM and miss the level data, since it's just so obvious. If this method doesn't work, you can do a search for TSA data; finding TSA data is actually mostly covered in the previous section. If you can find the TSA data and can locate the start of the data, then you can use that data to tell what hex value each block uses. With that, you can search in the ROM for a few blocks from the start of a level, and if it's a micro based level data system, you'll have found it. If it's macro based, you'll want to find the 4x4 TSA data and do the same with that as you just did with 2x2 TSA. If neither of those work, chances are the game uses compression. You'll need to find it either with ASM or corruption.<P>
+
+Finding statistical data is sometimes hard, sometimes easy. A good example of some statistical data is in the Mega Man games. Say you want to find the damage you deal the bosses when you shoot them with the P weapon. Well, in Mega Man 1, all of the bosses follow a 'golden order,' as Kuwata put it. This means that any data relating to these bosses follows a specific order, which, goes Cut, Ice, Bomb, Fire, Elec, Guts. I don't have the actual values in front of me as I write this, so I'll just make up the data as an example. Say, when you shoot these bosses, the damage you deal is 2, 1, 3, 2, 1, 2. Well, you can search in the ROM for 020103020102 and you'll find the data. Or, say you want to find the damage that enemies deal you when you touch them. You can search for how much damage you receive when you are hit by 3 different enemies with consecutive ID's, and you'll likely find the data. It's really pretty simple.<P>
+
+Stats like speeds and such are best left to being found with 6502 debugging. As I said, I might go over this in a future version of this document, but it would take a whole introduction to ASM that I honestly don't feel like writing, heh.<P>
+
+Things like enemy data and such are usually best found with corruption or ASM. As for text, that should all be thoroughly explained in the section of this document pertaining to text. And graphics, well, you can find those in a graphics program like Tile Layer Pro or Tile Molester.
+
+<hr><P>
+
+<a name=#sX><H2>X. Compression</H2><P>
+
+The dreaded compression, ROMhacking's bane. Well, it's really not so tough on the NES. Formats used for levels are pretty simple. The most common compression format on the NES is RLE, or Run Length Encoding. Commonly in NES games, there are multiple occurrences of the same block being repeated over and over; RLE condenses those blocks down to 2 or 3 bytes in size. Some good examples of RLE are found in Adventures of Lolo 1, 2, and 3. All three of these games use the same compression formats. If the game runs across an FF in the level data, it begins its RLE routine. After the FF comes the length byte. This byte plus 2 is how many times to repeat the block. The next byte is the block that it will be repeating. Using this, you can compress a good sized chunk of the level into a small group of 3 bytes. For example, FF050D will repeat 0D 7 times (0D in-game is a rock).<P>
+
+Another example of RLE can be found in Contra. At 802D is Contra's level data. A little ways into the data, at 8046, is the first example of the level's RLE. If it finds a value greater than or equal to 80 (ie if the highest bit is set), then it will subtract 80 from that value and repeat the following block that many times. So here we have 8700. This means to repeat block 00 7 times. Try changing the 00; you'll see all 7 ocurrences of the ground change. If you modify the 87 to 88 or 86, then you'll see the level shift because you just added in or removed a ground block, so all of the following blocks move one forward or backword to accomodate that new block. Most times that a game uses this variation of RLE, though, they have it set up so that when it subtracts 80 from the first byte, that is used as the block ID and the following byte is how many times to repeat it (they simply have the meanings of the bytes switched around).<P>
+
+Another compression format I've seen used is LZSS compression. LZSS is used to grab chunks of data that have already been used elsewhere and reuse them. So, say you used this data earlier on this screen of a level: 0402C6F293. You want to reuse this again in the level, so you'd use LZSS to call back that information so you can reuse it without having to use as much space. Kirby's Adventure is the only NES game I know of that uses this format in that way, where you can go back to any location up to 256 blocks earlier and grab up to 16 blocks from there. The Adventures of Lolo series uses a variation on the LZSS format, which I call Mirror Encoding. When it grabs blocks from previous locations in the stage, the block it gets is always right below the block it's placing. So if you had 0D0D0E0D as the blocks that are right below where you're using Mirror Encoding, then the four blocks it would place would be 0D0D0E0D. The reason Mirror Encoding is so nice is because it's condensed into a single byte. Placing Fx, where x+2 is how many blocks you want to mirror from the previous row, can grab up to 16 blocks, which is an entire row.<P>
+
+One of the most common formats you'll see that make stages smaller but make it so you don't have to worry about if your level fits or not is Nybble Encoding (also explained earlier in this document). With this, each nybble (or each digit of the hex value) acts as one block, so you get twice as much stuff into the same amount as space compared to having one byte per block. The problem? You're limited to 16 blocks. Games that use Nybble Encoding include Boulder Dash, Battle City, and Milon's Secret Castle.<P>
+
+I won't bother to go over compression formats like that used in Faxanadu, simply because they aren't standard and they're totally confusing to the point where I have some trouble dealing with them, heh. Also, I won't go over any text compression formats like DTE since I'm faily unfamiliar with them; I'm sure there are other documents that cover the format, and you can probably ask about it just about anywhere and find someone who knows a lot about it.<P>
+
+If you come across a compression format and you want to take a shot at cracking it, it usually helps to find the decompressed level in RAM so you can compare that with the compressed version, as well as see what the differences are when you modify the compressed version. Keep at it for a few hours (5 or so) and you should be able to do pretty well with the format.<P>
+
+<hr><P>
+
+<a name=#sXI><H2>XI. The ROM Hacking Dictionary</H2><P>
+
+<-<a href=##>#</a>-<a href=#a>A</a>-<a href=#b>B</a>-<a href=#c>C</a>-<a href=#d>D</a>-<a href=#e>E</a>-<a href=#f>F</a>-<a href=#g>G</a>-<a href=#h>H</a>-<a href=#i>I</a>-<a href=#j>J</a>-<a href=#k>K</a>-<a href=#l>L</a>-<a href=#m>M</a>-<a href=#n>N</a>-<a href=#o>O</a>-<a href=#p>P</a>-<a href=#q>Q</a>-<a href=#r>R</a>-<a href=#s>S</a>-<a href=#t>T</a>-<a href=#u>U</a>-<a href=#v>V</a>-<a href=#w>W</a>-<a href=#x>X</a>-<a href=#y>Y</a>-<a href=#z>Z</a>-><P>
+
+<a name=##><b><u>#</u></b></a><br>
+
+<b>6502 ASM</b>- The type of ASM that the NES microprocessor uses. (see also: ASM)<br>
+<b>65c816 ASM</b>- The type of ASM used by the SNES microprocessor. 65c816 is essentially a super-6502 language. They are very similar, but of course, 65c816 has more features. (see also: ASM)<br>
+<b>8x16 Sprite Mode</B>- This is a special NES sprite mode which allows loading of sprite tiles from both pattern tables. One sprite byte will load the corresponding sprite tile and the tile after that, and will place them in a vertical fashion (8x16) onscreen. Even values take sprite tiles from one table, while odd values take them from the other table (subtract 1 from the value to find where it will be taking tiles from). The sprite palettes are always used, no matter which table the tiles are being loaded from.<P>
+
+<a name=#a><B><u>A</u></B></a><br>
+
+<B>Attributes</B>- The colors that tiles use. One of four palettes has to be used for something that is being displayed onscreen, so which of these four is applied to a tile is called attributes. (see also: Palettes)<br>
+
+<b>ASCII</b>- American Standard Code for Information Interchange. Hex editors have a window on the right that translate hex code into ASCII, which some games use for their text values.<br>
+
+<B>ASM</B>- Assembly. This is the code that NES games (and others, of course) use, but with abbreviations such as LDA and STA so that people can more easily understand it. (see also: 6502 ASM, 65c816 ASM, Z80 ASM, R4300i ASM)<P>
+
+<a name=#b><B><u>B</u></B></a><br>
+
+<b>Binary</b>- Base 2. Only two numbers are used in this numbering system: 0 and 1. When you go higher than 1, that digit becomes 0, and the next digit is incremented. Each digit is twice as large as the previous digit; in the first digit, a 1 signifies 1, in the second, 2, in the third, 4, in the fourth, 8, in the fifth, 16, in the sixth, 32, in the seventh, 64, in the eighth, 128, etc. In NES ROMhacking, you'll only really need to deal with 8-digit binary. Examples: 00101110 = 46, 10001101 = 141, 10100010 = 162.<P>
+
+<a name=#c><B><u>C</u></B></a><br>
+
+<B>CHR</B>- Graphics.<br>
+<B>Compression</B>- Compression is simply shrinking data to as small a size as possible, so as to be able to fit more data into the same amount of space. This is commonly done with graphics and levels. See the section on compression for more information on common gaming compression formats. (see also: RLE)<P>
+
+<a name=#d><B><u>D</u></B></a><br>
+
+<b>DGFX</b>- Displayed Graphics. This refers to rare cases in games where the graphics that you see onscreen relate in no way to the layout of the current screen. Examples of this are RC Pro-AM and Balloon Fight. Essentially, it makes the screen be composed of two things, one being the clipping, ie what you react to, and the other being just what you see (which is the DGFX part).<P>
+
+<a name=#e><B><u>E</u></B></a><P>
+<a name=#f><B><u>F</u></B></a><P>
+<a name=#g><B><u>G</u></B></a><br>
+
+<b>GB Graphics Format</B>- This is essentially the same as the NES graphics format. The only difference is that instead of the first eight bytes defining the first half of the bits in the 64 bit pairs and the second eight defining the second half, the first byte defines the first bit of the first 8 bit pairs, and the second byte defines the second bit of the first 8 bit pairs. This is then repeated for the remaining 14 bytes in that tile. So really, the only difference is that in the NES one, the bytes that have the bit pairs are 7 bytes away from each other, and in this one, they're right next to each other. (see also: NES Graphics Format)<P>
+
+<a name=#h><B><u>H</u></B></a><br>
+
+<B>Hex</B>- Short for hexadecimal. (see also: Hexadecimal)<br>
+<B>Hexadecimal</B>- Base 16. There are 16 numbers used in this system: 0-9, A, B, C, D, E, and F. See the section on hex editing for more information.<P>
+
+<a name=#i><B><u>I</u></B></a><br>
+
+<b>IPS</b>- International Patching System. IPS patches are a way to make distribution of ROM hacks legal. They only contain the differences between a hack and the original ROM, so all of the data in it is perfectly legal and uncopyrighted. The format is quite simple: firstly, IPS patches always begin with 5041544348. This is the header; in ASCII, it spells PATCH. Next comes the actual data. The first 3 bytes following the header are the location bytes. They tell it where the changes are going to be made. Next are 2 bytes the tell it how many bytes in the ROM to change; 0001 means 1 byte, 0002 means 2 bytes, etc. 0000 calls RLE compression, but it's usually not used. The first byte is used for hundreds; 0100 would mean 256 bytes. Next comes the string of values that will be replacing the bytes at that location in the ROM. The size of the string will vary depending depending on the 2 previous bytes. After that, that format simply repeats (exluding the header) until the end of the file, which always has 454F46 (EOF- End of File).<P>
+
+<a name=#j><B><u>J</u></B></a><P>
+<a name=#k><B><u>K</u></B></a><P>
+<a name=#l><B><u>L</u></B></a><P>
+<a name=#m><B><u>M</u></B></a><br>
+<B>Macros</B>- 32x32 pixel blocks used to build levels. (see also: Micros)<br>
+<B>Micros</B>- 16x16 pixel blocks used to build levels. (see also: Macros)<P>
+<a name=#n><B><u>N</u></B></a><br>
+
+<B>NES Colors</B>- Those of you making editors should find this useful: an accurate RGB list of the NES colors, made by Fx3 using Rockman Complete Works for PSX:<br><font face=courier>
+01 788084<br>
+02 0000FC<br>
+03 0000C4<br>
+04 4028C4<br>
+05 94008C<br>
+06 AC0028<br>
+07 AC1000<br>
+08 8C1800<br>
+09 503000<br>
+0A 007800<br>
+0B 006800<br>
+0C 005800<br>
+0D 004058<br>
+0E 000000<br>
+0F 000000<br>
+10 000008<br>
+11 BCC0C4<br>
+12 0078FC<br>
+13 0088FC<br>
+14 6848FC<br>
+15 DC00D4<br>
+16 E40060<br>
+17 FC3800<br>
+18 E46018<br>
+19 AC8000<br>
+1A 00B800<br>
+1B 00A800<br>
+1C 00A848<br>
+1D 008894<br>
+1E 2C2C2C<br>
+1F 000000<br>
+20 000000<br>
+21 FCF8FC<br>
+22 38C0FC<br>
+23 6888FC<br>
+24 9C78FC<br>
+25 FC78FC<br>
+26 FC589C<br>
+27 FC7858<br>
+28 FCA048<br>
+29 FCB800<br>
+2A BCF818<br>
+2B 58D858<br>
+2C 58F89C<br>
+2D 00E8E4<br>
+2E 606060<br>
+2F 000000<br>
+30 000000<br>
+31 FCF8FC<br>
+32 A4E8FC<br>
+33 BCB8FC<br>
+34 DCB8FC<br>
+35 FCB8FC<br>
+35 F4C0E0<br>
+36 F4D0B4<br>
+37 FCE0B4<br>
+38 FCD884<br>
+39 DCF878<br>
+3A B8F878<br>
+3B B0F0D8<br>
+3C 00F8FC<br>
+3D C8C0C0<br>
+3E 000000<br>
+3F 000000<br>
+</font>
+(see also: Attributes, Palettes)<br>
+<B>NES Graphics Format</B>- The NES graphics format is fairly easy. 16 bytes defines one tile. These bytes must be broken down into binary in order to create the graphics. Each pixel is made up 2 bits. Whether or not these bits are set determines which of four colors a pixel will use. 00 is black, 10 is dark grey, 01 is light grey, and 11 is white (other colors in the NES palette are substituted for these four through the use of attributes). The first 8 bytes of the 16 that make up one tile contain the first bit in the pairs, while the second 8 bytes define the second bit in the pairs. Here's an example of the data for one tile:<br>
+<font face=courier>007D5555557D5555 007E6666667E6666<br></font>
+Now, we can break it down into binary:<br>
+<font face=courier>00000000 01111101 01010101 01010101 01010101 01111101 01010101 01010101<br>
+00000000 01111110 01100110 01100110 01100110 01111110 01100110 01100110<br></font>
+We now have the data for the bit pairs (just match up each bit with the bit below it). So what does that look like? It's the letter A, with some extra colors on it since I wanted to show off all four colors.<br>
+<table cellspacing=0 cellpadding=0><tr>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+</tr><tr>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+</tr><tr>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+</tr><tr>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+</tr><tr>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+</tr><tr>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+</tr><tr>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+</tr><tr>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=000000><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=FFFFFF><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=AAAAAA><font style="font: 1pt"> </td>
+<td width=2 height=2 bgcolor=555555><font style="font: 1pt"> </td>
+</tr></table>(see also: Attributes, Palettes)<P>
+
+<a name=#o><B><u>O</u></B></a><P>
+<a name=#p><B><u>P</u></B></a><br>
+
+<B>Palettes</B>- Palettes are sets of colors that consoles currently have loaded. For the NES, there are four sets of colors for the BG, and four sets for the sprites, each containing four colors, total. For the SNES, there are 16 colors in a palette. (see also: Attributes, NES Colors)<br>
+
+<B>Pattern Tables</B>- The pattern tables are from where games grab their 2D graphics. The NES has two pattern tables, one of which is for the BG, the other of which is for sprites. The SNES has four pattern tables. (see also: TSA)<br>
+
+<B>Properties</B>- Usually used in reference to blocks, properties are how something acts. This can be solid, air, water, spikes, or any other sort of block type.<P>
+
+<a name=#q><B><u>Q</u></B></a><P>
+<a name=#r><B><u>R</u></B></a><br>
+
+<B>R4300i ASM</B>- This is the language used by the Nintendo 64 microprocessor. (see also: ASM)<br>
+
+<B>RAM</B>- Random Access Memory. RAM is data that has been loaded by a computer and which can be manipulated.<br>
+
+<B>RLE</B>- Run-Length Encoding. See the compression section of this document for more information. (see also: Compression)<br>
+
+<B>ROM</B>- Read Only Message. ROMs, in our case, are cartridge video games on the computer, playable in emulators. ROM data cannot be manipulated by the game itself when loaded.<P>
+
+<a name=#s><B><u>S</u></B></a><P>
+<a name=#t><B><u>T</u></B></a><br>
+
+<B>Tiles</B>- Each pattern table contains 256 tiles that can be used in-game. Each tile is an 8x8 pixel block, used for both sprites and BG's. (see also: Pattern Tables, NES Graphics Format, GB Graphics Format, TSA)<br>
+
+<B>TSA</B>- Tiles Squaroid Assembler. A common alternative to TSA that games use is VSSA. See the TSA section of this document for more information. (see also: VSSA, Pattern Tables)<P>
+<a name=#u><B><u>U</u></B></a><P>
+<a name=#v><B><u>V</u></B></a><br>
+
+<B>VSSA</B>- Variable Sized Structure Arrays. See the TSA section of this document for more information. (see also: TSA)<P>
+
+<a name=#w><B><u>W</u></B></a><P>
+<a name=#x><B><u>X</u></B></a><P>
+<a name=#y><B><u>Y</u></B></a><P>
+<a name=#z><B><u>Z</u></B></a><br>
+
+<b>Z80 ASM</b>- This is the language used by the Game Boy microprocessor. (see also: ASM)<P>
+ <P>
+<font style="font: 8pt">This document is copyright ©2003 Vagla and Dragon Eye Studios; however, we take no responsible for the content contained within. We are not responsible for what is done with the information presented above, nor are to be held liable for any problems you may have with the programs mentioned in the document. We are not responsible for your obtaining of the materials required for ROMhacking; this includes ROMs, of which we do not condone the illegal obtaining of. Distribution of this document is allowed, so long as no charges of any kind are made, or any alterations are done to the material contained.<br>
+Special thanks to Weasel for prettying up the document.</font>
+</body>
+</html>

@@ -1,0 +1,59 @@
+Changing a palette on the screen with 6502
+===========================================
+by windwaker101
+
+
+
+So you want to change a palette.  It's really easy to do in 6502.  This guide will *hopefully* teach you how to write 6502 code that you can JSR/JMP to from wherever you are in the lines of 6502, and RTS/JMP back.  First, you should have some experience with some of the commands the NES uses, such as LDA, STA, etc.  Now, let's open nestech.txt (http://web.textfiles.com/games/nestech.txt), the Nintendo Entertainment System Documentation.  Now, scroll down under 4. PPU and go under the Memory Map (section B).  You should see this:
+
+        RAM Memory Map
+      +---------+-------+--------------------+
+      | Address | Size  | Description        |
+      +---------+-------+--------------------+
+      | $0000   | $1000 | Pattern Table #0   |
+      | $1000   | $1000 | Pattern Table #1   |
+      | $2000   | $800  | Name Tables        |
+      | $3F00   | $20   | Palettes           |
+      +---------+-------+--------------------+
+
+As you can see, the palettes start at $3F00 and continue for 20 bytes.  So, if you have the palette you want to change's address in the space in this range, you can change it on the screen with a simple line of code.  There are 3 things that you need to do when changing this code:
+
+- change the PPU address to $3F00 PLUS the index of the palette you want (so if you want to change the 3rd color in the BG palette, change it to $3F02)
+and
+- Write the color to PPU memory via the $2007 register
+
+The first thing may sound complicated (or not) but it's super easy.  You only use the STA/LDA commands.  So to do this if you wanted to store something into $3F02 and change the palette on the screen, you would go:
+
+LDA #$3F
+STA $2006
+LDA #$02
+STA $2006
+
+This (obviously) sets the PPU address to $3F02 via the $2006 register.  Now you have the address set, you just have to choose what color you would like to place here.  You do this by writing to $2007 which writes to PPU memory.  $2006 decides where in PPU memory $2007 writes to.  So if you wanted to change the color at $3F02 to the color represented by $20, you would do this:
+
+LDA #$20
+STA $2007
+
+Yeah, this is really easy.  Now your code looks like:
+
+LDA #$3F
+STA $2006
+LDA #$02
+STA $2006
+LDA #$20
+STA $2007
+
+
+Now, for finding where your palette colors are in the $3F00 section, refer to TFG's document on finding palettes with FCEUd.  It will show you how, and it requires a lot of trial and error by writing different things to $3F00, $3F01, etc.
+
+
+Credits
+=======
+
+The only credit I deserve is for writing this document.  Everyone at #rom-hacking and #disch taught me how to do this (Vystrix_Nexoth, DahrkDaiz, and Disch in specific).  And the god who wrote nestech.txt.
+
+
+
+- windwaker101
+  TEK Hacks
+  windwaker101@comcast.net

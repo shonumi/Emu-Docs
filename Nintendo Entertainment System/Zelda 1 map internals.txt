@@ -1,0 +1,499 @@
+  Zelda 1 Hack Information
+  Tril <dem@tunes.org>
+  $Id: z1spec.sgml,v 1.3 2001/08/05 21:12:30 dem Exp $
+
+  Here are Zelda 1 map internals obtained by disassembling the NES cart
+  rom.  Included are the internal formats of the overworld and under-
+  world map screens.  There is no monster or item information yet.
+  Palette and pattern info will be added later.  Use at your own risk.
+  ______________________________________________________________________
+
+  Table of Contents
+
+
+  1. Introduction
+     1.1 Where to get this document
+     1.2 Disclaimer
+     1.3 Before Reading This Document
+     1.4 Numeric Conventions
+     1.5 IMPORTANT Note about Offsets
+     1.6 About this Document
+     1.7 The Art of ROM Hacking
+
+  2. The Overworld
+     2.1 The Overworld Map Format
+     2.2 The Overworld Map
+     2.3 Overworld Screens
+     2.4 Columns
+        2.4.1 Column Data Format
+        2.4.2 Column Tables
+        2.4.3 The Column Directory
+        2.4.4 Indexing a Column
+     2.5 Squares
+        2.5.1 The Primary Square Table
+        2.5.2 The Secondary Square Table
+     2.6 Secrets
+
+  3. The Underworld
+     3.1 The Underworld Map Format
+     3.2 Underworld Data
+     3.3 Underworld Levels
+     3.4 The Underworld Screen Table
+     3.5 Underworld Screens
+     3.6 Underworld Columns
+     3.7 Underworld Squares
+     3.8 Underworld Doors
+        3.8.1 Finding Door Information
+        3.8.2 Door Codes
+
+  4. Common to Overworld and Underworld
+     4.1 Level Information
+        4.1.1 Level Information Table
+        4.1.2 Starting Locations
+
+
+  ______________________________________________________________________
+
+  1.  Introduction
+
+  1.1.  Where to get this document
+
+  The latest version of this document is always posted at
+  http://tril.tunes.org/games/z1spec/
+
+
+
+  1.2.  Disclaimer
+
+  The information in this document is not guaranteed to be correct.  I
+  take no responsibility for the integrity of your Zelda rom file if you
+  mess it up.  Please use patch files (such as the standard patch format
+  being adopted by several emulator authors) instead of modifying rom
+  images directly, so you don't lose the original game or ruin it for
+  somebody else.
+
+
+  1.3.  Before Reading This Document
+
+  Before reading this document, you are expected to know what a pattern
+  table is.  If you don't, read a document devoted to NES technical
+  information first.
+
+
+  1.4.  Numeric Conventions
+
+  All numbers are in decimal, unless written with a dollar sign ($), for
+  convenience by those who aren't used to hex.
+
+
+  1.5.  IMPORTANT Note about Offsets
+
+  Offsets are all from the start of PRG ROM, not from the start of
+  ZELDA.NES!  To calculate offsets into ZELDA.NES, add 16 bytes (the
+  size of the .NES header) to every offset in this document.
+
+
+  1.6.  About this Document
+
+  I am releasing this document into the public domain.  However, if you
+  find it useful, or if you have any comments, don't hesitate to send me
+  an e-mail.
+
+  I created this document so that my friend Conrad could create a map
+  editor.  However, I also enjoy reading 6502 assembly code and solving
+  tough problems.  I intend to eventually account for every byte in the
+  Zelda ROM, but I am putting off work on that for a while now that this
+  spec is basically done.  It should be enough to create a decent map
+  editor, if it is correct.  If it is not correct, let me know and we
+  can try to fix it.  I hope you get as much fun out of using this
+  document as I had making it.  Keep hacking!
+
+
+  1.7.  The Art of ROM Hacking
+
+  When I did a (pretty intensive) search for "zelda hack" in my usual
+  search for duplicate projects before beginning something new, I came
+  up with a lot of sprite modifications (clearly made using various NES
+  pattern editors that are readily available), and a page with a few
+  offsets that were apparently guessed at random.  This is a sad and
+  pathetic state.  Why doesn't anyone do things the right way?  The ONLY
+  way to get accurate information about modifying a game is to dig in
+  and immerse yourself in its machine code.  I hope this document, when
+  released, will show people what is really possible and encourage them
+  to repeat what I have done, for other games.  Only afterwards can you
+  call yourself a ROM hacker.  Using a program someone else has written
+  doesn't count (this goes for all the script kiddies, too)!  However,
+  getting the information for this document was a lot of work.  Don't
+  get frustrated right away, and you will find some very interesting
+  things in the depths of code, and perhaps even a new perspective on
+  programming- from the outside.
+
+
+  2.  The Overworld
+
+  2.1.  The Overworld Map Format
+
+
+  Description             Offset          Num. Entries    Entry Size
+  ------------------------------------------------------------------
+  Overworld Map           87064           128             16
+  Column Directory       105743           16              2
+  Column Table 0          89048           16              varies
+  Column Table 1          89101           16              varies
+  Column Table 2          89150           16              varies
+  Column Table 3          89216           16              varies
+  Column Table 4          89284           16              varies
+  Column Table 5          89334           16              varies
+  Column Table 6          89394           16              varies
+  Column Table 7          89453           16              varies
+  Column Table 8          89512           16              varies
+  Column Table 9          89574           16              varies
+  Column Table 10         89639           16              varies
+  Column Table 11         89708           16              varies
+  Column Table 12         89769           16              varies
+  Column Table 13         89823           16              varies
+  Column Table 14         89889           16              varies
+  Column Table 15         89941           16              varies
+  Primary Square Table    92540           64              1
+  Secondary Square Table  92596           16              4
+  Secrets Table           92534           6               1
+
+
+
+  2.2.  The Overworld Map
+
+  The overworld is 16 screens wide by 8 screens high.  Screens are
+  numbered 0..127 starting at the upper left corner, moving left to
+  right, then top to bottom.  Therefore the screen number is calculated
+  by 16*R + C where R is the map row and C is the map column.
+
+  However, not all 128 overworld locations are entirely different.  Some
+  have the same graphic as another location.  Each unique screen is
+  stored once.  Screens that have the same picture, but different
+  colors, can still share the same memory for their graphic (the colors
+  are stored elsewhere).
+
+  The overworld screen table stores 124 unique screens of 16 bytes each
+  (see the next section for a description for individual screens).
+  These in no particular order.  The overworld map contains 128 bytes,
+  one for each 2-D map location.  Each byte in the overworld map refers
+  to one screen in the overworld screen table.
+
+
+  2.3.  Overworld Screens
+
+  One screen in the overworld is 16 columns wide.  Each column is 11
+  squares high.  Each screen takes 16 bytes, one byte for each column of
+  squares on that screen.
+
+  Before we learn how to find the data for a column, we need to discuss
+  the format of the data for a column.
+
+
+  2.4.  Columns
+
+
+
+  2.4.1.  Column Data Format
+
+  The data for column is 11 bytes, one byte for each square in the
+  column, stored in order from top to bottom.  A square is made of 4
+  tiles arranged in a 2x2 square on the screen.
+
+  It takes 11 bytes to draw a column, but these aren't always stored as
+  11 consecutive bytes in memory.  Instead, if two squares (one above
+  the other) are the same graphic (use the same tiles), they can be
+  stored in one byte instead of two.  The number of bytes it takes to
+  store a column depends on how many squares are stored doubly.  The
+  minimum number is 6 bytes (if there are 5 duplicated squares and one
+  left over), and the maximum is 11 (if no squares are duplicated).
+  There is no way to duplicate more than 2 squares at a time, so even if
+  all the squares in a column are the same, you still need 6 bytes to
+  store that column.
+
+  There are 64 possible squares (although not all of the 64 possible may
+  be actually used).  This means that only 6 bits are needed to store
+  the square number.  Since each square uses one byte, there are 2 extra
+  bits in the byte for each square.  The meaning of a square byte is
+  described in section 4, "Squares."
+
+  The 6 bits for the square number are stored in bits 0-5 of each byte
+  in the column data.  If bit 6 is set, this square is a duplicated
+  square and will take up two rows, one above the other, in this column.
+
+
+  2.4.2.  Column Tables
+
+  The column data for 16 different columns is stored together in what we
+  will call a "column table."  A column table contains the 6-11 bytes
+  for each of the 16 columns in that column table, stored all in one
+  contiguous area of memory (which, if you do the arithmetic, could be
+  as small as 96 bytes, or as large as 176 bytes, depending on how many
+  total squares are doubled in the columns inside the column table).
+
+  The first byte of the 6-11 bytes for an individual column always has
+  bit 7 set.  This is how to locate columns within a column table.  We
+  have now accounted for all 8 bits of every byte inside the column
+  data.
+
+
+  2.4.3.  The Column Directory
+
+  There are 16 column tables, for a total of 256 different columns in
+  the overworld.  The addresses of the beginning of each column table
+  are stored in a table of column tables, which we will call the "column
+  directory." I have copied these addresses and converted them to
+  offsets in the ROM in the above table in the rows "Column Table XX",
+  for your convenience.
+
+  (The naming for this two-tiered table structure is taken from Intel's
+  description of its tiered structure for addressing memory pages in the
+  386 processor's virtual memory model.  This model uses a "page
+  directory" which contains pointers to "page tables", which in turn
+  point at individual pages, which are 4K blocks of memory that are the
+  unit of memory allocation.)
+
+
+  2.4.4.  Indexing a Column
+
+  Now we can understand the meaning of the 16 bytes in each overworld
+  screen.  There are 256 columns, so each column byte in an overworld
+  screen refers to one column.  The high nibble of the byte selects
+  which column table to use from the column directory.  The low nibble
+  selects a column from that column table.
+
+
+  2.5.  Squares
+
+  2.5.1.  The Primary Square Table
+
+  The primary square table is an array of 64 (or 56?) bytes, one for
+  each square number used in the column data.  The values in the primary
+  square table are used to determine the tiles to draw for a particular
+  square number.  If the value is greater than or equal to 16 (hex $10),
+  then it refers to the first of four consecutive tiles in NES Pattern
+  Table 1 (Pattern Table 0 is not used for map background tiles).  The 4
+  chosen tiles are the upper left, lower left, upper right, and lower
+  right tiles for that square, in that order.  If the value in the
+  primary square table is less than 16, the four tiles in this square
+  are taken from the secondary square table (using the value that is
+  less than 16 as the index).
+
+
+  2.5.2.  The Secondary Square Table
+
+  The secondary square table contains tile numbers for squares in the
+  overworld that have one or more tiles repeated.  To save space in the
+  pattern tables, pattern tables only store tiles for squares for which
+  all the tiles are unique.
+
+  Each entry in the secondary square table is 4 bytes long, and there
+  are 16 entries (indexed by values in the primary square table that are
+  less than 16).  The bytes specify the tile numbers (again in Pattern
+  Table 1) for a square in the same order used by the primary square
+  table.
+
+
+  2.6.  Secrets
+
+  Secret squares are marked by a special value in the primary square
+  table.  When the map is drawn, the primary square table value for a
+  secret is translated into the value for the graphic that should be
+  shown where the secret is.  This includes checking whether you have
+  gotten the secret on that screen, if applicable.  There are 6 possible
+  secrets: a pushable rock ($E5), a tree in the forest with a door under
+  it ($E6), a round bush with stairs under it ($E7), a well ($E8), a
+  statue ($E9), and a statue with stairs under it ($EA).
+
+  There can be only one secret per screen.  If you were to put more than
+  one secret on a screen, only the last one (the bottommost square of
+  the rightmost column that contains a secret) would be marked as the
+  row and column that a secret is at (and therefore would be the only
+  secret you could use by walking into it), and all the secrets on the
+  screen would share the same state of whether they were found or not,
+  since there is only one bit per overworld screen devoted to storing
+  that state.
+
+
+
+  3.  The Underworld
+
+  3.1.  The Underworld Map Format
+
+
+
+  Description                     Offset          Num. Entries    Entry Size
+  --------------------------------------------------------------------------
+  1st Quest Levels 1-6 Data       100096          768             1
+  1st Quest Levels 7-9 Data       100864          768             1
+  2nd Quest Levels 1-6 Data       101632          768             1
+  2nd Quest Levels 7-9 Data       102400          768             1
+  Underworld Screen Table          90334          64              12
+  Underworld Column Directory      91908          10              2
+  Underworld Column Table 0        90838          7               varies
+  Underworld Column Table 1        90854          7               varies
+  Underworld Column Table 2        90884          7               varies
+  Underworld Column Table 3        90901          7               varies
+  Underworld Column Table 4        90918          7               varies
+  Underworld Column Table 5        90941          7               varies
+  Underworld Column Table 6        90964          7               varies
+  Underworld Column Table 7        90981          7               varies
+  Underworld Column Table 8        90999          7               varies
+  Underworld Column Table 9        91025          7               varies
+  Underworld Square Table          91928          8               1
+
+
+
+  3.2.  Underworld Data
+
+  Underworld data consists of 768 bytes for a group of levels.  There
+  are 4 data blocks, one for levels 1-6 and 7-9 on each quest.  Each
+  data block contains maps and other information (not all deciphered
+  yet).  There is one Underworld Map in each data block:  All levels in
+  that block share a map.  The map is 384 bytes from the start of the
+  data, and is 128 bytes long.  This is the Underworld Map referred to
+  in the next section.
+
+
+  3.3.  Underworld Levels
+
+  An underworld level is 8 by 8 screens, for up to 64 map screens per
+  level.  The screen number is used as an index into the Underworld Map
+  for a particular level.  Bits 0-5 of each byte in an underworld map
+  are an index into the underworld screen table.
+
+
+  3.4.  The Underworld Screen Table
+
+  There are 64 unique underworld screens for ALL of the underworld.
+  Each byte in a map for an underworld level refers to one of these 64
+  possible screens in the underworld screen table.  The Underworld
+  Screen Table is a table with 64 entries.  Each entry takes up 12
+  bytes, one for each column.
+
+
+  3.5.  Underworld Screens
+
+  Every underworld screen has 12 columns.  Each column byte has two
+  parts: the high nibble is used to select a column table from the
+  column directory, and the low nibble is used to select a column from
+  that column table.
+
+
+  3.6.  Underworld Columns
+
+  There are 10 underworld column tables (there could be up to 16, but
+  the last 6 are unused).  Each column table can have up to 16 columns.
+  The columns in a column table are all run together like in the
+  overworld column tables, with the beginning of individual columns
+  marked by bit 7 being set.
+  Each column has 7 squares in it.  Unlike the overworld, where columns
+  can be from 6 to 11 bytes, underworld columns can be from 1 to 7
+  bytes.  Bits 0-2 are a square number (index into the Underworld Square
+  Table).  Bit 3 seems to be unused.  Bits 4-6 are a number from 0 to 6
+  indicating how many additional times to repeat this square.  0 means
+  draw the square once, 1 means draw it twice, and so on.  If the number
+  was 7 it would not mean to draw the square 8 times, since a column has
+  only 7 squares, the column would stop after the 7th square.
+
+
+  3.7.  Underworld Squares
+
+  Since the square number is 3 bits, there are 8 possible squares in the
+  underworld.  There is no secondary square table.  The square code is
+  looked up in the single square table which is 8 bytes long.  If the
+  code is less than 112 or greater than 242, it is a tile pattern to
+  draw for all 4 tiles in the square.  Otherwise the code is the first
+  in a sequence of 4 tile numbers (from Pattern Table 1) that form the
+  upper left, lower left, upper right, and lower right tiles in the
+  square.
+
+  All squares in a 12x7 underworld screen are always in the same place
+  every time you enter the screen.  There are no secrets like in the
+  overworld that cause screens to look different (trees become stairs,
+  rocks become doors, etc) when you enter them.
+
+
+  3.8.  Underworld Doors
+
+  3.8.1.  Finding Door Information
+
+  In each data block (see section "Underworld Data"), there are two
+  tables relevant to doors.  One table contains information about West
+  and East doors, the other has information about North and South doors.
+  Each door table is 128 bytes long.  The N/S door table is at the very
+  beginning of the data block.  The W/E door table is immediately after
+  it (128 bytes from the start of the data block).  The screen number
+  from 0 to 127 is an index to a particular entry in a door table.
+
+  Each door in each screen has a 3-bit door code.  The door code for the
+  north door is in bits 5-7 of the N/S door table, with bits 2-4 for the
+  south door.  Bits 5-7 of the W/E door table are for the West door, and
+  bits 2-4 are for the East door.  I don't know what bits 0 or 1 are for
+  in any of these tables.
+
+
+  3.8.2.  Door Codes
+
+
+  Code    Meaning
+  --------------------
+  0       Open door
+  1       ?
+  2       ?
+  3       ?
+  4       Bombable
+  5       Key Door
+  6       Key Door
+  7       Shutter Door
+
+
+
+  Codes 1, 2, and 3 cause a regular wall to be drawn every time the
+  screen is entered.  I suspect one of these is the regular wall and one
+  is the walk-through wall, and the other is unknown (possibly a
+  duplicate of one of the others), but I don't know which of the 3 codes
+  are which.  Please e-mail me when you find out by modifying door
+  codes.
+
+  There are two different kinds of key doors that look exactly alike but
+  have a different code for some reason (codes 5 and 6).
+
+
+  4.  Common to Overworld and Underworld
+
+  4.1.  Level Information
+
+  4.1.1.  Level Information Table
+
+
+  Description                     Offset          Num. Entries    Entry Size
+  --------------------------------------------------------------------------
+  Level Info Directory             98324          10              2
+  Overworld Info Block            103168          252             1
+  Level 1 Info Block              103420          252             1
+  Level 2 Info Block              103672          252             1
+  Level 3 Info Block              103924          252             1
+  Level 4 Info Block              104176          252             1
+  Level 5 Info Block              104428          252             1
+  Level 6 Info Block              104680          252             1
+  Level 7 Info Block              104932          252             1
+  Level 8 Info Block              105184          252             1
+  Level 9 Info Block              105436          252             1
+
+
+
+  Level information is loaded for each level 0-9 (with 0 being the
+  overworld).  The Level Info Directory contains the addresses of level
+  information blocks for each level; I have calculated their offsets
+  here for your convenience.  Much of the level information blocks is
+  not decoded yet.
+
+
+  4.1.2.  Starting Locations
+
+  The starting location for a level is a screen number, found at byte 47
+  from the start of the level information block for that level.
+
+
+

@@ -1,0 +1,2230 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+  <link rel="stylesheet" href="doc.css" type="text/css"/>
+  <meta content="2015-09-04 03:32:30 +0000" http-equiv="change-date"/>
+  <title>WSMan rev.4</title>
+</head>
+<body>
+<h1 class="onepg"><a class="anch" href="#top" id="top">WSMan rev.4</a></h1>
+<p>
+Bandai WonderSwan series - Technical Information<br/>
+Last updated: 4 September 2015, 03:32:30 UTC
+</p>
+<table>
+	<tr>
+		<th class="tbl_hdr">WonderSwan Reference</th>
+		<th class="tbl_hdr">Accessory Reference</th>
+		<th class="tbl_hdr">Miscellaneous Reference</th>
+	</tr>
+	<tr>
+		<td class="tbl_ent" style="vertical-align: text-top; text-align:left;">
+<b>Overview</b><br/>
+<a href="#ovr_over">System Overview</a><br/>
+<a href="#ovr_parts">Parts</a><br/>
+<a href="#ovr_memmap">Memory Map</a><br/>
+<a href="#ovr_iomap">I/O Map</a><br/>
+<br/>
+<b>Hardware Programming</b><br/>
+<a href="#hw_dispcon">Display Controller</a><br/>
+<a href="#hw_sound">Sound</a><br/>
+<a href="#hw_keypad">Keypad</a><br/>
+<a href="#hw_syscon">System Controller</a><br/>
+<a href="#hw_ints">Interrupts</a><br/>
+<a href="#hw_serial">Serial Port</a><br/>
+<a href="#hw_ieep">Internal EEPROM</a><br/>
+<a href="#hw_dma">DMA Controller</a><br/>
+<a href="#hw_sdma">Sound DMA Controller</a><br/>
+<a href="#hw_timer">Timers</a><br/>
+<br/>
+<b>Other</b><br/>
+<a href="#code_lyt">Code Layout</a><br/>
+<a href="#wsr">WSR Format</a><br/>
+<br/>
+		</td>
+		<td class="tbl_ent" style="vertical-align: text-top; text-align:left;">
+<b>Cartridge</b><br/>
+<a href="#cart_over">Overview</a><br/>
+<a href="#cart_meta">Metadata</a><br/>
+<a href="#cart_bank">Banking</a><br/>
+<a href="#cart_rtc">Real-Time Clock</a><br/>
+<a href="#cart_eep">EEPROM</a><br/>
+<a href="#cart_gpo">General-Purpose Outputs</a><br/>
+<br/>
+<b>WonderWitch</b><br/>
+<a href="#ww_over">Overview</a><br/>
+<a href="#ww_crypto">Update Encryption</a><br/>
+<a href="#ww_flash">Flash ROM</a><br/>
+<a href="#ww_ports">I/O Ports</a><br/>
+<br/>
+<b>WonderGate</b><br/>
+<a href="#wg_over">Overview</a><br/>
+<a href="#wg_terms">Terminology</a><br/>
+<a href="#wg_intf">Interface</a><br/>
+<a href="#wg_cmds">Commands</a><br/>
+<br/>
+		</td>
+		<td class="tbl_ent" style="vertical-align: text-top; text-align:left;">
+<b>V30MZ CPU</b><br/>
+<a href="#cpu_over">CPU Overview</a><br/>
+<a href="#cpu_isa">CPU Instruction Set</a><br/>
+<a href="#cpu_encoding">CPU Instruction Encoding</a><br/>
+<br/>
+<b>Pinouts</b><br/>
+<a href="#pinout_aswan">ASWAN</a><br/>
+<a href="#pinout_sphinx">SPHINX</a><br/>
+<a href="#pinout_sphinx2">SPHINX2</a><br/>
+<a href="#pinout_extport">Ext. Port</a><br/>
+<a href="#pinout_cartcon">Cart Connector</a><br/>
+<a href="#pinout_cartmap">Cart Mapper</a><br/>
+<a href="#pinout_cartpwr">Cart Power Controller</a><br/>
+<a href="#pinout_cartrom">Cart ROM</a><br/>
+<a href="#pinout_cartsram">Cart SRAM</a><br/>
+<a href="#pinout_carteep">Cart EEPROM</a><br/>
+<a href="#pinout_cartrtc">Cart RTC</a><br/>
+<br/>
+<b>Related Information</b><br/>
+<a href="#related_patents">Patents</a><br/>
+<a href="#related_cairo">CAIRO</a><br/>
+<br/>
+<b>About WSMan</b><br/>
+<a href="#about">About This Document</a><br/>
+<br/>
+		</td>
+	</tr>
+</table>
+<h2><a class="anch" href="#ovr_over" id="ovr_over">System Overview</a></h2>
+<p><code>CPU           NEC V30MZ @ 3.072MHz (80186 compatible)
+
+BIOS ROM      ??
+RAM           WS:  16KB
+              WSC: 64KB
+
+WS Screen     58mm x 37mm (2.7 inch FSTN LCD display) (TODO: Check)
+WSC Screen    58mm x 37mm (2.7 inch CSTN LCD display)
+SC Screen     58mm x 37mm (2.7 inch TFT color LCD display) (TODO: Check)
+
+SCR Layers    2 layers, 32x32 tiles
+SCR Colors    WS:  16 palettes of 4 colors
+              WSC: 16 palettes of 16 colors
+SPR Count     Up to 128 SPRs per screen, 32 per line
+SPR Colors    WS:   8 palettes of 4 colors (shared with SCR)
+              WSC:  8 palettes of 16 colors (shared with SCR)
+Priorities    SCR1 < SPR low priority < SCR2 < SPR high priority
+              SPR127 < SPR0
+
+Sound         4 32-sample 4-bit wave channels + 1 headphone-only PCM channel
+              Channel 2 may emit PCM voice
+              Channel 3 may have Sweep feature
+              Channel 4 may emit Noise
+              HyperVoice PCM voice (headphones only)
+Sound Output  Built-in Speaker (mono)
+              Headphone accessory (stereo)
+
+Game Pad      2 sets of 4-button directionals, 3 buttons
+
+Expansion     Full-duplex serial port
+              Headphone sound
+
+Cartridge     Up to 128Mbit ROM (512Mbit on Bandai 2003 mapper)
+              Up to 4Mbit SRAM (actually 128Mbit max? TODO)
+              Up to 16Kbit EEPROM
+              Up to 4 general-purpose output lines
+
+Power         1 AA battery
+</code></p>
+<h2><a class="anch" href="#ovr_parts" id="ovr_parts">Parts</a></h2>
+<h3>Console Parts</h3>
+<p><code>BANDAI SPGY-1001 ASWAN      SoC for WonderSwan            ---
+BANDAI SPGY-1002 SPHINX     SoC for WonderSwan Color      ---
+BANDAI SPGY-1003 SPHINX2    SoC for SwanCrystal           ---
+</code></p>
+<h3>Cart Parts</h3>
+<p><code>BANDAI 2001                 Mapper + I/O controller       ---
+BANDAI 2003                 Mapper + I/O controller       ---
+29DL400TC-90PFTN            WonderWitch Flash ROM         ---
+NEC D442000LGU-B85X-9JH     WonderWitch SRAM              ---
+BS62LV256TC-70              Fairly common SRAM            ---
+</code></p>
+<h3>Accessory Parts</h3>
+<p><code>Rohm BU9480F                Headphone adapter DAC         ---
+Rohm 2SK3541                Headphone adapter Amplifier   ---
+
+SUNTAC D825256GC001         WonderGate SoC                ---
+M29W800AT                   WonderGate Flash ROM          ---
+CY7C1021V33L-12ZC           WonderGate SRAM               ---
+</code></p>
+<h2><a class="anch" href="#ovr_memmap" id="ovr_memmap">Memory Map</a></h2>
+<p><code>Address           Content               Bus     Access Time
+000000h-00FFFFh*  Internal RAM          16-bit  1 cycle
+010000h-01FFFFh   Cartridge SRAM        8-bit   3 cycles?
+020000h-02FFFFh   Cartridge ROM bank 0  16-bit  1 cycle
+030000h-03FFFFh   Cartridge ROM bank 1  16-bit  1 cycle
+040000h-0FFFFFh   Cartridge ROM bank 2  16-bit  1 cycle
+</code></p>
+<p>Internal RAM ends at <code class="inline">003FFFh</code> for WonderSwan, and is mirrored through the rest of the area. WonderSwan Color and SwanCrystal fill all of the 64KB region.</p>
+<h3>Mapping Specifics</h3>
+<p>The entire space from <code class="inline">010000h</code> onwards is just sent directly to the cart, and the cart handles banking the ROM and the SRAM access and such. All WonderSwan carts use this mapping layout.</p>
+<h3>Address Overflow</h3>
+<p>It is possible to attempt to access beyond the 20-bit address space by abusing segmentation. Since the CPU lacks an A20 line, these will just wrap around to the beginning of the address map.</p>
+<h3>Endian</h3>
+<p>The CPU uses little-endian memory format. Thus, when accessing 16-bit or 32-bit data in memory, the least significant byte is the first byte, and the most significant the last. This is the same as other x86 CPUs, Z80, and others.
+</p>
+<h2><a class="anch" href="#ovr_iomap" id="ovr_iomap">I/O Map</a></h2>
+<p><code>000h  RW  <a href="#REG_DISP_CTRL">REG_DISP_CTRL</a>
+001h  RW  <a href="#REG_BACK_COLOR">REG_BACK_COLOR</a>
+002h  R   <a href="#REG_LINE_CUR">REG_LINE_CUR</a>
+003h  RW  <a href="#REG_LINE_CMP">REG_LINE_CMP</a>
+004h  RW  <a href="#REG_SPR_BASE">REG_SPR_BASE</a>
+005h  RW  <a href="#REG_SPR_FIRST">REG_SPR_FIRST</a>
+006h  RW  <a href="#REG_SPR_COUNT">REG_SPR_COUNT</a>
+007h  RW  <a href="#REG_MAP_BASE">REG_MAP_BASE</a>
+008h  RW  <a href="#REG_SCR2_WIN_X0">REG_SCR2_WIN_X0</a>
+009h  RW  <a href="#REG_SCR2_WIN_Y0">REG_SCR2_WIN_Y0</a>
+00Ah  RW  <a href="#REG_SCR2_WIN_X1">REG_SCR2_WIN_X1</a>
+00Bh  RW  <a href="#REG_SCR2_WIN_Y1">REG_SCR2_WIN_Y1</a>
+00Ch  RW  <a href="#REG_SPR_WIN_X0">REG_SPR_WIN_X0</a>
+00Dh  RW  <a href="#REG_SPR_WIN_Y0">REG_SPR_WIN_Y0</a>
+00Eh  RW  <a href="#REG_SPR_WIN_X1">REG_SPR_WIN_X1</a>
+00Fh  RW  <a href="#REG_SPR_WIN_Y1">REG_SPR_WIN_Y1</a>
+010h  RW  <a href="#REG_SCR1_X">REG_SCR1_X</a>
+011h  RW  <a href="#REG_SCR1_Y">REG_SCR1_Y</a>
+012h  RW  <a href="#REG_SCR2_X">REG_SCR2_X</a>
+013h  RW  <a href="#REG_SCR2_Y">REG_SCR2_Y</a>
+014h  RW  <a href="#REG_LCD_CTRL">REG_LCD_CTRL</a>
+015h  RW  <a href="#REG_LCD_ICON">REG_LCD_ICON</a>
+016h  ??  ???
+017h  ??  ???
+018h  ??  ???
+019h  ??  ???
+01Ah  ??  ???
+01Bh  ??  ???
+01Ch  RW  <a href="#REG_PALMONO_POOL_0">REG_PALMONO_POOL_0</a>
+01Dh  RW  <a href="#REG_PALMONO_POOL_1">REG_PALMONO_POOL_1</a>
+01Eh  RW  <a href="#REG_PALMONO_POOL_2">REG_PALMONO_POOL_2</a>
+01Fh  RW  <a href="#REG_PALMONO_POOL_3">REG_PALMONO_POOL_3</a>
+020h  RW  <a href="#REG_PALMONO_0">REG_PALMONO_0</a> (Low)
+021h  RW  <a href="#REG_PALMONO_0">REG_PALMONO_0</a> (High)
+022h  RW  <a href="#REG_PALMONO_1">REG_PALMONO_1</a> (Low)
+023h  RW  <a href="#REG_PALMONO_1">REG_PALMONO_1</a> (High)
+024h  RW  <a href="#REG_PALMONO_2">REG_PALMONO_2</a> (Low)
+025h  RW  <a href="#REG_PALMONO_2">REG_PALMONO_2</a> (High)
+026h  RW  <a href="#REG_PALMONO_3">REG_PALMONO_3</a> (Low)
+027h  RW  <a href="#REG_PALMONO_3">REG_PALMONO_3</a> (High)
+028h  RW  <a href="#REG_PALMONO_4">REG_PALMONO_4</a> (Low)
+029h  RW  <a href="#REG_PALMONO_4">REG_PALMONO_4</a> (High)
+02Ah  RW  <a href="#REG_PALMONO_5">REG_PALMONO_5</a> (Low)
+02Bh  RW  <a href="#REG_PALMONO_5">REG_PALMONO_5</a> (High)
+02Ch  RW  <a href="#REG_PALMONO_6">REG_PALMONO_6</a> (Low)
+02Dh  RW  <a href="#REG_PALMONO_6">REG_PALMONO_6</a> (High)
+02Eh  RW  <a href="#REG_PALMONO_7">REG_PALMONO_7</a> (Low)
+02Fh  RW  <a href="#REG_PALMONO_7">REG_PALMONO_7</a> (High)
+030h  RW  <a href="#REG_PALMONO_8">REG_PALMONO_8</a> (Low)
+031h  RW  <a href="#REG_PALMONO_8">REG_PALMONO_8</a> (High)
+032h  RW  <a href="#REG_PALMONO_9">REG_PALMONO_9</a> (Low)
+033h  RW  <a href="#REG_PALMONO_9">REG_PALMONO_9</a> (High)
+034h  RW  <a href="#REG_PALMONO_A">REG_PALMONO_A</a> (Low)
+035h  RW  <a href="#REG_PALMONO_A">REG_PALMONO_A</a> (High)
+036h  RW  <a href="#REG_PALMONO_B">REG_PALMONO_B</a> (Low)
+037h  RW  <a href="#REG_PALMONO_B">REG_PALMONO_B</a> (High)
+038h  RW  <a href="#REG_PALMONO_C">REG_PALMONO_C</a> (Low)
+039h  RW  <a href="#REG_PALMONO_C">REG_PALMONO_C</a> (High)
+03Ah  RW  <a href="#REG_PALMONO_D">REG_PALMONO_D</a> (Low)
+03Bh  RW  <a href="#REG_PALMONO_D">REG_PALMONO_D</a> (High)
+03Ch  RW  <a href="#REG_PALMONO_E">REG_PALMONO_E</a> (Low)
+03Dh  RW  <a href="#REG_PALMONO_E">REG_PALMONO_E</a> (High)
+03Eh  RW  <a href="#REG_PALMONO_F">REG_PALMONO_F</a> (Low)
+03Fh  RW  <a href="#REG_PALMONO_F">REG_PALMONO_F</a> (High)
+040h  RW  <a href="#REG_DMA_SRC">REG_DMA_SRC</a> (Low)
+041h  RW  <a href="#REG_DMA_SRC">REG_DMA_SRC</a> (Mid)
+042h  RW  <a href="#REG_DMA_SRC_HI">REG_DMA_SRC_HI</a>
+043h  ??  ??? (unused?)
+044h  RW  <a href="#REG_DMA_DST">REG_DMA_DST</a> (Low)
+045h  RW  <a href="#REG_DMA_DST">REG_DMA_DST</a> (Mid)
+046h  RW  <a href="#REG_DMA_LEN">REG_DMA_LEN</a> (Low)
+047h  RW  <a href="#REG_DMA_LEN">REG_DMA_LEN</a> (High)
+048h  RW  <a href="#REG_DMA_CTRL">REG_DMA_CTRL</a>
+049h  ??  ???
+04Ah  RW  <a href="#REG_SDMA_SRC">REG_SDMA_SRC</a> (Low)
+04Bh  RW  <a href="#REG_SDMA_SRC">REG_SDMA_SRC</a> (Mid)
+04Ch  RW  <a href="#REG_SDMA_SRC_HI">REG_SDMA_SRC_HI</a>
+04Dh  ??  ???
+04Eh  RW  <a href="#REG_SDMA_LEN">REG_SDMA_LEN</a> (Low)
+04Fh  RW  <a href="#REG_SDMA_LEN">REG_SDMA_LEN</a> (High)
+050h  ??  ???
+051h  ??  ???
+052h  RW  <a href="#REG_SDMA_CTRL">REG_SDMA_CTRL</a>
+053h  ??  ???
+054h  ??  ???
+055h  ??  ???
+056h  ??  ???
+057h  ??  ???
+058h  ??  ???
+059h  ??  ???
+05Ah  ??  ???
+05Bh  ??  ???
+05Ch  ??  ???
+05Dh  ??  ???
+05Eh  ??  ???
+05Fh  ??  ???
+060h  RW  <a href="#REG_DISP_MODE">REG_DISP_MODE</a>
+061h  ??  ???
+062h  ??  ???
+063h  ??  ???
+064h  ??  ???
+065h  ??  ???
+066h  ??  ???
+067h  ??  ???
+068h  ??  ???
+069h  ??  ???
+06Ah  RW  <a href="#REG_HYPER_CTRL">REG_HYPER_CTRL</a>
+06Bh  RW  <a href="#REG_HYPER_CHAN_CTRL">REG_HYPER_CHAN_CTRL</a>
+06Ch  ??  ???
+06Dh  ??  ???
+06Eh  ??  ???
+06Fh  ??  ???
+070h  ??  ???
+071h  ??  ???
+072h  ??  ???
+073h  ??  ???
+074h  ??  ???
+075h  ??  ???
+076h  ??  ???
+077h  ??  ???
+078h  ??  ???
+079h  ??  ???
+07Ah  ??  ???
+07Bh  ??  ???
+07Ch  ??  ???
+07Dh  ??  ???
+07Eh  ??  ???
+07Fh  ??  ???
+080h  RW  <a href="#REG_SND_CH1_PITCH">REG_SND_CH1_PITCH</a> (Low)
+081h  RW  <a href="#REG_SND_CH1_PITCH">REG_SND_CH1_PITCH</a> (High)
+082h  RW  <a href="#REG_SND_CH2_PITCH">REG_SND_CH2_PITCH</a> (Low)
+083h  RW  <a href="#REG_SND_CH2_PITCH">REG_SND_CH2_PITCH</a> (High)
+084h  RW  <a href="#REG_SND_CH3_PITCH">REG_SND_CH3_PITCH</a> (Low)
+085h  RW  <a href="#REG_SND_CH3_PITCH">REG_SND_CH3_PITCH</a> (High)
+086h  RW  <a href="#REG_SND_CH4_PITCH">REG_SND_CH4_PITCH</a> (Low)
+087h  RW  <a href="#REG_SND_CH4_PITCH">REG_SND_CH4_PITCH</a> (High)
+088h  RW  <a href="#REG_SND_CH1_VOL">REG_SND_CH1_VOL</a>
+089h  RW  <a href="#REG_SND_CH2_VOL">REG_SND_CH2_VOL</a>
+08Ah  RW  <a href="#REG_SND_CH3_VOL">REG_SND_CH3_VOL</a>
+08Bh  RW  <a href="#REG_SND_CH4_VOL">REG_SND_CH4_VOL</a>
+08Ch  RW  <a href="#REG_SND_SWEEP_VALUE">REG_SND_SWEEP_VALUE</a>
+08Dh  RW  <a href="#REG_SND_SWEEP_TIME">REG_SND_SWEEP_TIME</a>
+08Eh  RW  <a href="#REG_SND_NOISE">REG_SND_NOISE</a>
+08Fh  RW  <a href="#REG_SND_WAVE_BASE">REG_SND_WAVE_BASE</a>
+090h  RW  <a href="#REG_SND_CTRL">REG_SND_CTRL</a>
+091h  RW  <a href="#REG_SND_OUTPUT">REG_SND_OUTPUT</a>
+092h  R   <a href="#REG_SND_RANDOM">REG_SND_RANDOM</a> (Low)
+093h  R   <a href="#REG_SND_RANDOM">REG_SND_RANDOM</a> (High)
+094h  RW  <a href="#REG_SND_VOICE_CTRL">REG_SND_VOICE_CTRL</a>
+095h  ??  ???
+096h  ??  ???
+097h  ??  ???
+098h  ??  ???
+099h  ??  ???
+09Ah  ??  ???
+09Bh  ??  ???
+09Ch  ??  ???
+09Dh  ??  ???
+09Eh  ??  ???
+09Fh  ??  ???
+0A0h  RW  <a href="#REG_HW_FLAGS">REG_HW_FLAGS</a>
+0A1h  ??  ???
+0A2h  RW  <a href="#REG_TMR_CTRL">REG_TMR_CTRL</a>
+0A3h  ??  ???
+0A4h  RW  <a href="#REG_HTMR_FREQ">REG_HTMR_FREQ</a> (Low)
+0A5h  RW  <a href="#REG_HTMR_FREQ">REG_HTMR_FREQ</a> (High)
+0A6h  RW  <a href="#REG_VTMR_FREQ">REG_VTMR_FREQ</a> (Low)
+0A7h  RW  <a href="#REG_VTMR_FREQ">REG_VTMR_FREQ</a> (High)
+0A8h  R   <a href="#REG_HTMR_CTR">REG_HTMR_CTR</a> (Low)
+0A9h  R   <a href="#REG_HTMR_CTR">REG_HTMR_CTR</a> (High)
+0AAh  R   <a href="#REG_VTMR_CTR">REG_VTMR_CTR</a> (Low)
+0ABh  R   <a href="#REG_VTMR_CTR">REG_VTMR_CTR</a> (High)
+0ACh  ??  ???
+0ADh  ??  ???
+0AEh  ??  ???
+0AFh  ??  ???
+0B0h  RW  <a href="#REG_INT_BASE">REG_INT_BASE</a>
+0B1h  RW  <a href="#REG_SER_DATA">REG_SER_DATA</a>
+0B2h  RW  <a href="#REG_INT_ENABLE">REG_INT_ENABLE</a>
+0B3h  RW  <a href="#REG_SER_STATUS">REG_SER_STATUS</a>
+0B4h  R   <a href="#REG_INT_STATUS">REG_INT_STATUS</a>
+0B5h  RW  <a href="#REG_KEYPAD">REG_KEYPAD</a>
+0B6h   W  <a href="#REG_INT_ACK">REG_INT_ACK</a>
+0B7h  ??  ???
+0B8h  ??  ???
+0B9h  ??  ???
+0BAh  RW  <a href="#REG_IEEP_DATA">REG_IEEP_DATA</a> (Low)
+0BBh  RW  <a href="#REG_IEEP_DATA">REG_IEEP_DATA</a> (High)
+0BCh  RW  <a href="#REG_IEEP_ADDR">REG_IEEP_ADDR</a> (Low)
+0BDh  RW  <a href="#REG_IEEP_ADDR">REG_IEEP_ADDR</a> (High)
+0BEh  R   <a href="#REG_IEEP_STATUS">REG_IEEP_STATUS</a>
+0BEh   W  <a href="#REG_IEEP_CMD">REG_IEEP_CMD</a>
+0BFh  ??  ???
+0C0h  RW  <a href="#REG_BANK_ROM2">REG_BANK_ROM2</a>
+0C1h  RW  <a href="#REG_BANK_SRAM">REG_BANK_SRAM</a>
+0C2h  RW  <a href="#REG_BANK_ROM0">REG_BANK_ROM0</a>
+0C3h  RW  <a href="#REG_BANK_ROM1">REG_BANK_ROM1</a>
+0C4h  RW  <a href="#REG_EEP_DATA">REG_EEP_DATA</a> (Low)
+0C5h  RW  <a href="#REG_EEP_DATA">REG_EEP_DATA</a> (High)
+0C6h  RW  <a href="#REG_EEP_ADDR">REG_EEP_ADDR</a> (Low)
+0C7h  RW  <a href="#REG_EEP_ADDR">REG_EEP_ADDR</a> (High)
+0C8h  R   <a href="#REG_EEP_STATUS">REG_EEP_STATUS</a>
+0C8h   W  <a href="#REG_EEP_CMD">REG_EEP_CMD</a>
+0C9h  ??  ???
+0CAh  R   <a href="#REG_RTC_STATUS">REG_RTC_STATUS</a>
+0CAh   W  <a href="#REG_RTC_CMD">REG_RTC_CMD</a>
+0CBh  RW  <a href="#REG_RTC_DATA">REG_RTC_DATA</a>
+0CCh  RW  <a href="#REG_GPO_EN">REG_GPO_EN</a>
+0CDh  RW  <a href="#REG_GPO_DATA">REG_GPO_DATA</a>
+0CEh  RW  <a href="#REG_WW_FLASHLOCK">REG_WW_FLASHLOCK</a>
+0CFh  ??  ???
+0D0h  ??  ???
+0D1h  ??  ???
+0D2h  ??  ???
+0D3h  ??  ???
+0D4h  ??  ???
+0D5h  ??  ???
+0D6h  ??  ???
+0D7h  ??  ???
+0D8h  ??  ???
+0D9h  ??  ???
+0DAh  ??  ???
+0DBh  ??  ???
+0DCh  ??  ???
+0DDh  ??  ???
+0DEh  ??  ???
+0DFh  ??  ???
+0E0h  ??  ???
+0E1h  ??  ???
+0E2h  ??  ???
+0E3h  ??  ???
+0E4h  ??  ???
+0E5h  ??  ???
+0E6h  ??  ???
+0E7h  ??  ???
+0E8h  ??  ???
+0E9h  ??  ???
+0EAh  ??  ???
+0EBh  ??  ???
+0ECh  ??  ???
+0EDh  ??  ???
+0EEh  ??  ???
+0EFh  ??  ???
+0F0h  ??  ???
+0F1h  ??  ???
+0F2h  ??  ???
+0F3h  ??  ???
+0F4h  ??  ???
+0F5h  ??  ???
+0F6h  ??  ???
+0F7h  ??  ???
+0F8h  ??  ???
+0F9h  ??  ???
+0FAh  ??  ???
+0FBh  ??  ???
+0FCh  ??  ???
+0FDh  ??  ???
+0FEh  ??  ???
+0FFh  ??  ???
+</code></p>
+<h3>Mapping Specifics</h3>
+<p>Only the bottom 8 bits of the port address are used. (TODO: Unverified)</p>
+<p>The entire space from <code class="inline">0C0h</code> onwards is just sent directly to the cart, and the cart handles all of it.</p>
+<p>TODO: Specify info about the difference between 2001 and 2003?</p>
+<h3>Unmapped areas</h3>
+<p>Several of these seem to actually do something, but what is currently unknown.
+</p>
+<h2><a class="anch" href="#hw_dispcon" id="hw_dispcon">Display Controller</a></h2>
+<p>WonderSwan has a display resolution of 224x144.</p>
+<h3><a class="anch" href="#disp_hw" id="disp_hw">Display Hardware</a></h3>
+<p>The WonderSwan series used 3 types of LCD display throughout its lifetime.</p>
+<p>The original WonderSwan used a monochrome FSTN (filtered super-twisted nematic) LCD display capable of displaying 16 shades of grey.</p>
+<p>The WonderSwan Color used a CSTN (color super-twisted nematic) LCD display capable of displaying 12-bit color (4096 colors).</p>
+<p>The SwanCrystal used a TFT (thin film transistor) LCD display also capable of displaying 12-bit color. The superior viewing characteristics of the TFT technology makes it the superior system in terms of visibility.</p>
+<h3><a class="anch" href="#disp_timing" id="disp_timing">Display Timing</a></h3>
+<p>The display timing is something like this:</p>
+<p><code>    0            224 256
+    -----------------
+  0|              |  |
+   |              |  |
+   |              |  |
+   |              |  |
+144|--------------   |
+159|_________________|
+
+PIXCLK = 3.072MHz
+
+HDISP  = 224
+HBLANK =  32
+HTOTAL = 256
+HCLK   = 12kHz (3072000 / 256)
+
+VDISP  = 144
+VBLANK =  15
+VTOTAL = 159
+VCLK   = ~75.47Hz (12000 / 159)
+</code></p>
+<p>
+I think the CPU is not paused while the display controller accesses memory. Instead, I believe the SoC has bus arbitration to handle any simultaneous accesses. I don't know exactly how I can test any of this with decent accuracy though.</p>
+<p>Graphics DMA seems to happen on LINE_CUR = 142 (.5?). My guess is that the display hardware is at least 2 lines ahead always. Due to this, the DMA probably ends right at the start of V-Blank. This might have been done so that it acts like DMA at V-Blank, but without eating into V-Blank CPU cycles? In any case, emulator behavior of instant DMA at line 142 is incorrect and causes tearing.</p>
+<h3><a class="anch" href="#disp_pal" id="disp_pal">Palettes</a></h3>
+<p>Depending on the current video mode, as selected by <a href="#REG_DISP_MODE">REG_DISP_MODE</a>, different sets of palette data are used.</p>
+<h4><a class="anch" href="#disp_pal_mono" id="disp_pal_mono">Monochrome</a></h4>
+<p>Palettes in the monochrome video modes are controlled by the <a href="#REG_PALMONO_POOL">REG_PALMONO_POOL</a> registers, and the <a href="#REG_PALMONO">REG_PALMONO</a> registers.</p>
+<p><a href="#REG_PALMONO_POOL">REG_PALMONO_POOL</a> decides the pool of 8 colors that are then picked from to decide the final palettes. These colors are 4-bit, where <code class="inline">00h</code> is brightest and <code class="inline">0Fh</code> is darkest.</p>
+<p>The <a href="#REG_PALMONO">REG_PALMONO</a> registers choose 4 colors for each of the 16 palettes from this 8-color pool.</p>
+<p>Palettes 0-3 and 8-11 are entirely opaque, none of the colors will be used for transparency. Palettes 4-7 and 12-15 use color 0 as transparency, and this color will never be displayed.</p>
+<h4><a class="anch" href="#disp_pal_color" id="disp_pal_color">Color</a></h4>
+<p>Palettes in the color video modes completely ignore the monochrome palette registers, instead storing the palettes in RAM.</p>
+<p>In these modes, the palettes are stored in RAM at <code class="inline">0FE00h</code>, 1 word per color, 16 colors per palette. In 2BPP modes, the latter 12 colors in each palette are ignored (TODO: Verify?).</p>
+<p>All palettes have color 0 as transparency, and these colors will not be displayed unless used as the background color in <a href="#REG_BACK_COLOR">REG_BACK_COLOR</a>.</p>
+<p>Color entry format:</p>
+<p><code>8-11  Red
+4-7   Green
+0-3   Blue
+</code></p>
+<h3><a class="anch" href="#disp_tile" id="disp_tile">Tiles</a></h3>
+<p>The tile format and placement in memory is different depending on the current video mode, selected by <a href="#REG_DISP_MODE">REG_DISP_MODE</a>. All tiles are 8x8.</p>
+<h4><a class="anch" href="#disp_tile_2bpp" id="disp_tile_2bpp">2BPP Tiles</a></h4>
+<p>Tiles are located at <code class="inline">02000h</code> in RAM, and up to <code class="inline">0200h</code> tiles may be stored here.</p>
+<p>Each tile occupies 16 bytes.</p>
+<h5><a class="anch" href="#disp_tile_2bpp_planar" id="disp_tile_2bpp_planar">2BPP Planar Format</a></h5>
+<p>In this format, each byte contains a full 8 pixel row, defining a single bit of the resulting pixels. Even bytes determine bit0, odd bytes determine bit1.</p>
+<p><code>Each bit:
+[x+0][x+1][x+2][x+3][x+4][x+5][x+6][x+7]
+</code></p>
+<p><code>Each byte:
+[r0 b0][r0 b1]
+[r1 b0][r1 b1]
+[r2 b0][r2 b1]
+[r3 b0][r3 b1]
+[r4 b0][r4 b1]
+[r5 b0][r5 b1]
+[r6 b0][r6 b1]
+[r7 b0][r7 b1]
+</code></p>
+<h5><a class="anch" href="#disp_tile_2bpp_packed" id="disp_tile_2bpp_packed">2BPP Packed Format</a></h5>
+<p>In this format, each byte contains all bits for 4 pixels of the pixel row. Even bytes determine the right pixels, odd bytes determine the left pixels.</p>
+<p><code>Each bit:
+[x+3 b1][x+3 b0][x+2 b1][x+2 b0][x+1 b1][x+1 b0][x+0 b1][x+0 b0]
+</code></p>
+<p><code>Each byte:
+[r0 x+4][r0 x+0]
+[r1 x+4][r1 x+0]
+[r2 x+4][r2 x+0]
+[r3 x+4][r3 x+0]
+[r4 x+4][r4 x+0]
+[r5 x+4][r5 x+0]
+[r6 x+4][r6 x+0]
+[r7 x+4][r7 x+0]
+</code></p>
+<h4><a class="anch" href="#disp_tile_4bpp" id="disp_tile_4bpp">4BPP Tiles</a></h4>
+<p>Tiles are located at <code class="inline">04000h</code> in RAM, and up to <code class="inline">0400h</code> tiles may be stored here. Sprites may only use the first <code class="inline">0200h</code> tiles here, and to access the top <code class="inline">0200h</code> tiles in a background tile requires using a separate attribute bit.</p>
+<p>Each tile occupies 32 bytes.</p>
+<h5><a class="anch" href="#disp_tile_4bpp_planar" id="disp_tile_4bpp_planar">4BPP Planar Format</a></h5>
+<p>In this format, each byte contains a full 8 pixel row, defining a single bit of the resulting pixels. In order, bytes determine bit0, bit1, bit2, bit3.</p>
+<p><code>Each bit:
+[x+0][x+1][x+2][x+3][x+4][x+5][x+6][x+7]
+</code></p>
+<p><code>Each byte:
+[r0 b0][r0 b1][r0 b2][r0 b3]
+[r1 b0][r1 b1][r1 b2][r1 b3]
+[r2 b0][r2 b1][r2 b2][r2 b3]
+[r3 b0][r3 b1][r3 b2][r3 b3]
+[r4 b0][r4 b1][r4 b2][r4 b3]
+[r5 b0][r5 b1][r5 b2][r5 b3]
+[r6 b0][r6 b1][r6 b2][r6 b3]
+[r7 b0][r7 b1][r7 b2][r7 b3]
+</code></p>
+<h5><a class="anch" href="#disp_tile_4bpp_packed" id="disp_tile_4bpp_packed">4BPP Packed Format</a></h5>
+<p>In this format, each byte contains all bits for 2 pixels of the pixel row. In order, bytes determine right-most, right-center, left-center, left-most pixels.</p>
+<p><code>Each bit:
+[x+1 b3][x+1 b2][x+1 b1][x+1 b0][x+0 b3][x+0 b2][x+0 b1][x+0 b0]
+</code></p>
+<p><code>Each byte:
+[r0 x+6][r0 x+4][r0 x+2][r0 x+0]
+[r1 x+6][r1 x+4][r1 x+2][r1 x+0]
+[r2 x+6][r2 x+4][r2 x+2][r2 x+0]
+[r3 x+6][r3 x+4][r3 x+2][r3 x+0]
+[r4 x+6][r4 x+4][r4 x+2][r4 x+0]
+[r5 x+6][r5 x+4][r5 x+2][r5 x+0]
+[r6 x+6][r6 x+4][r6 x+2][r6 x+0]
+[r7 x+6][r7 x+4][r7 x+2][r7 x+0]
+</code></p>
+<h3>Screens</h3>
+<p>WonderSwan has 2 scrollable tilemapped screens each organized as a 32x32 map of tiles. The two screens are commonly referred to as SCR1 and SCR2. SCR1 is always behind SCR2.</p>
+<p>SCR2 has a window function that can be configured to either display only the region inside the window, or only the region outside of it. This window can be configured with the <a href="#REG_SCR2_WIN">REG_SCR2_WIN</a> registers.</p>
+<p>The location in memory of the tile maps can be configured using <a href="#REG_MAP_BASE">REG_MAP_BASE</a>.</p>
+<h4><a class="anch" href="#scr_datafmt" id="scr_datafmt">Data Format</a></h4>
+<p>Each tile's entry in a tile map is defined with a 16-bit word.</p>
+<p><code>15    Vertical flip
+14    Horizontal flip
+13    Tile bank (WSC only)
+9-12  Palette
+0-8   Tile
+</code></p>
+<h3>Sprites</h3>
+<p>Maximum 128 sprites, 32 per scanline. Sprite data location in memory can be moved with <a href="#REG_SPR_BASE">REG_SPR_BASE</a>. The sprite to begin processing with can be changed using <a href="#REG_SPR_FIRST">REG_SPR_FIRST</a>. The number of sprites to process can be changed with <a href="#REG_SPR_COUNT">REG_SPR_COUNT</a>.</p>
+<p>Sprite drawing puts priority to earlier sprites in the list. It is currently unknown what happens with a sprite with SCR2 Priority overlapping a sprite with a lower index. (TODO)</p>
+<p>Sprites support being clipped by a window defined with the <a href="#REG_SPR_WIN">REG_SPR_WIN</a> registers. Each sprite has a flag to designate if it will be affected by the window. Sprites also support being horizontally and vertically flipped.</p>
+<p><i>All</i> sprites appear above SCR1, and there is a flag for whether the sprite will appear above SCR2.</p>
+<p>As the sprite data format only allows 8 palettes, the actual selected palette is +8. So palette <code class="inline">03h</code> for sprites is actually palette <code class="inline">0Bh</code>.</p>
+<h4><a class="anch" href="#spr_datafmt" id="spr_datafmt">Data Format</a></h4>
+<p>Each sprite's entry in the sprite table uses a 32-bit dword.</p>
+<p><code>24-31 X position
+16-23 Y position
+15    Vertical flip
+14    Horizontal flip
+13    SCR2 Priority
+12    Window Clip enable
+9-11  Palette
+0-8   Tile
+</code></p>
+<h3><a class="anch" href="#disp_ports" id="disp_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_DISP_CTRL" id="REG_DISP_CTRL">REG_DISP_CTRL</a></h4>
+<p><code>Port:   000h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Display control.</p>
+<p><code>5     SCR2 window enable
+4     SCR2 window mode (0=Display Inside, 1=Outside)
+3     SPR window enable
+2     SPR enable
+1     SCR2 enable
+0     SCR1 enable
+</code></p>
+<h4><a class="anch" href="#REG_BACK_COLOR" id="REG_BACK_COLOR">REG_BACK_COLOR</a></h4>
+<p><code>Port:   001h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Determines the 'background' color used for pixels uncovered by sprites and screens.</p>
+<p><code>Mono:
+0-3   Background color (raw color)
+
+Color:
+4-7   Background color palette
+0-3   Background color index
+</code></p>
+<h4><a class="anch" href="#REG_LINE_CUR" id="REG_LINE_CUR">REG_LINE_CUR</a></h4>
+<p><code>Port:   002h
+Access: R
+Size:   Byte
+</code></p>
+<p>Current line being displayed.</p>
+<h4><a class="anch" href="#REG_LINE_CMP" id="REG_LINE_CMP">REG_LINE_CMP</a></h4>
+<p><code>Port:   003h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Line to fire <a href="#int_hwints">HWINT_LINE</a> on, compared against <a href="#REG_LINE_CUR">REG_LINE_CUR</a>.</p>
+<h4><a class="anch" href="#REG_SPR_BASE" id="REG_SPR_BASE">REG_SPR_BASE</a></h4>
+<p><code>Port:   004h
+Access: RW
+Size:   Byte
+</code></p>
+<p>The base address of the sprite table. Register value should be <code class="inline">address >> 9</code>. This register is 6 bits? (TODO: Verify)</p>
+<h4><a class="anch" href="#REG_SPR_FIRST" id="REG_SPR_FIRST">REG_SPR_FIRST</a></h4>
+<p><code>Port:   005h
+Access: RW
+Size:   Byte
+</code></p>
+<p>The index of the first sprite to draw.</p>
+<h4><a class="anch" href="#REG_SPR_COUNT" id="REG_SPR_COUNT">REG_SPR_COUNT</a></h4>
+<p><code>Port:   006h
+Access: RW
+Size:   Byte
+</code></p>
+<p>The number of sprites to draw.</p>
+<h4><a class="anch" href="#REG_MAP_BASE" id="REG_MAP_BASE">REG_MAP_BASE</a></h4>
+<p><code>Port:   007h
+Access: RW
+Size:   Byte
+</code></p>
+<p>The base address of the tile maps.</p>
+<p><code>4-6   SCR2 base address >> 11
+0-2   SCR1 base address >> 11
+</code></p>
+<a class="anch" id="REG_SCR2_WIN"></a>
+<h4><a class="anch" href="#REG_SCR2_WIN_X0" id="REG_SCR2_WIN_X0">REG_SCR2_WIN_X0</a></h4>
+<p><code>Port:   008h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Top-left X of SCR2 Window.</p>
+<h4><a class="anch" href="#REG_SCR2_WIN_Y0" id="REG_SCR2_WIN_Y0">REG_SCR2_WIN_Y0</a></h4>
+<p><code>Port:   009h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Top-left Y of SCR2 Window.</p>
+<h4><a class="anch" href="#REG_SCR2_WIN_X1" id="REG_SCR2_WIN_X1">REG_SCR2_WIN_X1</a></h4>
+<p><code>Port:   00Ah
+Access: RW
+Size:   Byte
+</code></p>
+<p>Bottom-right X of SCR2 Window.</p>
+<h4><a class="anch" href="#REG_SCR2_WIN_Y1" id="REG_SCR2_WIN_Y1">REG_SCR2_WIN_Y1</a></h4>
+<p><code>Port:   00Bh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Bottom-right Y of SCR2 Window.</p>
+<a class="anch" id="REG_SPR_WIN"></a>
+<h4><a class="anch" href="#REG_SPR_WIN_X0" id="REG_SPR_WIN_X0">REG_SPR_WIN_X0</a></h4>
+<p><code>Port:   00Ch
+Access: RW
+Size:   Byte
+</code></p>
+<p>Top-left X of SPR Window.</p>
+<h4><a class="anch" href="#REG_SPR_WIN_Y0" id="REG_SPR_WIN_Y0">REG_SPR_WIN_Y0</a></h4>
+<p><code>Port:   00Dh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Top-left Y of SPR Window.</p>
+<h4><a class="anch" href="#REG_SPR_WIN_X1" id="REG_SPR_WIN_X1">REG_SPR_WIN_X1</a></h4>
+<p><code>Port:   00Eh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Bottom-right X of SPR Window.</p>
+<h4><a class="anch" href="#REG_SPR_WIN_Y1" id="REG_SPR_WIN_Y1">REG_SPR_WIN_Y1</a></h4>
+<p><code>Port:   00Fh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Bottom-right Y of SPR Window.</p>
+<h4><a class="anch" href="#REG_SCR1_X" id="REG_SCR1_X">REG_SCR1_X</a></h4>
+<p><code>Port:   010h
+Access: RW
+Size:   Byte
+</code></p>
+<p>SCR1 X scroll.</p>
+<h4><a class="anch" href="#REG_SCR1_Y" id="REG_SCR1_Y">REG_SCR1_Y</a></h4>
+<p><code>Port:   011h
+Access: RW
+Size:   Byte
+</code></p>
+<p>SCR1 Y scroll.</p>
+<h4><a class="anch" href="#REG_SCR2_X" id="REG_SCR2_X">REG_SCR2_X</a></h4>
+<p><code>Port:   012h
+Access: RW
+Size:   Byte
+</code></p>
+<p>SCR2 X scroll.</p>
+<h4><a class="anch" href="#REG_SCR2_Y" id="REG_SCR2_Y">REG_SCR2_Y</a></h4>
+<p><code>Port:   013h
+Access: RW
+Size:   Byte
+</code></p>
+<p>SCR2 Y scroll.</p>
+<h4><a class="anch" href="#REG_LCD_CTRL" id="REG_LCD_CTRL">REG_LCD_CTRL</a></h4>
+<p><code>Port:   014h
+Access: RW
+Size:   Byte
+</code></p>
+<p>LCD control.</p>
+<p><code>1-7   System-specific
+0     LCD sleep (0=Active, 1=Sleep)
+
+WonderSwan:
+1-7   ??? (TODO)
+
+WonderSwan Color:
+4-7   Holds state, does nothing?
+2-3   0 (read only)
+1     Contrast (0=Low, 1=High)
+
+SwanCrystal:
+1-7   0 (read only)
+</code></p>
+<h4><a class="anch" href="#REG_LCD_ICON" id="REG_LCD_ICON">REG_LCD_ICON</a></h4>
+<p><code>Port:   015h
+Access: RW
+Size:   Byte
+</code></p>
+<p>LCD icons.</p>
+<p><code>5     Auxiliary 3 (Big circle)
+4     Auxiliary 2 (Medium circle)
+3     Auxiliary 1 (Small circle)
+2     Horizontal orientation indicator
+1     Vertical orientation indicator
+0     Sleep indicator
+</code></p>
+<a class="anch" id="REG_PALMONO_POOL_0"></a>
+<a class="anch" id="REG_PALMONO_POOL_1"></a>
+<a class="anch" id="REG_PALMONO_POOL_2"></a>
+<a class="anch" id="REG_PALMONO_POOL_3"></a>
+<h4><a class="anch" href="#REG_PALMONO_POOL" id="REG_PALMONO_POOL">REG_PALMONO_POOL</a></h4>
+<p><code>Port:   01Ch, 01Dh, 01Eh, 01Fh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Monochrome palette pool selection.</p>
+<p><code>4-7   Color (reg*2)+1
+0-3   Color (reg*2)+0
+</code></p>
+<a class="anch" id="REG_PALMONO_0"></a>
+<a class="anch" id="REG_PALMONO_1"></a>
+<a class="anch" id="REG_PALMONO_2"></a>
+<a class="anch" id="REG_PALMONO_3"></a>
+<a class="anch" id="REG_PALMONO_4"></a>
+<a class="anch" id="REG_PALMONO_5"></a>
+<a class="anch" id="REG_PALMONO_6"></a>
+<a class="anch" id="REG_PALMONO_7"></a>
+<a class="anch" id="REG_PALMONO_8"></a>
+<a class="anch" id="REG_PALMONO_9"></a>
+<a class="anch" id="REG_PALMONO_A"></a>
+<a class="anch" id="REG_PALMONO_B"></a>
+<a class="anch" id="REG_PALMONO_C"></a>
+<a class="anch" id="REG_PALMONO_D"></a>
+<a class="anch" id="REG_PALMONO_E"></a>
+<a class="anch" id="REG_PALMONO_F"></a>
+<h4><a class="anch" href="#REG_PALMONO" id="REG_PALMONO">REG_PALMONO</a></h4>
+<p><code>Port:   020h-021h, 022h-023h, 024h-025h, 026h-027h
+        028h-029h, 02Ah-02Bh, 02Ch-02Dh, 02Eh-02Fh
+        030h-031h, 032h-033h, 034h-035h, 036h-037h
+        038h-039h, 03Ah-03Bh, 03Ch-03Dh, 03Eh-03Fh
+Access: RW
+Size:   Word
+</code></p>
+<p>Monochrome palettes</p>
+<p><code>12-14 Color 3
+8-10  Color 2
+4-6   Color 1
+0-2   Color 0
+</code></p>
+<h2><a class="anch" href="#hw_sound" id="hw_sound">Sound</a></h2>
+<p>TODO: in-depth analysis by analyzing the headphone port's D_SND.</p>
+<p>TODO: Write up basic info</p>
+<p>The sound hardware seems to take about 16 cycles to start up after some things, for some reason. (TODO)</p>
+<h3><a class="anch" href="#snd_timings" id="snd_timings">Timing</a></h3>
+<p>Each sound channel updates every master clock (<i>3072000 Hz</i>). The sweep section updates every 256*32 clocks (<i>375 Hz</i>). The headphone DAC updates every 128 clocks (<i>24000 Hz</i>). The speaker DAC presumably is the same, but this is unverified (TODO?).</p>
+<p>I can't at all detect CPU stalling from accessing the wave table, no idea how they did this. (TODO)</p>
+<h3><a class="anch" href="#snd_pitch" id="snd_pitch">Pitch</a></h3>
+<p>Pitch register algorithm is:</p>
+<p><code>reg = 2048 - (3072000 / 32 / f)
+</code></p>
+<p>You may convert a register value back to a frequency with this algorithm:</p>
+<p><code>f = 3072000 / 32 / (2048 - reg) Hz
+</code></p>
+<p>These values are used with the <a href="#REG_SND_CHx_PITCH">REG_SND_CHx_PITCH</a> registers.</p>
+<p>This register is the down-counter compare value used for advancing to the next step in the sample. After each sample plays, the internal counter is reset to <code class="inline">2048</code>, then decrements by 1 every master clock. Once the internal counter matches the pitch register, the next sample is output.</p>
+<h3><a class="anch" href="#snd_hypervoice" id="snd_hypervoice">HyperVoice</a></h3>
+<p>Who knows what this is... Seems to be only output on headphones?</p>
+<p>TODO!</p>
+<h3><a class="anch" href="#snd_sweep" id="snd_sweep">Sweep</a></h3>
+<p>Each step in the sweep occurs every <code class="inline">(reg+1) * 32*256</code> master clocks. In terms of real time, you can decide the sweep time register like this, where <code class="inline">T</code> is the time in milliseconds between each sweep step:</p>
+<p><code>reg = (T / 2.667ms) - 1
+</code></p>
+<p>This value is used for the <a href="#REG_SND_SWEEP_TIME">REG_SND_SWEEP_TIME</a> register.</p>
+<h3><a class="anch" href="#snd_pcmvoice" id="snd_pcmvoice">PCM Voice</a></h3>
+<p>The PCM voice functionality on channel 2 uses its volume register <a href="#REG_SND_CH2_VOL">REG_SND_CH2_VOL</a> to provide raw 8-bit PCM data. This data can then be selected to stereo using <a href="#REG_SND_VOICE_CTRL">REG_SND_VOICE_CTRL</a>. There is no way to change volume of the output PCM data.</p>
+<h3><a class="anch" href="#snd_noise" id="snd_noise">Noise</a></h3>
+<p>The noise functionality on channel 4 utilizes a 15-bit LFSR with a configurable tap. The LFSR update algorithm is:</p>
+<p><code>noise_bit = 1 ^ (ctr >> 7) ^ (ctr >> tap)) & 1
+ctr = (ctr << 1) | noise_bit
+</code></p>
+<p>The configurable tap values are:</p>
+<p><code>Mode  Tap
+0     14
+1     10
+2     13
+3     4
+4     8
+5     6
+6     9
+7     11
+</code></p>
+<p>Resetting noise sets the LFSR counter to <code class="inline">00000h</code>. The LFSR updates while the enable bit is on and Channel 4 is on, even if Channel 4 is not in Noise mode. Some games hang up if the RNG continuously returns the same value with Channel 4 set to wave mode (Clock Tower notably).</p>
+<p>The output of the noise channel is <code class="inline">noise_bit</code> as specified above, multiplied by <code class="inline">0Fh</code>.</p>
+<h3><a class="anch" href="#snd_specifics" id="snd_specifics">Sound Generation Specifics</a></h3>
+<p>This section describes the operation of the hardware used to produce sound. It is mostly of use for emulator authors, but some of the peculiarities might be useful to a developer. This data was obtained by attaching a logic analyzer to the Ext.Port, and writing many tests to check the serial sound data.</p>
+<p>All sound generation is using <i>unsigned</i> integers. This means the sound output is heavily biased.</p>
+<h4><a class="anch" href="#snd_smpgen" id="snd_smpgen">Sample Generation</a></h4>
+<p>For simple wave channels, the generated sample is <code class="inline">L = wave[chan][ptr] * vol[chan].l</code> ; <code class="inline">R = wave[chan][ptr] * vol[chan].r</code>. Volume is latched at each sample's generation, not when the wave pointer changes.</p>
+<p>For <a href="#snd_noise">noise channel</a>, the generated sample is <code class="inline">L = noise_bit * 0Fh * vol[chan].l</code> ; <code class="inline">R = noise_bit * 0Fh * vol[chan].r</code>.</p>
+<p>For <a href="#snd_pcmvoice">voice channel</a>, the generated sample is <code class="inline">L = (voice_ctrl & 0Ch) ? vol[chan] : 0</code> ; <code class="inline">R = (voice_ctrl & 03h) ? vol[chan] : 0</code>.</p>
+<p>The two accumulators (L and R) are signed 11-bit, and are calculated with a simple unsigned addition of all the samples.</p>
+<h4><a class="anch" href="#snd_hypgen" id="snd_hypgen">HyperVoice Generation</a></h4>
+<p>TODO</p>
+<p>This seems to only be possible to drive by using <a href="#hw_sdma">Sound DMA</a>. When Sound DMA stops, output is halted as well.</p>
+<p>Input samples are signed 8-bit.</p>
+<h4><a class="anch" href="#snd_spkrout" id="snd_spkrout">Speaker Output</a></h4>
+<p>Speaker DAC is unsigned 8-bit.</p>
+<p>TODO: How are L and R merged?</p>
+<p>TODO: Is this a real DAC, or an R2R ladder? What's the sample rate?</p>
+<p>The output algorithm is <code class="inline">(accum >> spkr_dac_shift) & 0FFh</code>.</p>
+<h4><a class="anch" href="#snd_hdpnout" id="snd_hdpnout">Headphone Output</a></h4>
+<p>Headphone DAC is a signed 16-bit digital DAC, running at 12000Hz (24kHz / 2 channels).</p>
+<p>The accumulators are expanded to signed 16-bits, and are set to <code class="inline">accum << 5</code> before HyperVoice processing.</p>
+<p>With HyperVoice processing, each accumulator adds the respective HyperVoice value, with signed saturation at <code class="inline">07FFFh</code> and <code class="inline">-08000h</code>.</p>
+<h3><a class="anch" href="#snd_ports" id="snd_ports">Ports</a></h3>
+<a class="anch" id="REG_SND_CHx_PITCH"></a>
+<h4><a class="anch" href="#REG_SND_CH1_PITCH" id="REG_SND_CH1_PITCH">REG_SND_CH1_PITCH</a></h4>
+<h4><a class="anch" href="#REG_SND_CH2_PITCH" id="REG_SND_CH2_PITCH">REG_SND_CH2_PITCH</a></h4>
+<h4><a class="anch" href="#REG_SND_CH3_PITCH" id="REG_SND_CH3_PITCH">REG_SND_CH3_PITCH</a></h4>
+<h4><a class="anch" href="#REG_SND_CH4_PITCH" id="REG_SND_CH4_PITCH">REG_SND_CH4_PITCH</a></h4>
+<p><code>Port:   080h-081h, 082h-083h, 084h-085h, 086h-087h
+Access: RW
+Size:   Word
+</code></p>
+<p>Channel frequency reload values.</p>
+<a class="anch" id="REG_SND_CHx_VOL"></a>
+<h4><a class="anch" href="#REG_SND_CH1_VOL" id="REG_SND_CH1_VOL">REG_SND_CH1_VOL</a></h4>
+<h4><a class="anch" href="#REG_SND_CH2_VOL" id="REG_SND_CH2_VOL">REG_SND_CH2_VOL</a></h4>
+<h4><a class="anch" href="#REG_SND_CH3_VOL" id="REG_SND_CH3_VOL">REG_SND_CH3_VOL</a></h4>
+<h4><a class="anch" href="#REG_SND_CH4_VOL" id="REG_SND_CH4_VOL">REG_SND_CH4_VOL</a></h4>
+<p><code>Port:   088h, 089h, 08Ah, 08Bh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Channel volumes.</p>
+<p><code>4-7   Left volume
+0-3   Right volume
+</code></p>
+<p>For Voice, the whole register is the PCM value.</p>
+<h4><a class="anch" href="#REG_SND_SWEEP_VALUE" id="REG_SND_SWEEP_VALUE">REG_SND_SWEEP_VALUE</a></h4>
+<p><code>Port:   08Ch
+Access: RW
+Size:   Byte
+</code></p>
+<p>Sweep value for channel 3 in sweep mode. Each sweep tick increments the pitch of the channel by this signed value.</p>
+<h4><a class="anch" href="#REG_SND_SWEEP_TIME" id="REG_SND_SWEEP_TIME">REG_SND_SWEEP_TIME</a></h4>
+<p><code>Port:   08Dh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Sweep timing for channel 3 in sweep mode. This register is only 5 bits wide.</p>
+<h4><a class="anch" href="#REG_SND_NOISE" id="REG_SND_NOISE">REG_SND_NOISE</a></h4>
+<p><code>Port:   08Eh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Noise configuration for channel 4 in noise mode. When you change the noise mode, you must also set the reset bit. See the <a href="#snd_noise">Noise section</a> for more information on the values for Mode.</p>
+<p><code>4     Enable
+3     Reset (always reads 0)
+0-2   Mode
+</code></p>
+<h4><a class="anch" href="#REG_SND_WAVE_BASE" id="REG_SND_WAVE_BASE">REG_SND_WAVE_BASE</a></h4>
+<p><code>Port:   08Fh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Pointer to the wave table. Register value should be <code class="inline">address >> 6</code>. (TODO: This isn't actually 8 bits, is it?)</p>
+<h4><a class="anch" href="#REG_SND_CTRL" id="REG_SND_CTRL">REG_SND_CTRL</a></h4>
+<p><code>Port:   090h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Channel enable and mode bits.</p>
+<p><code>7     Channel 4 mode (0=Wave, 1=Noise)
+6     Channel 3 mode (0=No Sweep, 1=Sweep)
+5     Channel 2 mode (0=Wave, 1=Voice)
+4     Unused
+3     Channel 4 enable
+2     Channel 3 enable
+1     Channel 2 enable
+0     Channel 1 enable
+</code></p>
+<h4><a class="anch" href="#REG_SND_OUTPUT" id="REG_SND_OUTPUT">REG_SND_OUTPUT</a></h4>
+<p><code>Port:   091h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Output control.</p>
+<p><code>7     Headphones connected (0=no, 1=yes)
+3     Heaphone enable
+1-2   Main speaker DAC shift
+        The value sent to the speaker DAC is shifted down this many bits.
+0     Main speaker enable
+</code></p>
+<h4><a class="anch" href="#REG_SND_RANDOM" id="REG_SND_RANDOM">REG_SND_RANDOM</a></h4>
+<p><code>Port:   092h-093h
+Access: R
+Size:   Word
+</code></p>
+<p>The current value of the noise LFSR.</p>
+<h4><a class="anch" href="#REG_SND_VOICE_CTRL" id="REG_SND_VOICE_CTRL">REG_SND_VOICE_CTRL</a></h4>
+<p><code>Port:   094h
+Access: RW
+Size:   Byte
+</code></p>
+<p>PCM voice stereo select.</p>
+<p><code>2-3   Left enable (either bit works)
+0-1   Right enable (either bit works)
+</code></p>
+<h4><a class="anch" href="#REG_HYPER_CTRL" id="REG_HYPER_CTRL">REG_HYPER_CTRL</a></h4>
+<p><code>Port:   06Ah
+Access: RW
+Size:   Byte
+</code></p>
+<p>TODO: A lot of investigation</p>
+<p>This is related to <a href="#REG_HYPER_CHAN_CTRL">REG_HYPER_CHAN_CTRL</a> and causes some of these meanings to change???</p>
+<p><code>7     Enable
+4-6   Speed????
+        0   /6 (2000kHz)
+        1   /6 (2000kHz)
+        2   /6 (2000kHz)
+        3   /6 (2000kHz)
+        4   /6 (2000kHz)
+        5   /6 (2000kHz)
+        6   /8 (1500kHz)
+        7   /12 (1000kHz)
+2-3   Transform mode
+        0   hvoice <<8-vol
+        1   hvoice <<8-vol | (0x700 << 8-vol)
+        2   hvoice <<8-vol
+        3   hvoice <<8
+0-1 = vol
+</code></p>
+<h4><a class="anch" href="#REG_HYPER_CHAN_CTRL" id="REG_HYPER_CHAN_CTRL">REG_HYPER_CHAN_CTRL</a></h4>
+<p><code>Port:   06Bh
+Access: RW
+Size:   Byte
+</code></p>
+<p>TODO: A lot of investigation</p>
+<p>This is related to <a href="#REG_HYPER_CTRL">REG_HYPER_CTRL</a> and causes some of these meanings to change???</p>
+<p><code>7     Nothing?
+4-6   Channel outputs
+        7   Simple Stereo
+        6   Seems same as 7?
+        4   Right only
+        2   Left only
+        1   Slow interlace? each sample lasts on one channel for 12 frames, channels offset from each other 6 frames
+0-3   Nothing?
+</code></p>
+<h2><a class="anch" href="#hw_keypad" id="hw_keypad">Keypad</a></h2>
+<p>The keypad is multiplexed over 4 bits, using an AND mask. To get the full keypad values, iterate through each of the mask values and combine the pad data values.</p>
+<p>For the lowest power state, turn on all enables.</p>
+<p>When setting the enable flags, you will want to delay about 6? cycles before reading the new state to allow the circuitry to propagate the change. (TODO: Get the actual timing required)</p>
+<h3><a class="anch" href="#keypad_funfacts" id="keypad_funfacts">Fun Facts</a></h3>
+<p>The keypad control is actually designed for a 4x4 keypad matrix, but the WonderSwan only uses 3 sets. When looking at the specification for <a href="#related_cairo">CAIRO</a>, there is a direct mention that the keypad input can take up to 4x4.</p>
+<p>Considering the bit layout of <a href="#REG_KEYPAD">REG_KEYPAD</a>, I believe this was true for WonderSwan as well. Additionally, looking at the <a href="#related_patents">patents</a> filed, it seems there were quite a number of designs with varying numbers of buttons, so it seems not unlikely that it was designed this way in case they decided to go with something really weird.</p>
+<h3><a class="anch" href="#keypad_ports" id="keypad_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_KEYPAD" id="REG_KEYPAD">REG_KEYPAD</a></h4>
+<p><code>Port:   0B5h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Keypad multiplex control, and state.</p>
+<p><code>6     Button enable
+5     X keys enable
+4     Y keys enable
+3         B, X4, Y4 (read only)
+2         A, X3, Y3 (read only)
+1     Start, X2, Y2 (read only)
+0            X1, Y1 (read only)
+</code></p>
+<p>With each enable flag, the respective buttons are ORed. The button states are active high.</p>
+<p>The button circuitry uses pull-downs for unattached lines. Some games refuse to boot if unmapped buttons are treated as pull-up.
+</p>
+<h2><a class="anch" href="#hw_syscon" id="hw_syscon">System Controller</a></h2>
+<p>TODO: Other things?</p>
+<h3><a class="anch" href="#syscon_ports" id="syscon_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_DISP_MODE" id="REG_DISP_MODE">REG_DISP_MODE</a></h4>
+<p><code>Port:   060h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Display mode. I think this belongs here instead of Display for various reasons.</p>
+<p><code>7     BPP (0=2BPP, 1=4BPP)
+6     Color (0=Monochrome, 1=Color)
+5     Format (0=Planar, 1=Packed)
+0-4   Unknown
+</code></p>
+<p>These flags also change the WonderSwan to Color mode, used for things such as EEPROM size. They also affect the placement of the tiles in memory.</p>
+<p><code>Feature     bit5  bit6  bit7
+DMA Engine  NG    NG    OK
+Fast INSW   OK    OK    OK
+</code></p>
+<p><i>Fast INSW</i> is a peculiar behavior I noticed where the instruction <code class="inline">INSW</code> runs 2 cycles faster. I think it might be making the cart SRAM access in one cycle rather than 3 (!!!!!!!) (TODO)</p>
+<h4><a class="anch" href="#REG_HW_FLAGS" id="REG_HW_FLAGS">REG_HW_FLAGS</a></h4>
+<p><code>Port:   0A0h
+Access: RW
+Size:   Byte
+</code></p>
+<p>The only real use for this register is to check for a system with color.</p>
+<p><code>7     BIOS hide (locking)
+4-6   0 (read only)
+3     Holds state, does nothing?
+2     External bus width (0=8bit, 1=16bit)
+        Changing this makes everything blow up, there's no reason to change this.
+1     System (0=WonderSwan, 1=WonderSwan Color or greater)
+0     1 (read only)
+</code></p>
+<h2><a class="anch" href="#hw_ints" id="hw_ints">Interrupts</a></h2>
+<p>The interrupt vector table is located at <code class="inline">0000:0000h</code>, each entry is 4 bytes long containing a <i>far pointer</i> to the handler. There are <code class="inline">100h</code> entries in the vector table, but only the CPU interrupt and the hardware interrupt entries must be filled or used for interrupt handler pointers.</p>
+<h3><a class="anch" href="#int_cpuints" id="int_cpuints">CPU Interrupts</a></h3>
+<p>These interrupt numbers are locked to the beginning of the IVT.</p>
+<p><code>INT#  Name            Description
+00h   CPUINT_DIV      Divide error
+01h   CPUINT_STEP     Single-stepping interrupt
+02h   CPUINT_NMI      Non-maskable interrupt
+03h   CPUINT_BREAK    INT 3 instruction
+04h   CPUINT_INTO     Overflow interrupt
+05h   CPUINT_BOUNDS   BOUND failure
+06h   CPUINT_INVALID  Invalid opcode
+07h   CPUINT_ESCAPE   Escape opcode (TODO: exists on V30MZ?)
+</code></p>
+<h3><a class="anch" href="#int_hwints" id="int_hwints">Hardware Interrupts</a></h3>
+<p>These interrupts are not locked down to being at the beginning of the IVT, the register <a href="#REG_INT_BASE">REG_INT_BASE</a> determines the base for the hardware interrupt vectors.</p>
+<p>These are prioritized, with the highest interrupt number having priority over lower.</p>
+<p>Edge-triggered interrupts must be acknowledged through <a href="#REG_INT_ACK">REG_INT_ACK</a> to allow for another interrupt to fire. Level-triggered interrupts need to be resolved or the interrupt will fire continuously, causing your program to lock up.</p>
+<p><code>INT#  Trigger   Name              Description
+00h   Level     HWINT_SER_TX      Serial send interrupt
+01h   Edge      HWINT_KEY         Key press interrupt
+02h   Level     HWINT_CART        Cartridge interrupt (usually RTC alarm)
+03h   Level     HWINT_SER_RX      Serial receive interrupt
+04h   Edge      HWINT_LINE        Line compare interrupt
+05h   Edge      HWINT_VBLANK_TMR  V-Blank timer interrupt
+06h   Edge      HWINT_VBLANK      V-Blank interrupt
+07h   Edge      HWINT_HBLANK_TMR  H-Blank timer interrupt
+</code></p>
+<h3><a class="anch" href="#int_ports" id="int_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_INT_BASE" id="REG_INT_BASE">REG_INT_BASE</a></h4>
+<p><code>Port:   0B0h
+Access: RW
+Size:   Byte
+</code></p>
+<p>The interrupt number offset for hardware interrupts. TODO: Is it an addition, or?...</p>
+<h4><a class="anch" href="#REG_INT_ENABLE" id="REG_INT_ENABLE">REG_INT_ENABLE</a></h4>
+<p><code>Port:   0B2h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Bit mask for enabling hardware interrupts. Bits used are the same as the interrupt numbers.</p>
+<h4><a class="anch" href="#REG_INT_STATUS" id="REG_INT_STATUS">REG_INT_STATUS</a></h4>
+<p><code>Port:   0B4h
+Access: R
+Size:   Byte
+</code></p>
+<p>Bit mask for currently asserted hardware interrupts. Bits used are the same as the interrupt numbers.</p>
+<h4><a class="anch" href="#REG_INT_ACK" id="REG_INT_ACK">REG_INT_ACK</a></h4>
+<p><code>Port:   0B6h
+Access: W
+Size:   Byte
+</code></p>
+<p>Acknowledge hardware interrupts. Each set bit will acknowledge the according interrupt, cleared bits have no effect.
+</p>
+<h2><a class="anch" href="#hw_serial" id="hw_serial">Serial Port</a></h2>
+<p>The WonderSwan expansion port is primarily an external serial port. The connector has only a serial IN and OUT pin, meaning there can be no hardware flow control.</p>
+<p>The WonderSwan serial controller has a single byte input buffer, and no output buffer. Any input buffer overrun will cause the <i>Overrun</i> bit in <a href="#REG_SER_STATUS">REG_SER_STATUS</a> to be set and the serial controller will stop responding until the <i>Overrun Reset</i> bit is set.</p>
+<h3><a class="anch" href="#serial_sync" id="serial_sync">Using Synchronously</a></h3>
+<p>To open the serial communication, set the <i>Enable</i> bit and the <i>Overrun Reset</i> bit in <a href="#REG_SER_STATUS">REG_SER_STATUS</a>.</p>
+<p>To close the serial communication, clear the <i>Enable</i> bit. You most likely want to wait for <i>Send Empty</i> to go high first.</p>
+<p>To send a character, wait for <i>Send Empty</i> to go high, then write the data byte to <a href="#REG_SER_DATA">REG_SER_DATA</a>.</p>
+<p>To receive a character, wait for <i>Data Received</i> to go high, then read the data byte from <a href="#REG_SER_DATA">REG_SER_DATA</a>. If <i>Overrun</i> becomes set while waiting, an overrun has managed to occur, and you'll want to set <i>Overrun Reset</i>.</p>
+<h3><a class="anch" href="#serial_async" id="serial_async">Using Asynchronously</a></h3>
+<p>TODO: explain using interrupts for async transfers</p>
+<h3><a class="anch" href="#serial_ports" id="serial_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_SER_DATA" id="REG_SER_DATA">REG_SER_DATA</a></h4>
+<p><code>Port:   0B1h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Serial data. Used for both TX and RX.</p>
+<h4><a class="anch" href="#REG_SER_STATUS" id="REG_SER_STATUS">REG_SER_STATUS</a></h4>
+<p><code>Port:   0B3h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Serial status and flow control.</p>
+<p><code>7     Serial Enable
+6     Baud rate (0=9600, 1=38400)
+5     Overrun Reset
+2     Send Buffer Empty
+1     Overrun
+0     Data Received
+</code></p>
+<h2><a class="anch" href="#hw_ieep" id="hw_ieep">Internal EEPROM</a></h2>
+<p>WonderSwan has a 1Kbit (64x16-bit) internal EEPROM used to store information about the user and some very small amounts of game save data. WonderSwan Color upgrades the EEPROM to 16Kbit (1024x16-bit), adding a few more user info fields and increasing the game save area.</p>
+<p>The 'owner' information can be set in the IPL program.</p>
+<h3><a class="anch" href="#ieep_using" id="ieep_using">Using</a></h3>
+<p>TODO: Explain it</p>
+<p>TODO: Explain how to deal with game save data</p>
+<h3><a class="anch" href="#ieep_content" id="ieep_content">Contents</a></h3>
+<p>Owner information is easiest to understand in bytes rather than words, so I am going to specify everything in bytes (addresses and sizes) instead of words.</p>
+<p><code>Addr  Size  Description
+060h  10h   Name (see <a href="#ieep_name_encoding">name encoding</a> section)
+070h  02h   Birth year (BCD)
+072h  01h   Birth month (1 ~ 12) (BCD)
+073h  01h   Birth day (1 ~ 31) (BCD)
+074h  01h   Sex (0=?, 1=Male, 2=Female)
+075h  01h   Blood type (0=?, 1=A, 2=B, 3=O, 4=AB)
+</code></p>
+<p>WSC only:</p>
+<p><code>Addr  Size  Description
+080h  03h   Unknown?
+083h  01h   Flags
+              b7    Unknown? Causes serious boot-time corruption that is difficult to un-do.
+              b6    LCD contrast (0=Low, 1=High)
+              b0-1  Default volume
+084h  01h   Name color
+              00  Black
+              01  Red
+              02  Orange
+              03  Yellow
+              04  Green
+              // TODO There are more after this but I can't figure out what they are
+</code></p>
+<h4><a class="anch" href="#ieep_name_encoding" id="ieep_name_encoding">Name encoding</a></h4>
+<p>Any value not given here is treated as a space. This mapping between values and ASCII was taken from WonderWitch's decoding.</p>
+<p><code>Value     ASCII     Description
+000h      020h      Space
+001h-00Ah 030h-039h Numbers
+00Bh-024h 041h-05Ah Upper-case characters
+025h      003h      Heart
+026h      00Dh      Eight Note
+027h      02Bh      Plus
+028h      02Dh      Minus
+029h      03Fh      Question mark
+02Ah      02Eh      Period
+</code></p>
+<h3><a class="anch" href="#ieep_ports" id="ieep_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_IEEP_DATA" id="REG_IEEP_DATA">REG_IEEP_DATA</a></h4>
+<p><code>Port:   0BAh-0BBh
+Access: RW
+Size:   Word
+</code></p>
+<p>Data port.</p>
+<h4><a class="anch" href="#REG_IEEP_ADDR" id="REG_IEEP_ADDR">REG_IEEP_ADDR</a></h4>
+<p><code>Port:   0BCh-0BDh
+Access: RW
+Size:   Word
+</code></p>
+<p>Address and control port.</p>
+<p><code>1Kbit:
+8     Start
+6-7   Command (0=Extended Command, 1=Write, 2=Read, 3=Erase)
+0-5   Address
+
+16Kbit:
+12    Start
+10-11 Command (0=Extended Command, 1=Write, 2=Read, 3=Erase)
+0-9   Address
+</code></p>
+<p><code>Extended commands (top 2 bits of address)
+0   Write Disable
+1   Write All (TODO?)
+2   Erase All (Zero fill? TODO)
+3   Write Enable
+</code></p>
+<h4><a class="anch" href="#REG_IEEP_STATUS" id="REG_IEEP_STATUS">REG_IEEP_STATUS</a></h4>
+<p><code>Port:   0BEh
+Access: R
+Size:   Byte
+</code></p>
+<p>Status port.</p>
+<p><code>4-7   Command
+1     Write complete
+0     Read complete
+</code></p>
+<h4><a class="anch" href="#REG_IEEP_CMD" id="REG_IEEP_CMD">REG_IEEP_CMD</a></h4>
+<p><code>Port:   0BEh
+Access: W
+Size:   Byte
+</code></p>
+<p>Command port. TODO: Understand more</p>
+<p><code>7     Initialize?
+6     Protect?
+5     Write
+4     Read
+</code></p>
+<h2><a class="anch" href="#hw_dma" id="hw_dma">DMA Controller</a></h2>
+<p>WonderSwan Color introduced a DMA controller. This DMA controller pauses the CPU during transfers, so code may safely assume the DMA has finished as soon as it starts.</p>
+<h3><a class="anch" href="#dma_limits" id="dma_limits">Limitations</a></h3>
+<p>DMA transfers in words, so transfers must be word aligned and use an even number of bytes transferred.</p>
+<p>DMA cannot access cart SRAM in any way, due to it using an 8-bit bus.</p>
+<p>DMA can only transfer to IRAM, there is no way to specify a destination outside of it.</p>
+<h3><a class="anch" href="#dma_failing" id="dma_failing">Failure Behavior</a></h3>
+<p>DMA has a few modes of failure. For <i>quick failure</i>, the DMA transfer never attempts to start, and no CPU pausing occurs. For <i>slow failure</i>, the DMA transfer takes the same amount of time as a completed transfer, but some or all words may not have transferred.</p>
+<p>The cases for <i>quick failure</i> are:</p>
+<ul><li>Source, Destination, or Length are not word-aligned.</li>
+<li>Length is <code class="inline">0</code>.</li>
+<li>Source is specified as being in cart SRAM.</li>
+</ul>
+<p>The cases for <i>slow failure</i> are:</p>
+<ul><li>Source advances into cart SRAM. (TODO: Verify?)</li>
+<ul><li>In this case, words are transferred until this failure case. (TODO: Verify?)</li>
+</ul></ul>
+<h3><a class="anch" href="#dma_timing" id="dma_timing">Timing</a></h3>
+<p>DMA transfers have very low overhead. Total transfer time from start to end is <code class="inline">5 + 2n</code> cycles, where <code class="inline">n</code> is the number of words transferred.</p>
+<h3><a class="anch" href="#dma_ports" id="dma_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_DMA_SRC" id="REG_DMA_SRC">REG_DMA_SRC</a></h4>
+<p><code>Port:   040h-041h
+Access: RW
+Size:   Word
+</code></p>
+<p>DMA source address, as a linear address (low 16 bits). This is updated after each transfer.</p>
+<h4><a class="anch" href="#REG_DMA_SRC_HI" id="REG_DMA_SRC_HI">REG_DMA_SRC_HI</a></h4>
+<p><code>Port:   042h
+Access: RW
+Size:   Byte
+</code></p>
+<p>DMA source address, as a linear address (high 4 bits). Top 4 bits are ignored. This is updated after each transfer.</p>
+<h4><a class="anch" href="#REG_DMA_DST" id="REG_DMA_DST">REG_DMA_DST</a></h4>
+<p><code>Port:   044h-045h
+Access: RW
+Size:   Word
+</code></p>
+<p>DMA destination IRAM address, as a linear address. This is updated after each transfer.</p>
+<h4><a class="anch" href="#REG_DMA_LEN" id="REG_DMA_LEN">REG_DMA_LEN</a></h4>
+<p><code>Port:   046h-047h
+Access: RW
+Size:   Word
+</code></p>
+<p>DMA transfer size in bytes. Must be an even count. This is updated after each transfer (TODO Verify?).</p>
+<h4><a class="anch" href="#REG_DMA_CTRL" id="REG_DMA_CTRL">REG_DMA_CTRL</a></h4>
+<p><code>Port:   048h
+Access: RW
+Size:   Byte
+</code></p>
+<p>DMA transfer control.</p>
+<p><code>7     Transfer (0=Stop, 1=Start)
+      When transfer completes, this bit becomes unset.
+6     Address Step (0=Increase, 1=Decrease)
+0-5   Nothing?
+</code></p>
+<h2><a class="anch" href="#hw_sdma" id="hw_sdma">Sound DMA Controller</a></h2>
+<p>WonderSwan Color introduced a Sound DMA controller. Sound DMA is under-investigated presently. TODO</p>
+<p>Sound DMA periodically transfers a single byte to a destination.</p>
+<p>It is currently unknown what the interaction is between sound DMA and regular DMA. TODO</p>
+<p>TODO: How does looping really work? Is it affected by changing SRC during a transfer?</p>
+<h3><a class="anch" href="#sdma_ports" id="sdma_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_SDMA_SRC" id="REG_SDMA_SRC">REG_SDMA_SRC</a></h4>
+<p><code>Port:   04Ah-04Bh
+Access: RW
+Size:   Word
+</code></p>
+<p>Sound DMA source address, as a linear address (low 16 bits). This is updated after each transfer.</p>
+<h4><a class="anch" href="#REG_SDMA_SRC_HI" id="REG_SDMA_SRC_HI">REG_SDMA_SRC_HI</a></h4>
+<p><code>Port:   04Ch
+Access: RW
+Size:   Byte
+</code></p>
+<p>Sound DMA source address, as a linear address (high 4 bits). Top 4 bits are ignored. This is updated after each transfer.</p>
+<h4><a class="anch" href="#REG_SDMA_LEN" id="REG_SDMA_LEN">REG_SDMA_LEN</a></h4>
+<p><code>Port:   04Eh-04Fh
+Access: RW
+Size:   Word
+</code></p>
+<p>Sound DMA transfer size in bytes. This is updated after each transfer (TODO Verify?).</p>
+<h4><a class="anch" href="#REG_SDMA_CTRL" id="REG_SDMA_CTRL">REG_SDMA_CTRL</a></h4>
+<p><code>Port:   052h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Sound DMA transfer control.</p>
+<p><code>7     Transfer (0=Stop, 1=Start)
+      When transfer completes, this bit becomes unset.
+      If looping, this bit will never unset on its own.
+6     Address Step (0=Increase, 1=Decrease)
+5     Quieter?? TODO
+4     Destination Port (0=<a href="#REG_SND_CH2_VOL">REG_SND_CH2_VOL</a>, 1=<a href="#REG_SND_HYPERVOICE">REG_SND_HYPERVOICE</a>?)
+3     Loop
+2     Nothing?
+0-1   Rate (0=3000Hz, 1=6000Hz, 2=12000Hz, 3=24000Hz)
+</code></p>
+<p>TODO: HyperVoice hacks this up heavily, but what the fuck
+</p>
+<h2><a class="anch" href="#hw_timer" id="hw_timer">Timers</a></h2>
+<p>TODO: Explain things?</p>
+<h3><a class="anch" href="#timer_ports" id="timer_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_TMR_CTRL" id="REG_TMR_CTRL">REG_TMR_CTRL</a></h4>
+<p><code>Port:   0A2h
+Access: RW
+Size:   Byte
+</code></p>
+<p>Timer controls.</p>
+<p><code>3     V-Blank Timer mode (0=one-shot, 1=auto-reset)
+2     V-Blank Timer enable
+1     H-Blank Timer mode (0=one-shot, 1=auto-reset)
+0     H-Blank Timer enable
+</code></p>
+<h4><a class="anch" href="#REG_HTMR_FREQ" id="REG_HTMR_FREQ">REG_HTMR_FREQ</a></h4>
+<p><code>Port:   0A4h-0A5h
+Access: RW
+Size:   Word
+</code></p>
+<p>H-Blank Timer frequency, number of H-Blanks between interrupts. TODO: what about 0?</p>
+<h4><a class="anch" href="#REG_VTMR_FREQ" id="REG_VTMR_FREQ">REG_VTMR_FREQ</a></h4>
+<p><code>Port:   0A6h-0A7h
+Access: RW
+Size:   Word
+</code></p>
+<p>V-Blank Timer frequency, number of V-Blanks between interrupts. TODO: what about 0?</p>
+<h4><a class="anch" href="#REG_HTMR_CTR" id="REG_HTMR_CTR">REG_HTMR_CTR</a></h4>
+<p><code>Port:   0A8h-0A9h
+Access: R
+Size:   Word
+</code></p>
+<p>Current value of H-Blank Timer counter.</p>
+<h4><a class="anch" href="#REG_VTMR_CTR" id="REG_VTMR_CTR">REG_VTMR_CTR</a></h4>
+<p><code>Port:   0AAh-0ABh
+Access: R
+Size:   Word
+</code></p>
+<p>Current value of V-Blank Timer counter.
+</p>
+<h2><a class="anch" href="#code_lyt" id="code_lyt">Code Layout</a></h2>
+<h3>WonderSwan (Color)</h3>
+<p>TODO</p>
+<h3>WonderWitch software</h3>
+<p>WonderWitch software loads all contents of the DATA section into SRAM, and uses the data there rather than from the original contents. Actual program software is run in-place on the Flash ROM, using 8086 segmentation for relocation; this means your software <b>MAY NOT</b> assume CS. DS may safely be assumed as 1000h, and should be set to that at most times (otherwise the Freya BIOS routines may act incorrectly). SS and SP should not be modified, as the launcher will automatically setup and configure this properly. SS should never be assumed to be the same as DS.</p>
+<p>Code should be using a CS-relative small code model, since the area of the memory map that the program is set to is only 64K, and CS may be different between executions. Data should use a small data model, since SRAM is only 64K. This memory model is typically called <b>small</b>.</p>
+<p>Here is an OpenWatcom WLINK linker script that should properly link files to work on WonderWitch:</p>
+<p><code>output raw
+order
+    clname CODE
+    clname DATA segaddr=0x1000
+    clname BSS noemit
+</code></p>
+<h2><a class="anch" href="#wsr" id="wsr">WSR Format</a></h2>
+<p>WSR is a format for WonderSwan music rips. It is a program format, so the rips are made by pulling out the original sound driver code and sound data, then wrapping them in a few user-made functions, and sticking an extra footer on.</p>
+<h3><a class="anch" href="#wsr_footer" id="wsr_footer">WSR Footer</a></h3>
+<p>The extra footer goes 16 bytes before the regular footer and has the following structure:</p>
+<p><code>Offset  Size  Description
+000h    004h  'WSRF' ASCII string
+004h    001h  Version number (currently 000h)
+005h    001h  First Track Number
+006h    00Ah  Reserved. (zero)
+</code></p>
+<h3><a class="anch" href="#wsr_cpustate" id="wsr_cpustate">WSR CPU State</a></h3>
+<p>When a WSR is loaded, execution begins at <code class="inline">0FFFF:0000h</code>, as usual, but <code class="inline">AX</code> is set to the track number to play instead of being undefined.</p>
+<h3><a class="anch" href="#wsr_entryfunc" id="wsr_entryfunc">WSR Entry Function</a></h3>
+<p>Setting of interrupts for handling should be done in the entry function. (? TODO: Japanese format documentation says what follows, poorly translated) Interrupt vector is the RAM on.</p>
+<p>Unlike KSS and HES formats, do <i>not</i> return from the entry function after setup is complete. Return when the song is complete (if it ever ends). Otherwise it is acceptable to be in an infinite loop.</p>
+<p>The entry point will be called each time a new track is selected, and there should be no assumptions made about the current machine state. So, switching songs should reset the entire driver.
+</p>
+<h2><a class="anch" href="#cart_over" id="cart_over">Cartridge Overview</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#cart_meta" id="cart_meta">Cartridge Metadata</a></h2>
+<p>WonderSwan ROMs contain a 10 byte metadata section as the last 10 bytes of the ROM image. In most cases this is accurate, but the cartridge releases of <i>Judgement Silversword</i> and <i>Dicing Knight</i> are still using the regular WonderWitch metadata, which is incorrect.</p>
+<p><code>Offset  Size  Description
+000h    001h  Developer ID (see <a href="#cart_meta_devlist">developer list</a>)
+001h    001h  Minimum system (0=WonderSwan, 1=WonderSwan Color)
+002h    001h  Game ID (TODO: make a list?)
+003h    001h  ? Mapper version?
+004h    001h  ROM size
+                000h  ?
+                001h  ?
+                002h  4Mbit (512KB)
+                003h  8Mbit (1MB)
+                004h  16Mbit (2MB)
+                005h  ?
+                006h  32Mbit (4MB)
+                007h  ?
+                008h  64Mbit (8MB)
+                009h  128Mbit (16MB)
+005h    001h  Save size/type
+                000h  None
+                001h  64Kbit SRAM (8KB)
+                002h  256Kbit SRAM (32KB)
+                003h  1Mbit SRAM (128KB)
+                004h  2Mbit SRAM (256KB)
+                005h  4Mbit SRAM (512KB)
+                010h  1Kbit EEPROM
+                020h  16Kbit EEPROM
+                050h  8Kbit EEPROM?
+006h    001h  Flags
+                b2  Always set
+                b0  Orientation (0=Horizontal, 1=Vertical)
+007h    001h  RTC present (0=no, 1=yes)
+008h    002h  16-bit sum of all ROM words except this one
+                This is zero for WonderWitch.
+</code></p>
+<h3><a class="anch" href="#cart_meta_devlist" id="cart_meta_devlist">Developer ID list</a></h3>
+<p>Apparently Bandai didn't care too much to keep the developer ID list sane. So this is only an approximate list; there is lots of cross-over and incorrect developer IDs in real-world ROM images. Don't think about it too hard.</p>
+<p><code>ID    Developer
+000h  Misc.
+001h  Bandai (and misc.)
+002h  Taito
+003h  Tomy
+004h  Koei
+005h  Data East
+006h  Asmik
+007h  Media Entertainment
+008h  Nichibutsu
+00Ah  Coconuts Japan
+00Bh  Sammy
+00Ch  Sunsoft
+00Dh  Mebius
+00Eh  Banpresto
+010h  Jaleco
+011h  Imagineer
+012h  Konami
+016h  Kobunsha
+017h  Bottom Up
+018h  Naxat (Mechanic Arms? Media Entertainment?)
+019h  Sunrise
+01Ah  Cyberfront
+01Bh  Megahouse
+01Dh  Interbec
+01Eh  NAC
+01Fh  Emotion (Bandai Visual?)
+020h  Athena
+021h  KID
+024h  Omega Micott
+025h  Upstar
+026h  Kadokawa/Megas
+027h  Cocktail Soft
+028h  Squaresoft
+02Bh  TomCreate
+02Dh  Namco
+02Fh  Gust
+036h  Capcom
+</code></p>
+<h2><a class="anch" href="#cart_bank" id="cart_bank">Cartridge Banking</a></h2>
+<p>Cartridges use banking to allow access to greater amounts of ROM and RAM than the address space normally provides. There are three separate ROM banks, and one SRAM bank.</p>
+<p>TODO: Maybe explain the use cases for each of these banks?</p>
+<h3><a class="anch" href="#cart_bank_ports" id="cart_bank_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_BANK_ROM2" id="REG_BANK_ROM2">REG_BANK_ROM2</a></h4>
+<p><code>Port:   0C0h
+Access: RW
+Size:   Byte
+</code></p>
+<p>This register contains the top bits of the ROM bank used for ROM2 accesses; the bottom 4 bits of the bank are the top 4 bits of the address accessed in that range. All 8 bits hold state. On 2001 mappers, this only outputs 4 bits, but on 2003 it outputs 6.</p>
+<p>As an example, for register value <code class="inline">0F4h</code> and accessed address <code class="inline">056789h</code>, the resulting ROM address would be <code class="inline">0456789h</code> on a 2001 mapper, and <code class="inline">03456789h</code> on a 2003 mapper.</p>
+<h4><a class="anch" href="#REG_BANK_SRAM" id="REG_BANK_SRAM">REG_BANK_SRAM</a></h4>
+<p><code>Port:   0C1h
+Access: RW
+Size:   Byte
+</code></p>
+<p>This register contains the bank of SRAM accessed.</p>
+<p>As an example, for register value <code class="inline">034h</code> and accessed address <code class="inline">015678h</code>, the resulting SRAM address would be <code class="inline">0345678h</code>.</p>
+<h4><a class="anch" href="#REG_BANK_ROM0" id="REG_BANK_ROM0">REG_BANK_ROM0</a></h4>
+<p><code>Port:   0C2h
+Access: RW
+Size:   Byte
+</code></p>
+<p>This register contains the bank for ROM0 accesses.</p>
+<p>As an example, for register value <code class="inline">034h</code> and accessed address <code class="inline">025678h</code>, the resulting ROM address would be <code class="inline">0345678h</code>.</p>
+<h4><a class="anch" href="#REG_BANK_ROM1" id="REG_BANK_ROM1">REG_BANK_ROM1</a></h4>
+<p><code>Port:   0C3h
+Access: RW
+Size:   Byte
+</code></p>
+<p>This register contains the bank for ROM1 accesses.</p>
+<p>As an example, for register value <code class="inline">034h</code> and accessed address <code class="inline">035678h</code>, the resulting ROM address would be <code class="inline">0345678h</code>.
+</p>
+<h2><a class="anch" href="#cart_rtc" id="cart_rtc">Cartridge Real-Time Clock</a></h2>
+<p>Some cartridges provide an RTC for various things.</p>
+<p>TODO: More explanation, command info.</p>
+<h3><a class="anch" href="#cart_rtc_ports" id="cart_rtc_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_RTC_STATUS" id="REG_RTC_STATUS">REG_RTC_STATUS</a></h4>
+<p><code>Port:   0CAh
+Access: R
+Size:   Byte
+</code></p>
+<p>RTC status.</p>
+<p><code>7     Ready for command (0=Busy, 1=Ready)
+0-6   Unknown
+</code></p>
+<h4><a class="anch" href="#REG_RTC_CMD" id="REG_RTC_CMD">REG_RTC_CMD</a></h4>
+<p><code>Port:   0CAh
+Access: W
+Size:   Byte
+</code></p>
+<p>RTC command.</p>
+<p>TODO: Command list</p>
+<h4><a class="anch" href="#REG_RTC_DATA" id="REG_RTC_DATA">REG_RTC_DATA</a></h4>
+<p><code>Port:   0CBh
+Access: RW
+Size:   Byte
+</code></p>
+<p>RTC data port.
+</p>
+<h2><a class="anch" href="#cart_eep" id="cart_eep">Cartridge EEPROM</a></h2>
+<p>Some cartridges provide an EEPROM for save data. It uses the same exact interface as the <a href="#hw_ieep">Internal EEPROM</a>.</p>
+<p>TODO: More explanation.</p>
+<p>TODO: Copy in info from IEEP when that section is completed.</p>
+<h3><a class="anch" href="#cart_eep_ports" id="cart_eep_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_EEP_DATA" id="REG_EEP_DATA">REG_EEP_DATA</a></h4>
+<p><code>Port:   0C4h-0C5h
+Access: RW
+Size:   Word
+</code></p>
+<p>Data port.</p>
+<h4><a class="anch" href="#REG_EEP_ADDR" id="REG_EEP_ADDR">REG_EEP_ADDR</a></h4>
+<p><code>Port:   0C6h-0C7h
+Access: RW
+Size:   Word
+</code></p>
+<p>Address and control port.</p>
+<h4><a class="anch" href="#REG_EEP_STATUS" id="REG_EEP_STATUS">REG_EEP_STATUS</a></h4>
+<p><code>Port:   0C8h
+Access: R
+Size:   Byte
+</code></p>
+<p>Status port.</p>
+<h4><a class="anch" href="#REG_EEP_CMD" id="REG_EEP_CMD">REG_EEP_CMD</a></h4>
+<p><code>Port:   0C8h
+Access: W
+Size:   Byte
+</code></p>
+<p>Command port.
+</p>
+<h2><a class="anch" href="#cart_gpo" id="cart_gpo">Cartridge General-Purpose Outputs</a></h2>
+<p>The mappers provide general-purpose outputs that are used in a small number of carts for things like LEDs.</p>
+<p>You'd think these would also allow inputs and be bi-directional ports, but nope.</p>
+<p>TODO: More explanation.</p>
+<h3><a class="anch" href="#cart_gpo_ports" id="cart_gpo_ports">Ports</a></h3>
+<h4><a class="anch" href="#REG_GPO_EN" id="REG_GPO_EN">REG_GPO_EN</a></h4>
+<p><code>Port:   0CCh
+Access: RW
+Size:   Byte
+</code></p>
+<p><code>4-7   Unused? Holds state.
+3     GPO3 enable
+2     GPO2 enable
+1     GPO1 enable
+0     GPO0 enable
+</code></p>
+<h4><a class="anch" href="#REG_GPO_DATA" id="REG_GPO_DATA">REG_GPO_DATA</a></h4>
+<p><code>Port:   0CDh
+Access: RW
+Size:   Byte
+</code></p>
+<p><code>4-7   Unused? Holds state.
+3     GPO3 data (reads written state)
+2     GPO2 data (reads written state)
+1     GPO1 data (reads written state)
+0     GPO0 data (reads written state)
+</code></p>
+<h2><a class="anch" href="#ww_over" id="ww_over">WonderWitch Overview</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#ww_crypto" id="ww_crypto">WonderWitch Update Encryption</a></h2>
+<p>Both <i>System</i> and <i>Soft</i> images for WonderWitch are not in plain text. They are encrypted, but the encryption is very very simple. </p>
+<p>Here's pseudo-code for encrypting a binary:</p>
+<p><code>index = 0
+foreach byte in buffer {
+  if index == 0, last_byte = 0xFF // reset last byte to 0xFF on every XMODEM sector
+
+  byte ^= last_byte // \_Swap these two operations to decrypt instead
+  buf = byte        // /
+  last_byte = buf
+
+  write(byte)
+
+  index = (index + 1) & 0x7F
+}
+</code></p>
+<p>Using this, one can decrypt the WonderWitch firmware image, then re-encrypt it. One could also encrypt some software and put it in as <i>Soft</i> to turn the WonderWitch into a ghetto low-space flash cart.
+</p>
+<h2><a class="anch" href="#ww_flash" id="ww_flash">WonderWitch Flash ROM</a></h2>
+<p>WonderWitch uses a Flash ROM to hold programs and the internal 'OS' and 'BIOS' called Freya.</p>
+<p>This flash ROM can be written from WonderSwan code, however you must not be simultaneously executing and writing code to the flash ROM. Thus, you will need to drop code into RAM and execute from there in order to write the flash ROM.</p>
+<p>The procedure for writing the flash can be found in any datasheet for the part, but I will explain the basic flashing procedure anyways for reference.</p>
+<p>TODO: iirc this is actually wrong, re-do.</p>
+<p>Firstly, change the in-use bank to the bank you wish to write to, using <a href="#REG_BANK_ROM1">REG_BANK_ROM1</a>. You must then disable the flash write lock by writing <code class="inline">001h</code> to <a href="#REG_WW_FLASHLOCK">REG_WW_FLASHLOCK</a>. Next, set the chip to <i>Fast Mode</i> by writing the following sequence to the ROM1 region:</p>
+<p><code>Addr    Byte
+0AAAh   0AAh
+0555h   055h
+0AAAh   020h
+</code></p>
+<p>Next, you will perform a <i>Fast Program</i> by writing <code class="inline">0A0h</code> to any location, then the byte you are writing to the address you wish to write to. After this, you will want to wait for the flash chip to finish writing the data. This is accomplished by reading the destination address twice and comparing <i>bit 6</i>. If they are equal, the flashing is complete. If they are different, and <i>bit 5</i> is set, the write has timed out and failed.</p>
+<p>If you wish to write more bytes, you may perform the <i>Fast Program</i> step again. Otherwise, exit <i>Fast Mode</i> by writing <code class="inline">090h</code> then <code class="inline">0F0h</code> to the destination location. Now re-enable the flash write lock by writing <code class="inline">000h</code> to <a href="#REG_WW_FLASHLOCK">REG_WW_FLASHLOCK</a>.
+</p>
+<h2><a class="anch" href="#ww_ports" id="ww_ports">WonderWitch I/O Ports</a></h2>
+<h3><a class="anch" href="#REG_WW_FLASHLOCK" id="REG_WW_FLASHLOCK">REG_WW_FLASHLOCK</a></h3>
+<p><code>Port:   0CEh
+Access: RW
+Size:   Byte
+</code></p>
+<p>Lock for the flash ROM. When 0, writes are not permitted to the flash.</p>
+<p>TODO: iirc this is something else, but similar
+</p>
+<h2><a class="anch" href="#wg_over" id="wg_over">WonderGate Overview</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#wg_terms" id="wg_terms">WonderGate Terminology</a></h2>
+<p>Due to using now-outdated technology and several technologies never seen outside of Japan, a brief overview of some terms being used is in order.</p>
+<p><code>PDC   <a href="http://en.wikipedia.org/wiki/Personal_Digital_Cellular">Personal Digital Cellular</a>, the cellular standard used by supported mobile phones.
+PPP   <a href="http://en.wikipedia.org/wiki/Point-to-Point_Protocol">Point-to-Point Protocol</a>, a fairly common protocol to connect two nodes directly.
+</code></p>
+<h2><a class="anch" href="#wg_intf" id="wg_intf">WonderGate Interface</a></h2>
+<p>WonderGate works over the serial connection to the WonderSwan, so refer to the <a href="#hw_serial">Serial Port</a> section.</p>
+<p>The WonderGate can communicate at both 9600 and 38400 baud, though the command sequence required for this is currently unknown. (TODO)</p>
+<h3><a class="anch" href="#wg_intf_connect" id="wg_intf_connect">Connecting</a></h3>
+<p>Send <a href="#wg_cmd_init">Initialize</a> command.</p>
+<p>Send <a href="#wg_cmd_get_status">Get Status</a> command. If 003h is returned, you're done and are currently connected.</p>
+<p>Send <a href="#wg_cmd_check_pdc">Check PDC</a> command to verify that the PDC is connected and working.</p>
+<p>Send <a href="#wg_cmd_set_ppp_login">Set PPP Login</a> command to set PPP login credentials.</p>
+<h3><a class="anch" href="#wg_cmdxfer" id="wg_cmdxfer">Command Transfer</a></h3>
+<p>Sending a command to the WonderGate is merely a matter of constructing a command structure as described below, then sending it to the serial port.</p>
+<p>Retrieving the return values consists of collecting bytes from the serial port, then interpreting them as the command structure as well. The <i>Type</i> and <i>Command</i> fields should match between the command and reply (with some exceptions).</p>
+<p><code>Addr  Size  Description
+000h  001h  Type
+001h  001h  Zero?
+002h  001h  Parameter length+1
+003h  001h  Command
+004h  ...   Parameters
+</code></p>
+<h2><a class="anch" href="#wg_cmds" id="wg_cmds">WonderGate Commands</a></h2>
+<p>TODO Rewrite this a bunch</p>
+<p>TODO Add more commands and understand them more.</p>
+<h3><a class="anch" href="#wg_cmd_init" id="wg_cmd_init">Initialize</a></h3>
+<p><code>Type:    001h
+Command: 002h
+Return:
+  Type:    001h
+  Command: 002h
+  1 byte:
+    WonderGate major version (ASCII)
+  1 byte:
+    WonderGate minor version (ASCII)
+</code></p>
+<p>Initialize WonderGate.</p>
+<h3><a class="anch" href="#wg_cmd_close" id="wg_cmd_close">Close</a></h3>
+<p><code>Type:    00Fh
+Command: 0FFh
+Parameter:
+  4 bytes:
+    Confirmation sequence (55,AA,55,AA)
+Return:
+  Type:    00Fh
+  Command: 0FFh
+  1 byte:
+    Return value. (zero)
+</code></p>
+<p>Close WonderGate.</p>
+<h3><a class="anch" href="#wg_cmd_get_status" id="wg_cmd_get_status">Get Status</a></h3>
+<p><code>Type:    002h
+Command: 001h
+Parameter:
+  1 byte:
+    03 (why?)
+Return:
+  Type:    002h
+  Command: 002h
+  1 byte:
+    Status:
+      002h = WonderGate is ON.
+      003h = PPP is in operation (phone connected).
+</code></p>
+<p>Get WonderGate status.</p>
+<h3><a class="anch" href="#wg_cmd_check_pdc" id="wg_cmd_check_pdc">Check PDC</a></h3>
+<p><code>Type:    001h
+Command: 000h
+Return:
+  Type:    001h
+  Command: 000h
+  1 byte:
+    Connection status:
+      000h = Connected and working.
+      001h = Busy.
+      002h = Out-of-service.
+      003h = Phone not connected.
+  1 byte:
+    Reception level (4 bit)
+</code></p>
+<p>Examines the attached cellular phone.</p>
+<h3><a class="anch" href="#wg_cmd_set_ppp_login" id="wg_cmd_set_ppp_login">Set PPP Login</a></h3>
+<p><code>Type:    001h
+Command: 010h
+Parameter:
+  6 bytes:
+    07 00 00 00 00 01 (why?)
+  1 byte:
+    User name length (or 0)
+  ? bytes:
+    User name (not present if no user name)
+  1 byte:
+    Password length (or 0)
+  ? bytes:
+    Password (not present if no password)
+Return:
+  Type:    001h
+  Command: 010h
+  1 byte:
+    PPP auth setting result:
+      1 = Success.
+      0 = Failure.
+</code></p>
+<p>Set PPP authorization information.</p>
+<h3><a class="anch" href="#wg_cmd_set_dns" id="wg_cmd_set_dns">Set DNS</a></h3>
+<p><code>Type:    001h
+Command: 011h
+Parameter:
+  9 bytes:
+    0 (why?)
+  4 bytes:
+    DNS1 IP address (big endian)
+  4 bytes:
+    DNS2 IP address (big endian)
+Return:
+  Type:    001h
+  Command: 011h
+  1 byte:
+    DNS setting result:
+      1 = Success.
+      0 = Failure.
+</code></p>
+<p>Set the DNS server to use.</p>
+<h3><a class="anch" href="#wg_cmd_dial_up" id="wg_cmd_dial_up">Dial up</a></h3>
+<p><code>Type:    001h
+Command: 008h
+Parameter:
+  3 bytes:
+    00 01 03 (why?)
+  1 byte:
+    Phone number length.
+  ? bytes:
+    Phone number to connect to.
+Return:
+  Type:    001h
+  Command: 00Bh
+  1 byte:
+    Connection result:
+      000h = Successfully connected.
+      001h = No response from destination phone.
+      002h = Busy.
+      003h = Redial restricted.
+      0F0h = Communication disconnected.
+      0FFh = Mobile phone disconnected.
+</code></p>
+<p>Connect to phone line, start PPP.</p>
+<h3><a class="anch" href="#wg_cmd_hang_up" id="wg_cmd_hang_up">Hang up</a></h3>
+<p><code>Type:    001h
+Command: 00Ah
+Parameter:
+  1 byte:
+    01 (why?)
+Return:
+  Type:    001h
+  Command: 00Bh
+  1 byte:
+    Disconnect reason.
+</code></p>
+<p>Stop PPP, disconnect the phone line.</p>
+<h3><a class="anch" href="#wg_cmd_get_host" id="wg_cmd_get_host">Get Host</a></h3>
+<p><code>Type:    011h
+Command: 008h
+Parameter:
+  ? bytes:
+    Name (null-terminated ASCII)
+Return:
+  Type:    011h
+  Command: 008h
+  1 byte:
+    Lookup status:
+      1 = Success.
+      0 = Failure.
+  ? bytes:
+    Official name of the host (null-terminated ASCII)
+  4 bytes:
+    IP address (big endian)
+</code></p>
+<p>Get official host name and IP address.</p>
+<h3><a class="anch" href="#wg_cmd_new_socket" id="wg_cmd_new_socket">New Socket</a></h3>
+<p><code>Type:    011h
+Command: 001h
+Parameter:
+  1 bytes:
+    00 (why?)
+Return:
+  Type:    011h
+  Command: 001h
+  1 byte:
+    Result:
+      -1 = Failure.
+      else, Socket number.
+</code></p>
+<p>Create a new TCP socket.</p>
+<h3><a class="anch" href="#wg_cmd_con_socket" id="wg_cmd_con_socket">Connect to a Socket</a></h3>
+<p><code>Type:    011h
+Command: 003h
+Parameter:
+  1 bytes:
+    Socket number
+  2 bytes:
+    Address family (big endian)
+  <=14 bytes:
+    sa_data
+Return:
+  Type:    011h
+  Command: 003h
+  1 byte:
+    ?
+  1 byte:
+    Result:
+      1 = Success.
+      0 = Failure.
+</code></p>
+<p>Connect to a socket.</p>
+<h3><a class="anch" href="#wg_cmd_del_socket" id="wg_cmd_del_socket">Close Socket</a></h3>
+<p><code>Type:    011h
+Command: 007h
+Parameter:
+  1 bytes:
+    Socket number
+Return:
+  Type:    011h
+  Command: 007h
+  1 byte:
+    Result:
+      1 = Success.
+      0 = Failure.
+</code></p>
+<p>Close a socket.</p>
+<h3><a class="anch" href="#wg_cmd_send_socket" id="wg_cmd_send_socket">Send to Socket</a></h3>
+<p><code>Type:    011h
+Command: 00Eh
+Parameter:
+  1 bytes:
+    Socket number
+  ? bytes:
+    Data
+Return:
+  Type:    011h
+  Command: 00Eh
+  1 byte:
+    ?
+  1 byte:
+    Number of bytes written
+</code></p>
+<p>Write to a socket.</p>
+<h3><a class="anch" href="#wg_cmd_recv_socket" id="wg_cmd_recv_socket">Receive from Socket</a></h3>
+<p><code>Type:    011h
+Command: 00Fh
+Parameter:
+  1 bytes:
+    Socket number
+  1 bytes:
+    Data length
+Return:
+  Type:    011h
+  Command: 00Fh
+  1 byte:
+    ?
+  1 byte:
+    Number of bytes read
+  ? bytes:
+    Data
+</code></p>
+<p>Write to a socket.
+</p>
+<h2><a class="anch" href="#cpu_over" id="cpu_over">CPU Overview</a></h2>
+<p>WonderSwan CPU is a <i>NEC V30MZ</i> clocked at 3.072MHz.</p>
+<p>The CPU is binary compatible with the Intel 80186, but far higher performance. Performance characteristics:</p>
+<ul><li>1 bus cycle in 1 clock.</li>
+<li>High speed execution due to internal pipelining.</li>
+<li>Complete stopping of system clock is possible due to fully static CMOS design.</li>
+<li>20-bit address bus, 16-bit data bus (input/output separated bus).</li>
+</ul>
+<h2><a class="anch" href="#cpu_isa" id="cpu_isa">CPU Instruction Set</a></h2>
+<p>TODO: Gross notes be here</p>
+<p><code>Actual write for OUT seems to occur 3 cycles from end.
+</code></p>
+<h2><a class="anch" href="#cpu_encoding" id="cpu_encoding">CPU Instruction Encoding</a></h2>
+<h3><a class="anch" href="#cpu_opcodes" id="cpu_opcodes">Opcode Map</a></h3>
+<p>TODO: This is bullshit.</p>
+<h4><a class="anch" href="#cpu_op_grp1" id="cpu_op_grp1">GRP1 Opcodes</a></h4>
+<p>Encoded as part of the <a href="#cpu_modrm">ModRM</a> byte.</p>
+<p><code>REG=0 REG=1 REG=2 REG=3 REG=4 REG=5 REG=6 REG=7
+ADD   OR    ADC   SBB   AND   SUB   XOR   CMP
+</code></p>
+<h4><a class="anch" href="#cpu_op_grp2" id="cpu_op_grp2">GRP2 Opcodes</a></h4>
+<p>Encoded as part of the <a href="#cpu_modrm">ModRM</a> byte.</p>
+<p><code>REG=0 REG=1 REG=2 REG=3 REG=4 REG=5 REG=6 REG=7
+ROL   ROR   RCL   RCR   SHL   SHR   SAL   SAR
+</code></p>
+<h4><a class="anch" href="#cpu_op_grp3" id="cpu_op_grp3">GRP3 Opcodes</a></h4>
+<p>Encoded as part of the <a href="#cpu_modrm">ModRM</a> byte.</p>
+<p><code>REG=0     REG=1 REG=2 REG=3 REG=4 REG=5 REG=6 REG=7
+TEST E I  ---?? NOT   NEG   MUL   IMUL  DIV   IDIV
+</code></p>
+<h4><a class="anch" href="#cpu_op_grp4" id="cpu_op_grp4">GRP4 Opcodes</a></h4>
+<p>Encoded as part of the <a href="#cpu_modrm">ModRM</a> byte.</p>
+<p><code>REG=0 REG=1 REG=2 REG=3   REG=4 REG=5   REG=6 REG=7
+INC   DEC   CALL  CALL Mp JMP   JMP Mp  PUSH  ---??
+</code></p>
+<h3><a class="anch" href="#cpu_modrm" id="cpu_modrm">ModRM byte</a></h3>
+<p>Get ready for a wild ride.</p>
+<p><code>6-7   MOD (Mode)
+3-5   REG (Register)
+0-2   RM (Register/Memory Type)
+</code></p>
+<p><code>        Byte  Word  Segment
+REG=0   AL    AX    ES
+REG=1   CL    CX    CS
+REG=2   DL    DX    SS
+REG=3   BL    BX    DS
+REG=4   AH    SP    ? (ES?)
+REG=5   CH    BP    ? (CS?)
+REG=6   DH    SI    ? (SS?)
+REG=7   BH    DI    ? (DS?)
+</code></p>
+<p><code>MOD   RM    Address
+00    000   [BX+SI]
+      001   [BX+DI]
+      010   [BP+SI]
+      011   [BP+DI]
+      100   [SI]
+      101   [DI]
+      110   disp16
+      111   [BX]
+</code></p>
+<p><code>MOD   RM    Address
+01    000   [BX+SI]+disp8
+      001   [BX+DI]+disp8
+      010   [BP+SI]+disp8
+      011   [BP+DI]+disp8
+      100   [SI]+disp8
+      101   [DI]+disp8
+      110   [BP]+disp8
+      111   [BX]+disp8
+</code></p>
+<p><code>MOD   RM    Address
+10    000   [BX+SI]+disp16
+      001   [BX+DI]+disp16
+      010   [BP+SI]+disp16
+      011   [BP+DI]+disp16
+      100   [SI]+disp16
+      101   [DI]+disp16
+      110   [BP]+disp16
+      111   [BX]+disp16
+</code></p>
+<p><code>MOD   RM    Address
+11    000   AX
+      001   CX
+      010   DX
+      011   BX
+      100   SP
+      101   BP
+      110   SI
+      111   DI
+</code></p>
+<h2><a class="anch" href="#pinout_aswan" id="pinout_aswan">ASWAN Pinout</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#pinout_sphinx" id="pinout_sphinx">SPHINX Pinout</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#pinout_sphinx2" id="pinout_sphinx2">SPHINX2 Pinout</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#pinout_extport" id="pinout_extport">Ext. Port Pinout</a></h2>
+<p>Looking at female end of connector:</p>
+<p><code> _________
+| 4 3 2 1 |
+|         |
+ |5_6_7_8|
+</code></p>
+<p><code>1   GND
+2   Serial OUT
+3   Serial IN
+4   Vcc, +3.3V
+5   CLK1, 768kHz
+6   CLK2, 24kHz
+7   D_SND
+8   /HEADPHONES
+</code></p>
+<h2><a class="anch" href="#pinout_cartcon" id="pinout_cartcon">Cart Connector Pinout</a></h2>
+<p>Looking at cart, 1 on left, 48 on right:</p>
+<p><code>1   GND
+2   A15
+3   A10
+4   A11
+5   A9
+6   A8
+7   A13
+8   A14
+9   A12
+10  A7
+11  A6
+12  A5
+13  A4
+14  D15
+15  D14
+16  D7
+17  D6
+18  D5
+19  D4
+20  D3
+21  D2
+22  D1
+23  D0
+24  Vdd, +3.3V
+25  Vdd, +3.3V
+26  A0
+27  A1
+28  A2
+29  A3
+30  A19
+31  A18
+32  A17
+33  A16
+34  D8
+35  D9
+36  D10
+37  D11
+38  D12
+39  D13
+40  /RESET
+41  BMC1
+42  BMC2
+43  /OE
+44  /WE
+45  BMC3
+46  CARTINT
+47  CLK, 384kHz
+48  GND
+</code></p>
+<p>Several other documents label address with A1 as A0, and A0 as A(-1), as ROM accesses ignore A0.
+</p>
+<h2><a class="anch" href="#pinout_cartmap" id="pinout_cartmap">Cart Mapper Pinout</a></h2>
+<h2><a class="anch" href="#pinout_cartpwr" id="pinout_cartpwr">Cart Power Controller Pinout</a></h2>
+<p>IC labeled <code class="inline">GIZA</code>.</p>
+<p><code>     -----
+1 --|     |-- 8
+2 --|   _ |-- 7
+3 --|  / \|-- 6
+4 --|  \_/|-- 5
+     -----
+
+8 -> SRAM./CE1
+7 -> GND
+6 -> SRAM.CE2 & SRAM.Vcc (need to probe more, looks like it connects to the battery)
+5 -> R1.B
+4 -> Flash.37
+3 -> NC?
+2 -> NC?
+1 -> NC?
+</code></p>
+<p>This isn't completely mapped out yet.
+</p>
+<h2><a class="anch" href="#pinout_cartrom" id="pinout_cartrom">Cart ROM Pinout</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#pinout_cartsram" id="pinout_cartsram">Cart SRAM Pinout</a></h2>
+<p><code>       -----------------------------------------------------
+A11 --|  _                                                  |-- /OE
+A19 --| / \                                                 |-- A10
+ A8 --| \_/                                                 |-- /CE1
+A13 --|                                                     |-- D7
+/WE --|                                                     |-- D6
+CE2 --|                                                     |-- D5
+A15 --|                                                     |-- D4
+Vcc --|                                                     |-- D3
+A17 --|                                                     |-- GND
+A16 --|                                                     |-- D2
+A14 --|                                                     |-- D1
+A12 --|                                                     |-- D0
+ A7 --|                                                     |-- A0
+ A6 --|                                                     |-- A1
+ A5 --|                                                     |-- A2
+ A4 --|                                                     |-- A3
+       -----------------------------------------------------
+</code></p>
+<p>Both /CE1 and CE2 need to be active for the chip to be enabled.
+</p>
+<h2><a class="anch" href="#pinout_carteep" id="pinout_carteep">Cart EEPROM Pinout</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#pinout_cartrtc" id="pinout_cartrtc">Cart RTC Pinout</a></h2>
+<p>
+</p>
+<h2><a class="anch" href="#related_patents" id="related_patents">Patents</a></h2>
+<p>There are a number of patents on various elements of the WonderSwan design.</p>
+<ul><li><a href="https://www.google.com/patents/EP0971290A1">EP0971290A1</a> - Cartridge protection</li>
+<li><a href="https://www.google.com/patents/US6764400">US6764400</a> - WonderSwan itself</li>
+<li><a href="https://www.google.com/patents/US6767288">US6767288</a> - 'Owner' information</li>
+<li><a href="https://www.google.com/patents/US6494786">US6494786</a> - WonderSwan main body</li>
+<li><a href="https://www.google.com/patents/US6273247">US6273247</a> - Cartridge case</li>
+</ul>
+<h2><a class="anch" href="#related_cairo" id="related_cairo">CAIRO</a></h2>
+<p>Koto Labs briefly marketed an SoC called <i>CAIRO</i> that is a successor to the ASWAN SoC used in the WonderSwan. It is incredibly similar, with the biggest difference being the doubled clock speed.</p>
+<p>I've not had access to any device using CAIRO, but if I can get my hands on one I'd love to poke on it.</p>
+<p>The official specification page is archived here: <a href="http://web.archive.org/web/20071023111112/http://www.koto.co.jp/products/mono_sp.html">http://web.archive.org/web/20071023111112/http://www.koto.co.jp/products/mono_sp.html</a>
+</p>
+<h2><a class="anch" href="#about" id="about">About This Document</a></h2>
+<p>WSMan written 2014-2015 by Alex Marshall (trap15), hardware documentation and programming information for the Bandai WonderSwan series.</p>
+<h3><a class="anch" href="#about_updates" id="about_updates">Updates</a></h3>
+<p>This document will receive updates whenever errors or missing information is found. Regular updates are not to be expected.</p>
+<h3><a class="anch" href="#about_home" id="about_home">Homepage</a></h3>
+<ul><li><a href="http://daifukkat.su/">http://daifukkat.su/</a> - My homepage</li>
+<li><a href="http://daifukkat.su/docs/wsman/">http://daifukkat.su/docs/wsman/</a> - WSMan</li>
+</ul>
+<h3><a class="anch" href="#about_feedback" id="about_feedback">Feedback</a></h3>
+<p>If you find any information contained in this document to be incorrect, incomplete, and/or misleading, <i>please</i> send me an email at trap15#raidenii.net.</p>
+<p>Any known missing/incorrect/incomplete information is generally marked with TODO or question mark(s).</p>
+<h3><a class="anch" href="#about_credits" id="about_credits">Credits</a></h3>
+<p>Huge thanks to Martin Korth (nocash) for the formatting and general inspiration for this document.</p>
+<p>Thanks for information and fixes,</p>
+<ul><li>Ryphecha</li>
+<li>dox</li>
+<li>judge</li>
+<li>LiraNuna</li>
+<li>Qute</li>
+<li>Manoel Trapier (Godzil/<a href="http://twitter.com/Gozilu">@Gozilu</a>)</li>
+<li>Ed Mandy (Flavor/<a href="http://twitter.com/FreeplayTech">@FreeplayTech</a>)</li>
+</ul>
+<p>General thanks to,</p>
+<ul><li>Charles MacDonald</li>
+<li>#raidenii</li>
+<li>#mednafen</li>
+</ul>
+<h3><a class="anch" href="#about_changelog" id="about_changelog">Changelog</a></h3>
+<h4><a class="anch" href="#about_change_rev4" id="about_change_rev4">rev.4</a></h4>
+<p>Release: 4 September 2015, 03:32:30 UTC</p>
+<ul><li>Corrected and clarified information about sound's Ch2 PCM voice.</li>
+<li>Clarified information about sound's Ch4 noise.</li>
+<li>Properly named the two HyperVoice registers.</li>
+<li>Corrected information about HyperVoice saturation and math signedness.</li>
+</ul>
+<h4><a class="anch" href="#about_change_rev3" id="about_change_rev3">rev.3</a></h4>
+<p>Release: 26 August 2015, 09:15:00 UTC</p>
+<ul><li>Corrected <a href="#REG_BANK_ROM2">REG_BANK_ROM2</a>'s bit length (thanks Flavor/Godzil).</li>
+<li>Discovered that <b>REG_DMA_DST_HI</b> doesn't actually exist.</li>
+<li>Added pinouts section.</li>
+<li>Corrected typo in WonderWitch SRAM part name.</li>
+<li>Added a bunch of notes about sound generation and hypervoice.</li>
+<li>Added information about cart GPOs (thanks Flavor/Godzil).</li>
+</ul>
+<h4><a class="anch" href="#about_change_rev2" id="about_change_rev2">rev.2</a></h4>
+<p>Release: 17 August 2015, 09:12:45 UTC</p>
+<ul><li>Converted source document format</li>
+<li>Rewrote basically everything</li>
+<li>Added more information</li>
+</ul>
+<h4><a class="anch" href="#about_change_rev1" id="about_change_rev1">rev.1</a></h4>
+<p>Release: 26 July 2014, 20:31:39 UTC</p>
+<ul><li>Initial release</li>
+</ul>
+<h3><a class="anch" href="#about_todo" id="about_todo">TODO</a></h3>
+<p>Full TODO:</p>
+<ul><li>Cart Protection</li>
+<li>Common startup procedures</li>
+<li>Tools/Compilers/etc.</li>
+</ul>
+<p>Partial TODO:</p>
+<ul><li>Timers: using</li>
+<li>DMA: using and flags?</li>
+<li>SDMA: using</li>
+<li>Sound: hypervoice, high-precision info on noise</li>
+<li>RTC: commands, etc.</li>
+<li>Serial: async</li>
+<li>Internal EEPROM: bit7 of WSC control byte, using</li>
+<li>WonderWitch: Shell information, architecture</li>
+<li>WonderGate: A lot</li>
+<li>Part information: more</li>
+<li>CPU: Behavior of undefined ops, instruction set overview</li>
+<li>Screens, display, and window: stuff?</li>
+<li>LCD, Tiles, Palettes (Display): idk?</li>
+<li>Maybe add sub-ToCs for sections</li>
+</ul>
+<p>
+</p>
+</body>
+</html>

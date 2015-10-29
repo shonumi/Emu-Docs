@@ -1,0 +1,112 @@
+                    "Mario Party" 7 in 1 Mapper #52 Info
+                    ------------------------------------
+
+
+12.19.2000
+Version 1.0
+
+Mapper info by The Mad Dumper
+---
+
+
+This mapper has been assigned the number 52.  (that's 52 decimal)
+
+
+OK, this mapper is fairly straight foreward.  Another cascaded mapper.  
+This time, it's MMC3 and an extra bank control register.  There is 1Mbyte
+of PRG ROM and 1Mbyte of CHR ROM on this cart.  
+
+On this cart are 7 "Mario" games... well, three are "legit" Mario games-
+SMB2, SMB3, and Mario is Missing.  The rest are weird graphics hacks.  
+Interestingly, all the games appear to be NTSC, except SMB2.  For some 
+reason, this is the PAL version!
+
+---
+
+
+The hardware:
+
+It consists of 1 6264 8K RAM chip (for WRAM), and 3 glop-tops.  2 are
+1Mbyte ROMs while the remaining chip is the mapper.  That's it.  
+
+An aside:  When I got this cart, it was sort of DOA.  The CHR ROM had some
+major problems... apparently the CHR ROM underwent an ESD event (read: static
+electricty) which blew the input protection circuitry.  There was a "soft"
+short between A8 and A13 of about 34 ohms.  I managed to fix this however
+by connecting A8 to 5V and then shorting A13 to ground.  The cart functions
+properly and I got to dump it :-)
+</aside>
+
+-
+
+This mapper operates like any other MMC3, however it has a single byte
+register at 6800h.  (This is probably mapped in at 6000-7FFFh, but I didn't
+check)  After a reset, this register is 00h.  Writing to this area
+sets the bank control byte.  It can only be written once.  To reset it and
+allow another write, you must reset the console.
+
+The rest of the registers are standard MMC3, and will not be discussed
+further.
+
+-
+
+Bank Select Register:
+
+7  bit  0
+---------
+xABC DEFG
+
+x- not used
+A- CHR ROM bank size.  1=128K, 0=256K
+D- PRG ROM bank size.  1=128K, 0=256K
+G- PRG ROM bank "part" (for 128K banks)
+
+E,F- PRG ROM 256K bank
+
+
+---***---PRG bank selection---***---
+
+The D,E,F, and G bits control the PRG ROM banking.  On this mapper, the
+MMC3 can "see" either 128K of PRG ROM at a time, or 256K of PRG ROM.
+
+When operating in 256K mode (bit D=0), only bits E and F affect the bank;
+bit G is ignored.  While in 128K mode (bit D=1), bit G selects which 128K
+"part" will be used.  0=lower 128K, 1=upper 128K.
+
+
+PRG bank selection: (128K banks)
+
+
+Pbank:  output of our formula
+Select: the above Bank Select Register
+MMC3P:  A17 out of the MMC3 PRG select registers
+
+Pbank = (Select AND 06h) OR (D and G) OR (!D and MMC3P)
+
+
+---***---CHR bank selection---***---
+
+The A,B,C, and E bits control the CHR ROM banking.  Note: bit E is shared
+between the CHR and PRG bank controls.  This operates identically to the 
+PRG switching, except it uses different bits and operates on CHR banks.
+
+When operating in 256K mode, (bit A=0), only bits B and E affect the bank;
+bit C is ignored.  While in 128K mode, (bit A=1), bit C selects which 128K
+"part" will be used. 0=lower 128K, 1=upper 128K.
+
+
+CHR bank selection: (128K banks)
+
+Cbank:  output of our formula
+Select: the above Bank Select Register
+MMC3C:  A17 out of the MMC3 CHR select registers
+
+Cbank = (B*4 + E*2) OR (A and C) OR (!A and MMC3C)
+
+
+---
+
+Well, that's it!  Enjoy this super k-rad game.
+
+
+

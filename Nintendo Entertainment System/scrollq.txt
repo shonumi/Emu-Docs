@@ -1,0 +1,146 @@
+Question 1:
+--------------
+I am trying to apply the description of the PPU from Loopy to my code,
+and I can't figure out why it's doing what it is doing. As an example, if
+I wait for VBLANK, then write something to PPU memory via $2007 I have
+modified the "v" and "t" registers loopy describes. Lets say I wrote
+something to the image palette, so both "v" and "t" would be equal to
+$3F10. When VBLANK is over, Loopy says "v=t", which in this case puts
+$3F10 in "v". If the PPU uses the "v" register for read from the nametable,
+how come the name table data is not read from $3F10 in this case?
+
+
+The answer is in fact staring you in the face. ;)
+When the PPU reads name table data, it doesn't use the value in the VRAM
+register as linear index. Rather it only uses a few bits from the VRAM
+register, and retranslates the addresses into an address that only has
+enough width (in bits) to index into the name table.
+
+"you can think of bits 0,1,2,3,4 of the vram address as the "x scroll"(*8)
+that the ppu increments as it draws. as it wraps from 31 to 0, bit 10 is
+switched. you should see how this causes horizontal wrapping between name
+tables (0,1) and (2,3)."
+
+"you can think of bits 5,6,7,8,9 as the "y scroll"(*8). this functions
+slightly different from the X. it wraps to 0 and bit 11 is switched when
+it's incremented from _29_ instead of 31. there are some odd side effects
+from this.. if you manually set the value above 29 (from either 2005 or
+2006), the wrapping from 29 obviously won't happen, and attrib data will be
+used as name table data. the "y scroll" still wraps to 0 from 31, but
+without switching bit 11. this explains why writing 240+ to 'Y' in 2005
+appeared as a negative scroll value."
+
+
+Question 2:
+--------------
+>When you overwrite "t" by writing to $2005/$2006 you have lost your
+>old vertical and horizontal scroll values. Does this mean I have to
+>reload the scroll values on every vblank?
+
+correct.. anytime you write to $2006 (for writing to vram or whatever),
+you've just trashed your scroll values and have to reload them. if you don't
+write to $2005/6 between frames, your scroll values shouldn't need to be reloaded.
+
+
+Question 3:
+--------------
+I can give a pretty good explanation of how the scrolling works...
+
+First of all, the scroll should only be updated during the vblank.
+The first value written to the register($2005) is the horizontal scroll value.
+This can be in the range of 0 - 255.
+The second value written to the register is the vertical scroll value.
+This can be in the range of 0 - 239.
+
+These are direct values. What I mean is, if you scroll the screen past
+255 (wrapping back around to 0) horizontally, the screen will reset back to
+the left edge. This isnt what we want. In order to fix this, we must switch
+nametables AS SOON AS the scroll value resets back to 0. Once we switch
+nametables, we can continue scrolling again with no problem - just toggle back
+and forth between nametables each time the scroll wraps around.
+
+Here is the scrolling code from Ultima 2:
+
+;scroll THE SCREEN
+LD9D2: 		
+
+	LDA <$FF ;GET CONTROL REGISTER 1
+
+	LSR A ;SHIFT OUT NAMETABLE NUMBER
+	TAX ;SAVE TEMPORARILY
+
+	LDA hscroll1 ;HORIZONTAL scroll DIVIDED BY 8
+
+	ASL A
+	ASL A
+	ASL A ;MULTIPLY BY 8 TO GET THE CORRECT VALUE
+	ORA hscroll2 ;ADD IN THE MISSING LOWER 3 BITS (0 - 7)
+	STA hscroll ;THIS IS THE REAL HORIZONTAL scroll VALUE
+
+	TXA ;GET BACK CONTROL REGISTER 1 
+	ROL A ;THE CARRY IS THE NAMETABLE NUMBER WE WANT
+	STA <$FF ;NOW WE HAVE THE CORRECT NAMETABLE SET
+
+	LDA vscroll1 ;VERTICAL scroll VALUE DIVIDED BY 8
+
+	ASL A
+	ASL A
+	ASL A ;MULTIPLY BY 8 TO GET THE CORRECT VALUE
+	ORA vscroll2 ;ADD IN THE MISSING LOWER 3 BITS 
+	STA vscroll ;NOW WE HAVE THE REAL VERTICAL scroll VALUE
+
+	RTS
+	
+Later during the vblank, the program writes HSCROLL followed
+by VSCROLL to $2005.
+
+Actually, looking over this code it seems like you can write values higher
+than 239 to the vertical scroll.
+
+I hope this helps anyone.
+
+
+Question 4
+-----------
+
+How should I write scrolling stuff to $2005?
+
+Like this:
+
+ScrollScreen:
+
+.vwait:	
+	lda $2002    ;wait for vblank
+	bpl .vwait
+	rts
+
+	lda ScrollH	;Horitontal scroll
+	sta $2005
+
+	lda ScrollV	;Vertical scroll
+	sta $2005
+
+	lda ppuReg0	;reg $2000 with correct name table set
+	sta $2000
+	rts
+
+
+Question 5
+----------
+
+Easy way to flip name tables:
+
+HotizontalFlip:
+	lda #%00000001
+	eor ppuReg0	;copy of $2000, since $2000 can't be read.
+	sta ppuReg0
+	rts
+
+VerticalFlip:
+	lda #%00000010
+	eor ppuReg0	;copy of $2000, scine $2000 can't be read.
+	sta ppuReg0
+	rts
+
+Afterwards copy ppuReg0 to $2000 after writing you scroll values.
+

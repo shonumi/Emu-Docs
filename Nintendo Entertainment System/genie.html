@@ -1,0 +1,147 @@
+<HTML>
+<HEAD><TITLE>A Note on Game Genie Codes for the NES</TITLE></HEAD>
+<STYLE TYPE="text/css">
+td { text-align: center; }
+</STYLE>
+<BODY>
+<H1>A Note on Game Genie Codes for the NES</H1>
+Last revised 2011-03-20.
+<P>
+(For lists of codes, see under
+<A HREF="http://www.gamegenie.com/cheats/gamegenie/nes/index.shtml">NES</A>
+at the Galoob web site.
+I have a few custom codes on my pages for
+<STRONG><A HREF="../zelda/index.html">Legend of Zelda</A></STRONG>,
+<STRONG><A HREF="../finalfantasy/index.html">Final Fantasy</A></STRONG>,
+<STRONG><A HREF="../finalfantasy2/index.html">Final Fantasy II</A></STRONG>,
+<STRONG><A HREF="../finalfantasy3/index.html">Final Fantasy 3</A></STRONG>,
+<STRONG><A HREF="../bard/index.html">The Bard's Tale</A></STRONG>,
+<STRONG><A HREF="../mother/index.html">Mother (Earthbound Zero)</A></STRONG>,
+<STRONG><A HREF="../ninjagaiden/index.html">Ninja Gaiden</A></STRONG>,
+<STRONG><A HREF="../willow.html">Willow</A></STRONG>,
+and <STRONG><A HREF="../kidicarus/index.html">Kid Icarus</A></STRONG>.)
+<P>
+The current reference
+on Game Genie Codes for the Nintendo Entertainment System (N.E.S.)
+is the <A HREF="http://nesdev.parodius.com/nesgg.txt">NES
+Game Genie Code Format DOC</A>, version 0.71, by Benzene of Digital Emutations.
+It is short and to the point.
+Unfortunately its algorithm manipulates single bits to encipher and
+decipher the Game Genie Codes.
+This complicates the programming needlessly.
+Essentially the same method appears on pages by <A
+HREF="http://www.wyrmcorp.com/software/uggconv/uggconv.shtml">WyrmCorp</A>
+and <A HREF="http://tuxnes.sourceforge.net/gamegenie.html">The Mighty
+Mike Master</A>.
+<P>
+Here is an efficient algorithm:
+<P>
+Game Genie codes are made up from 16 letters,
+divided into two groups: [APZLGITY] and [EOXUKSVN].
+Benzene, following others, treats these as low values (0&ndash;7)
+and high values (8&ndash;15).
+The correct coding assigns even values to the first group
+and odd values to the second:
+<P>
+<TABLE BORDER=1>
+<TR><TD>A=0<TD>P=2<TD>Z=4<TD>L=6<TD>G=8<TD>I=10<TD>T=12<TD>Y=14</TR>
+<TR><TD>E=1<TD>O=3<TD>X=5<TD>U=7<TD>K=9<TD>S=11<TD>V=13<TD>N=15</TR>
+</TABLE>
+<P>This coding preserves the nybble structure of the codes.
+The other does not and so requires bits to be rearranged.
+<P>
+Game Genie Codes for NES may be conditional or unconditional.
+<P>
+<EM>Unconditional:</EM> 16-bit ROM address, 8-bit replacement value.
+<P>
+<EM>Conditional:</EM> 16-bit ROM address, 8-bit replacement
+value, 8-bit compare value.
+<P>
+The conditional form is more common, because the NES maps ROM banks.
+An unconditional replacement would affect any ROM bank mapped
+in at the specified location.
+The original value at that location
+usually suffices to distinguish the desired bank.
+Unconditional substitution is good enough for a location with a fixed mapping.
+<H2>Enciphering</H2>
+Define a <EM>nybble</EM> as half a byte, a byte's first or last 4 bits,
+high-order bit first.
+Let ABCD be the nybbles of the address, EF be those of
+the replacement value, and GH be those of the compare value if any.
+The high bit of the address is always 1 to the CPU,
+or 0 relative to the start of the ROM bank.
+Set it to 0 if the code is unconditional, 1 if conditional.
+Then rearrange the groups of 4 bits thus:
+<P>
+FECADB or FECADBHG
+<P>
+Rotate the bits one position leftward,
+then translate each nybble into its letter code.
+<P>
+Example: for infinite lives in Bomberman, replace the
+value at address $c498 with $a5.
+The address nybbles ABCD are 1100-0100-1001-1000; the value nybbles
+EF are 1010-0101.
+Clear the high bit of A and
+rearrange the nybbles according to the scheme FECADB; this gives
+0101-1010-1001-0100-1000-0100.
+Rotating left gives
+1011-0101-0010-1001-0000-1000, or SXPKAG.
+<P>
+<TABLE BORDER=1>
+<TR><TD>C<TD>4<TD>9<TD>8<TD>A<TD>5</TR>
+
+<TR><TD BGCOLOR="#eeddff">4<TD>4<TD>9<TD>8<TD>A<TD>5</TR>
+
+<TR><TD>5<TD>A<TD>9<TD>4<TD>8<TD>4</TR>
+
+<TR><TD><FONT COLOR="darkred">0101</FONT>
+<TD><FONT COLOR="darkgreen">1010</FONT>
+<TD><FONT COLOR="darkred">1001</FONT>
+<TD><FONT COLOR="darkgreen">0100</FONT>
+<TD><FONT COLOR="darkred">1000</FONT>
+<TD><FONT COLOR="darkgreen">0100</FONT></TR>
+
+<TR>
+<TD><FONT COLOR="darkred">101</FONT><FONT COLOR="darkgreen">1</FONT>
+<TD><FONT COLOR="darkgreen">010</FONT><FONT COLOR="darkred">1</FONT>
+<TD><FONT COLOR="darkred">001</FONT><FONT COLOR="darkgreen">0</FONT>
+<TD><FONT COLOR="darkgreen">100</FONT><FONT COLOR="darkred">1</FONT>
+<TD><FONT COLOR="darkred">000</FONT><FONT COLOR="darkgreen">0</FONT>
+<TD><FONT COLOR="darkgreen">100</FONT><FONT COLOR="darkred">0</FONT>
+</TR>
+
+<TR><TD>B<TD>5<TD>2<TD>9<TD>0<TD>8</TR>
+
+<TR><TD>S<TD>X<TD>P<TD>K<TD>A<TD>G</TR>
+
+</TABLE>
+
+<H2>Deciphering</H2>
+Reverse the process to decipher a code.
+That is, translate each letter to a nybble, rotate the bits one position
+rightward, and interpret the resulting nybbles as FECADB or
+FECADBHG, depending on the high bit of A.
+Finally, set the high bit of ABCD to get the CPU address.
+<P>
+Example: for infinite lives in Castlevania, the Game Genie code
+is OXNGLZVK.
+Translating to nybbles gives 0011-0101-1111-1000-0110-0100-1101-1001.
+Rotating one bit rightward gives 1001-1010-1111-1100-0011-0010-0110-1100,
+or $9afc326c.
+Interpret these nybbles as FECADBHG; this gives an address ABCD of $c2f3,
+a replacement value EF of $a9, and a compare value GH of $c6.
+(On a 6502, $c6 is the opcode for decrementing a zero-page address,
+and $a9 is a load immediate.)
+<P>
+Here is a <A HREF="gg.pl">Perl script</A>
+that enciphers and deciphers Game Genie codes for the N.E.S.
+<P>
+&ldquo;Game Genie&rdquo; is a registered trademark of Lewis Galoob Toys, Inc.
+<HR>
+<A HREF="../index.html">Back to Crude ASCII Maps</A>
+<HR>
+Col. G. L. Sicherman
+[ <A HREF="http://www.monmouth.com/~colonel/">HOME</A> |
+<A HREF="mailto:colonel@monmouth.com">MAIL</A> ]
+</BODY></HTML>

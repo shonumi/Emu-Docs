@@ -1,0 +1,74 @@
+                      "Golden Game" 150 in 1 Mapper Info
+                      ----------------------------------
+
+
+10.29.2000
+
+Mapper info by The Mad Dumper
+
+
+Revised, version 2.0
+
+---
+
+
+This mapper has been assigned the number 235.  (that's 235 decimal)
+
+It is the weirdest multicart I have ever seen.  There are only 60 or so
+games which can be expected, however there's an integrated "trainer"
+setup, some "demos", and other weird crap.  The menu screen has Adventure
+Island music and graphics.  Instead of a PRG ROM, this cart uses a single
+8K VRAM and it loads the graphics into RAM before/during gameplay!
+All the games have been hacked, so when they wish to switch out CHR ROM,
+it will load in a new set of GFX!
+
+The mapper hardware itself is very simple, only 4 TTL chips.  This particular
+board has space for 4 ROM chips, however only 2 are filled.
+
+---
+
+There is no CHR ROM, there is only 8K VRAM.  This particular cart has space
+for up to 4Mbytes of ROMs but only 2Mbytes have been stuffed.
+
+Reads:
+8000-BFFF:  Lower 16K ROM bank
+C000-FFFF:  Upper 16K ROM bank
+
+
+Writes:
+8000-FFFF:  Control register (See below)
+
+---
+
+How to work it good:
+
+Like other multicarts, the address written to is used instead of the
+actual data written.
+
+The bits are set up like so:
+
+(A15)          (A0)
+
+1xMP RNBB xxxA AAAA
+
+A15 must be 1 (obviously)
+x = don't care
+R = ROM page size (0=16K, 1=32K)
+P = ROM page # (0=lower 16K, 1=upper 16K)
+M = Mirroring control (0=H 1=V)
+N = Mirroring control (0=2 screens 1=1 screen) (see below)
+B = ROM # (A8=bit 0, A9=bit 1) (32K pages)
+A = Upper ROM address lines (aka 32K pages. A0=bit 0, A1=bit 1, etc.)
+
+The Mirroring Control bit (N) is sorta cool.  It allows one to make
+"single screen" games where there is only 1K of nametable RAM, so all
+4 quadrants of the scrollable screen are the same thing.
+
+The B bits are the ROM enable bits.  This cart can have up to 4 1Mbyte
+ROM chips, however only 2 are used.  So the only valid selections are
+ROM 0 and ROM 2.  (i.e.:  00b = ROM 0, 10b = ROM 1)
+
+---
+
+There is no CHR ROM on this board, so no emulation of it is required.
+

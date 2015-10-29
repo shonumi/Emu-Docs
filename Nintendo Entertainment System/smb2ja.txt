@@ -1,0 +1,52 @@
+                 SMB2j aka "The Lost Levels" Mapper #40 Info
+                 -------------------------------------------
+
+
+02.08.2000
+
+Mapper info by The Mad Dumper
+
+Thanks to Thomas Steen for some debug help.
+---
+
+
+This mapper has been assigned the number 40.  (that's 40 decimal)
+
+The ROM is mapped in from 6000-ffff.  It is broken up into 8 8K banks.
+              
+Bank #0 is 0000-1fff of the ROM, bank #1 is 2000-3fff of the ROM, etc.
+
+Reads:
+6000-7fff: bank #6
+8000-9fff: bank #4
+a000-bfff: bank #5
+c000-dfff: Selectable
+e000-ffff: bank #7
+
+Writes:
+8000-9fff: Disable and reset IRQ counter
+a000-bfff: Enable IRQ counter
+c000-dfff: Not Used 
+e000-ffff: Selects desired bank
+
+
+Writes to the ROM area control the bankswitching and other features of
+this cart.  When writing to the ROM area, it is disabled to prevent
+bus contention.
+
+
+Writing anything anywhere to 8000-9fff disables the interrupt counter and
+resets it.
+
+Writing anything anywhere to a000-bfff enables the interrupt counter. 
+
+After 4096 M2 cycles, an IRQ is generated.  This is equivalant to about
+36 scanlines.
+
+Writing to c000-bfff is not allowed.
+
+Writing to e000-ffff selects the desired 8K bank which is then available
+for use at c000-dfff.  Only D0-D2 are used, and the bank selected here
+is not known on power up.
+
+

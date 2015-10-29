@@ -1,0 +1,91 @@
+<html>
+  <head>
+    <title>Deathskull Laboratories! - NES/SNES Controllers</title>
+    <link href="../../style.css" rel="stylesheet" type="text/css"></head>
+  <body vlink="navy" link="maroon">
+    <div class="navtop">
+      <p class="list"><img height="49" src="../../images/skull.gif" width="87">
+        <a href="../../index.html"><b>Home</b></a> |
+        <a href="../../games/lists/index.html"><b>Lists</b></a> |
+        <a href="../../games/tech/index.html"><b>Deathskull Labs</b></a> |
+        <a href="../../games/museum/index.html"><b>Museum</b></a> |
+        <a href="../../links.html"><b>Links</b></a></p>
+    </div>
+    <h1>Nintendo NES and SNES controllers</h1>
+    <p>I got some of this info from
+      <a href="http://www.repairfaq.org/~filipg/HTML/LINK/F_SNES.html">Fil's FAQ-Link-In Corner: LinkIn: SNES pinouts</a>. </p>
+    <h2>NES Controller</h2>
+    <p>Proprietary connector on the controller. <br>
+<pre>
+       o 4
+  1 o  o 5
+  2 o  o 6
+  3 o  o 7
+    </pre></p>
+    <p><i>Should probably draw that one up.</i>
+      <ol>
+        <li>+5VDC Supply</li>
+        <li>?</li>
+        <li>?</li>
+        <li>GND</li>
+        <li>CLK</li>
+        <li>Latch</li>
+        <li>Data out</li>
+      </ol>
+    </p>
+    <p>The NES starts the show by sending a high pulse down the Latch line, which makes the 4021 (8-bit shift register) inside the controller grab and store the state of all buttons. </p>
+    <p>Then the NES sends a series of eight low pulses down the CLK line, which makes the controller shuffle bits (one for each CLK pulse) down the Data Out line according to which buttons were pressed when latched. A low bit on the Data Out line means the button is pressed. </p>
+    <h3>Clock pulse and corresponding button</h3>
+    <ol>
+      <li>A</li>
+      <li>B</li>
+      <li>Select</li>
+      <li>Start</li>
+      <li>North</li>
+      <li>South</li>
+      <li>West</li>
+      <li>East</li>
+    </ol>
+    <p>Pins 2 &amp; 3 aren't used on the standard pad. I believe they may be used with alternative controllers like the light gun or Arkanoid paddle. <hr></p>
+    <h2><a name="snes">SNES Controller</a></h2>
+    <p>Proprietary connector on the controller. <br>
+<pre>
+ o  o  o  o |  o  o  o
+ 1  2  3  4    5  6  7
+    </pre></p>
+    <p><i>Should probably draw that one up too.</i>
+      <ol>
+        <li>+5VDC Supply</li>
+        <li>CLK</li>
+        <li>Latch</li>
+        <li>Data out</li>
+        <li>?</li>
+        <li>?</li>
+        <li>GND</li>
+      </ol>
+    </p>
+    <p>The SNES pad works exactly the same as the NES controller, except it has two 4021's inside, and there are sixteen pulses on the CLK line, and sixteen bits of data come out the Data line.As a matter of fact, a SNES pad can be connected to a NES by simply swapping the connector on the end. </p>
+    <h3>Clock pulse and corresponding button</h3>
+    <ol>
+      <li>B</li>
+      <li>Y</li>
+      <li>Select</li>
+      <li>Start</li>
+      <li>North</li>
+      <li>South</li>
+      <li>West</li>
+      <li>East</li>
+      <li>A</li>
+      <li>X</li>
+      <li>L</li>
+      <li>R</li>
+      <li>[no button, always high]</li>
+      <li>[no button, always high]</li>
+      <li>[no button, always high]</li>
+      <li>[no button, always high]</li>
+    </ol>
+    <hr>
+    <p class="list"><i>Jay Tilton</i><br>
+      06/28/98 </p>
+  </body>
+</html>

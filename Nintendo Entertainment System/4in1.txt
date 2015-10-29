@@ -1,0 +1,84 @@
+                             4 in 1 Mapper Info
+                             ------------------
+
+
+12.07.2000
+
+Mapper info by The Mad Dumper
+
+---
+
+
+
+This mapper has been assigned the number 49.  (that's 49 decimal)
+
+Cart is marked "1993 SUPER HIK 4 in 1".  The game lineup:
+
+Master Fighter III (Dunno, not the "usual" SF/MK clone)
+Bubbce Bobbce II   (Bubble Bobble 2)
+Gun-Nac
+Zen Ninja          (Zen: The Intergalactic Ninja)
+
+---
+
+This is very similar to the 7 in 1 I RE'd awhile back.  It's made by the
+same company, and the hardware is similar.  The games don't appear to have
+hacked out copyrights or anything.  The menu code is at the end of the first
+bank like usual.
+
+Hardware consists of 2 TTL chips (74HC174 and 74HC157) and a pirate 
+MMC3 in a 40 pin DIP package.
+
+---
+
+There is 512K of PRG ROM, and 512K of CHR ROM
+
+Standard MMC3 write addresses apply.  This cart is somewhat interesting since
+it is set up to play NROM titles as well.  The menu shows 23 or so titles,
+while only 4 appear when the game is run.
+
+---
+
+They used the WRAM output line to operate the 74174 on here which I thought
+was somewhat clever.  Since they did this, you must enable WRAM on the MMC3
+before you can write to the register.  
+
+This register is accessed via writes to 06000h-07fffh. 
+
+7  bit  0
+---------
+BBPP xxxS
+
+
+The B bits select which 128K page to work with for PRG AND CHR.  The MMC3
+can only "see" 128K of PRG and 128K of CHR at a time due to the way the
+ROMs are wired.  These B bits select the 128K page.  bit 6 = LSB, 
+bit 7 = MSB.
+
+The S bit controls the cart's mode.  When set, the cart will be in MMC3
+mode, and the MMC3 has full control of the 128K worth of PRG, and the
+128K worth of CHR.
+
+When the S bit is cleared, however, the cart reverts to "NROM compatibility
+mode".  The PRG ROM is "disconnected" from the MMC3 entirely, and the P bits
+select which 32K PRG ROM bank will be used.  CHR addressing is NOT affected
+by this, presumably since you can select desired bank via the MMC3.
+
+bit 5 is the MSB, and bit 4 is the LSB.
+
+
+---
+
+How to work it good:
+
+When first powered up, the bank select register is cleared to 00h.  This
+selects the first 32K of PRG data, and the first 128K of CHR data.  
+There is a piece of bootstrap code which is loaded into 0400h and run.
+It enables WRAM on the MMC3, and sets the bank select register to point
+to the bank with the menu.
+
+
+
+
+
+

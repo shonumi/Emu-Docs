@@ -1,0 +1,89 @@
+                             7 in 1 Mapper Info
+                             ------------------
+
+
+10.16.2000
+
+Mapper info by The Mad Dumper
+
+---
+
+
+
+This mapper has been assigned the number 44.  (that's 44 decimal)
+
+Cart is marked "1991 Super HiK 7 in 1 384K" with the usual humorous 
+"Remarks" message about "defauts" on the back.
+
+Another weird multicart from those brainiacs in the far east.  Unlike the
+other multicarts with the same old crap, this one is unique.  The 7 games
+have been left intact for the most part (including copyright messages and
+such), and they are all MMC3-based.  There are 6 128K/128K games, and 1
+256K/256K game.  The menu code resides in the Adventure Island 2 ROM bank
+(bank 0).
+
+Hardware consists of 3 TTL chips (74HC161, 74HC153, 74HC138) and a pirate 
+MMC3 in a 40 pin DIP package.
+
+---
+
+There is 1Mbyte of PRG ROM, and 1Mbyte of CHR ROM
+
+Standard MMC3 write addresses apply, with a wildcard thrown in for good
+measure.
+
+The cartridge is a normal MMC3 cart with a 3 bit bank select register which
+is write-only.  Its state determines which game will be played.  The MMC3
+controls all mirroring and bankswitching otherwise.
+
+The address of this register is:
+
+A15              A0
+
+101x xxxx xxxx xxx1
+
+valid addresses would then be: 
+
+A001, A003, A005, A007 ... BFFF
+
+
+D0-D2 are used to select the desired game.  
+
+---
+
+How to work it good:
+
+When first powered up, the bank select register is cleared to 000b.  This
+selects the first bank of data; 128K PRG and 128K CHR.  The menu code is
+in this first bank (which also holds Adventure Island 2).
+
+Writing to the bank select register selects the desired game to play.
+
+Each game is 128K/128K (PRG/CHR) except the last game, which is 256K/256K.
+
+Writing 000b to the register selects the first game,
+Writing 001b to the register selects the second game
+.
+.
+.
+Writing 110b to the register selects the last (256K/256K) game
+Writing 111b to the register also selects the last game 
+
+
+The 74HC153 is used to control this weird arrangement by the finagling of
+the upper address lines on the PRG and CHR ROMs.
+
+Most likely code similar to this will be used:
+
+
+8000: LDA #06h       ;desired game to play
+8002: JMP 00200h     ;jump to RAM, 'cause this ROM is gone
+
+0200: STA 0A001h     ;select the game through the register
+0203: JMP (0FFFCh)   ;jump to reset vector
+
+
+---
+
+
+

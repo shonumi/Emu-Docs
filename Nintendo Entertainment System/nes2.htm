@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+
+<html>
+<head>
+<title>NES documentation</title>
+<meta name="Microsoft Theme" content="sumipntg 011, default"></head>
+<body background="../_themes/sumipntg/sumtextb.jpg" bgcolor="#FFFFFF" text="#808080" link="#3333CC" vlink="#666699" alink="#990099"><!--mstheme--><font face="verdana">
+<!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+<b><center><font size="+2">Andy Simpson's NES documentation.</font></b><br>
+<i>With thanks and credit to Marat Fayzullin</i><br>
+</center><br>
+
+<!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+<i>This doc is based upon Marat Fazullin's NES faq (in fact this is almost a template of<br>
+Marat's file).  Its purpose is to satisfy the general populous who mail me asking to<br>
+explain/clarify/add to the info Marat has provided.  Hence, this file:-<br>
+<!--msthemelist--><table border="0" cellpadding="0" cellspacing="0" width="100%">
+<!--msthemelist--><tr><td valign="baseline" width="42"><img src="../_themes/sumipntg/sumbul1a.gif" width="20" height="20" hspace="11"></td><td valign="top" width="100%"><!--mstheme--><font face="verdana">Goes over the ground explored by Marat, but with clarified expression (ie explained in language wot you understands).<br>
+<!--msthemelist--><tr><td valign="baseline" width="42"><img src="../_themes/sumipntg/sumbul1a.gif" width="20" height="20" hspace="11"></td><td valign="top" width="100%"><!--mstheme--><font face="verdana">Gives additional information that I picked up whilst working on the SimNES emulator (@copyright 1997 Nintemulation).<br>
+<!--msthemelist--></table>
+</i><br>
+<b>Alrighty then! Let's get a moving! </b><br>
+<br>
+
+<!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+<i>Note: Most figures here are taken from Marat Fayzullin's NES doc.  This is taken on<br>
+trust that they are correct.  If any prove to be inaccurate (which I doubt) then updates<br>
+will be made in the future, after I've checked them.<br>
+</i><br>
+
+<!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+<b>Q) What is a NES?</b><br>
+<br>
+A) The NES (Nintendo Entertainment System) is an 8-bit gaming console, popular in<br>
+the 1980s, mainly due to its phenomenal software base.  The NES was known as<br>
+Famicom (FAMily COMputer) in Japan.  <br>
+<br>
+
+<!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+<b>Q) Ok, so give me some NES stats!</b><br>
+<br>
+A) The NES is based on the following:-<br>
+<!--msthemelist--><table border="0" cellpadding="0" cellspacing="0" width="100%">
+<!--msthemelist--><tr><td valign="baseline" width="42"><img src="../_themes/sumipntg/sumbul1a.gif" width="20" height="20" hspace="11"></td><td valign="top" width="100%"><!--mstheme--><font face="verdana">6502 CPU - the main &quot;brain&quot; of the console, if you like.<br>
+<!--msthemelist--><tr><td valign="baseline" width="42"><img src="../_themes/sumipntg/sumbul1a.gif" width="20" height="20" hspace="11"></td><td valign="top" width="100%"><!--mstheme--><font face="verdana">PPU (Picture Processing Unit) - the &quot;make-up artist&quot; of the console, as it were.<br>
+<!--msthemelist--></table>
+<br>
+The video memory required by the PPU is SEPARATED from the main memory<br>
+of the CPU.  It can be read or written to via ports.<br>
+ROM images (or NES cartridges for those of you with the actual console) can<br>
+contain:-<br>
+<!--msthemelist--><table border="0" cellpadding="0" cellspacing="0" width="100%">
+<!--msthemelist--><tr><td valign="baseline" width="42"><img src="../_themes/sumipntg/sumbul1a.gif" width="20" height="20" hspace="11"></td><td valign="top" width="100%"><!--mstheme--><font face="verdana">The ROM appearing in the main CPU address space (location $8000-$FFFF)<br>
+<!--msthemelist--><tr><td valign="baseline" width="42"><img src="../_themes/sumipntg/sumbul1a.gif" width="20" height="20" hspace="11"></td><td valign="top" width="100%"><!--mstheme--><font face="verdana">VROM/VRAM appearing in the PPU address space (location $0000-$1FFF)<br>
+<!--msthemelist--><tr><td valign="baseline" width="42"><img src="../_themes/sumipntg/sumbul1a.gif" width="20" height="20" hspace="11"></td><td valign="top" width="100%"><!--mstheme--><font face="verdana">Internal VRAM  location is commonly $2000-$3FFF (also at $6000-7FFF in some cases)
+<!--msthemelist--></table>
+<br>
+<i>Sim's hint - It's a good tip to treat unfamiliar images as if they utilise locations<br>
+$6000-7FFF.  When programming SimNES, many supposedly &quot;compatible&quot; images<br>
+turned out to require further work through ignorance of the above.<br>
+</i><br>
+
+<!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+<b>Q) How can the NES CPU be mapped out?</b><br>
+<br>
+A) Though use of this reference chart!<p>
+<img src="cputab.gif" alt="CPU Table"><p>
+<!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+<br>
+
+<b>Q) NES and interrupts.  Do I wanna know about them?</b><br>
+
+<br>
+
+A) Yeah!  And anyway, I wanna tell you!<br>
+
+  <br>
+
+The NES uses <b>NMI</b>s which are, to give them their full name, <b>Non Maskable<br>
+
+Interrupts</b>. The NES PPU generates a non-maskable interrupt at the end of each<br>
+
+frame.  These are most commonly known as <b>VBLANK interrupts</b>.<br>
+
+<br>
+
+<i>Sim's tip:- If a ROM suffers from constant background or sprite graphic glitching, it<br>
+
+is usually because the VBLANK interrupts are not set at an acceptable &quot;level&quot; for that<br>
+
+ROM.  Games such as Rad Racer and TMNT (both SimNES compatible!) demand fine<br>
+
+tweaking in this area if they are to co-operate aesthetically. Phew!  Layman's terms,<br>
+
+eh?</i><br>
+
+<br>
+
+<b>Enabling or disabling of VBLANK interrupts can be achieved by writing into<br>
+
+location $2000, bit 7.  Upon occurance of an interrupt, the return address/status<br>
+
+register are pushed on stack and the CPU jumps to the address at location<br>
+
+$FFFA.  The interrupt handler is supposed to finish its execution with an RTI<br>
+
+command returning the CPU to the main program (but let's face it, that goes<br>
+
+without saying).<br>
+
+</b><br><!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+
+<b>Q) PPU memory.  I love it unrequitedly.  How do I make it love me back?</b><br>
+
+<br>
+
+A)  Pattern tables!  My favourite!  Ok, to tame PPU, you have to know how and when<br>
+
+to read or write to them.  This is the basis of understanding, see?<br>
+
+<br>
+
+<b>Note: The BG colour of the picture is defined by locations $3F00 and $3F10 in<br>
+
+VRAM.  The locations actually mirror each other (ie they are the same memory cell,<br>
+
+the siamese twins of the NES world, if you like.)</b><br>
+
+<br><!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+
+<b>Q) How do I write to PPU memory?</b><br>
+
+<br>
+
+A) Firstly write <b>both the upper and lower address bytes </b>into location $2006.  Data should be written to location $2007.  Each time data is written, the address will increase by 1 (ie bit 2 of $2000 is 0) or by 32 (ie bit 2 this time is 1).<br>
+
+<br><!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+
+<b>Q) How do I read from PPU?</b><br>
+
+   <br>
+
+A) Presuming you have written <b>the upper and lower address bytes into $2006 </b>(which<br>
+
+you will have, if you want this to work!) then data can be read from location $2007. <br>
+
+Each time data is read, the output address will increase by 1.<br>
+
+<br>
+
+(Continued next update, techie dudes!)<br>
+
+<br>
+<!--msthemeseparator--><p align="CENTER"><img src="../_themes/sumipntg/sumhorsa.gif" width="300" height="10"></p>
+<a href="title.htm">Back to the main homepage...</a>
+<!--mstheme--></font></body>
+</html>

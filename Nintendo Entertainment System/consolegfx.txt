@@ -1,0 +1,300 @@
+Console Graphics Document
+Author:   Klarth
+Contact:  stevemonaco@hotmail.com
+          http://rpgd.emulationworld.com/klarth
+          Started on July 18, 2000
+
+Version 0.7 - January 2, 2000
+-- Initial Release covering 11 of the most common console graphic formats
+
+I.  Table of Contents
+
+1.  Introduction and Terminology
+2.  1BPP NES/Monochrome
+3.  2BPP NES
+4.  2BPP SNES/Gameboy/GBC
+5.  3BPP SNES
+6.  4BPP SNES/PC Engine
+7.  8BPP SNES
+8.  Mode 7 SNES
+9.  2BPP NGPC
+10. 2BPP Virtual Boy
+11. 4BPP SMS/Game Gear/WSC
+12. 4BPP Genesis/x68k
+13. Thanks Section
+
+_______________________________________________________________________________________________
+
+
+1.   Introduction and Terminology
+
+-----A. Introduction
+
+     There was a period when I didn't even look at this document for probably two or three 
+     months, particularly after when I forced myself to do nearly all of the SNES formats.  
+     This document really isn't for somebody beginning to learn graphics but rather for 
+     somebody with a fairly strong bitmap graphic knowledge and to use this as a reference.
+
+     If you wish to put this document on your site, please contact me for authorization 
+     *before* you post this file on your site.  If I seem to "magically" disappear from the 
+     scene, you may post this document *only* in its original form.  If you use this doc 
+     please credit me in a thanks section since I just like to see who reads and uses them.
+
+-----B. Terminology
+
+     BPP:  Bits per pixel.
+
+     Xth Bitplane: Tells how many bitplanes deep the pixel or row is; the top layer 
+          is the first bitplane, the one below that is the second, and so on.
+
+     [rC: bpD]: row number C (0-7 in a 8x8 tile), bitplane number D (starting at 1).
+
+     [pA-B rC: bpD]: pixels A-B (leftmost pixel is 0), row number C (0-7 in a 8x8 tile), 
+          bitplane number D (starting at 1. bp* means it's a linear format and stores the 
+          bitplanes one after another bp 1 to bp Max.)
+
+_______________________________________________________________________________________________
+
+
+2.  1BPP NES/Monochrome
+  Colors Per Tile - 0-1
+  Space Used - 1 bit per pixel.  8 bytes per 8x8 tile.
+
+  Note: This is a tiled, linear bitmap format.
+  Each pair represents one byte
+  Format:
+
+  [r0, bp1], [r1, bp1], [r2, bp1], [r3, bp1], [r4, bp1], [r5, bp1], [r6, bp1], [r7, bp1]
+
+  Short Description:
+
+  The first bitplane is stored row by row, very simple.
+
+_______________________________________________________________________________________________
+
+
+3.  2BPP NES
+  Colors Per Tile - 0-3
+  Space Used - 2 bits per pixel.  16 bytes per 8x8 tile.
+
+  Note: This is a tiled, planar bitmap format.
+  Each pair represents one byte
+  Format:
+
+  [r0, bp1], [r1, bp1], [r2, bp1], [r3, bp1], [r4, bp1], [r5, bp1], [r6, bp1], [r7, bp1]
+  [r0, bp2], [r1, bp2], [r2, bp2], [r3, bp2], [r4, bp2], [r5, bp2], [r6, bp2], [r7, bp2]
+
+  Short Description:
+
+  Bitplane 1 is stored row by row and then bitplane 2 is stored row by row.
+
+_______________________________________________________________________________________________
+
+
+4. 2BPP SNES/Gameboy/GBC
+  Colors Per Tile - 0-3
+  Space Used - 2 bits per pixel.  16 bytes per 8x8 tile.
+
+  Note: This is a tiled, planar bitmap format.
+  Each pair represents one byte
+  Format:
+
+  [r0, bp1], [r0, bp2], [r1, bp1], [r1, bp2], [r2, bp1], [r2, bp2], [r3, bp1], [r3, bp2]
+  [r4, bp1], [r4, bp2], [r5, bp1], [r5, bp2], [r6, bp1], [r6, bp2], [r7, bp1], [r7, bp2]
+
+  Short Description:
+
+  Bitplanes 1 and 2 are intertwined row by row.
+
+_______________________________________________________________________________________________
+
+
+5. 3BPP SNES
+  Colors Per Tile - 0-7
+  Space Used - 3 bits per pixel.  24 bytes for a 8x8 tile.
+
+  Note: This is a tiled, planar bitmap format.
+  Each pair represents one byte.
+  Format:
+
+  [r0, bp1], [r0, bp2], [r1, bp1], [r1, bp2], [r2, bp1], [r2, bp2], [r3, bp1], [r3, bp2]
+  [r4, bp1], [r4, bp2], [r5, bp1], [r5, bp2], [r6, bp1], [r6, bp2], [r7, bp1], [r7, bp2]
+  [r0, bp3], [r1, bp3], [r2, bp3], [r3, bp3], [r4, bp3], [r5, bp3], [r6, bp3], [r7, bp3]
+
+  Short Description:
+
+  Bitplanes 1 and 2 are stored first, intertwined row by row.  Then the third bitplane is 
+  stored row by row.  This format isn't used by many games since it's actually a type of 
+  compression, because the SNES doesn't natively support the 3BPP format.  There is a routine 
+  that inserts the fourth bitplane before or while it's being transferred to VRAM so that it 
+  can be used by the SNES.
+
+_______________________________________________________________________________________________
+
+
+6. 4BPP SNES/PC Engine
+  Colors Per Tile - 0-15
+  Space Used - 4 bits per pixel.  32 bytes for a 8x8 tile.
+
+  Note: This is a tiled, planar bitmap format.
+  Each pair represents one byte
+  Format:
+
+  [r0, bp1], [r0, bp2], [r1, bp1], [r1, bp2], [r2, bp1], [r2, bp2], [r3, bp1], [r3, bp2]
+  [r4, bp1], [r4, bp2], [r5, bp1], [r5, bp2], [r6, bp1], [r6, bp2], [r7, bp1], [r7, bp2]
+  [r0, bp3], [r0, bp4], [r1, bp3], [r1, bp4], [r2, bp3], [r2, bp4], [r3, bp3], [r3, bp4]
+  [r4, bp3], [r4, bp4], [r5, bp3], [r5, bp4], [r6, bp3], [r6, bp4], [r7, bp3], [r7, bp4]
+
+  Short Description:
+
+  Bitplanes 1 and 2 are stored first, intertwined row by row.  Then bitplanes 3 and 4 
+  are stored, intertwined row by row.
+
+_______________________________________________________________________________________________
+
+
+7. 8BPP SNES
+  Colors Per Tile - 0-255
+  Space Used - 8 bits per pixel.  64 bytes for a 8x8 tile.
+
+  Note: This is a tiled, planar bitmap format.
+  Each pair represents one byte.
+  Format:
+
+  [r0, bp1], [r0, bp2], [r1, bp1], [r1, bp2], [r2, bp1], [r2, bp2], [r3, bp1], [r3, bp2]
+  [r4, bp1], [r4, bp2], [r5, bp1], [r5, bp2], [r6, bp1], [r6, bp2], [r7, bp1], [r7, bp2]
+  [r0, bp3], [r0, bp4], [r1, bp3], [r1, bp4], [r2, bp3], [r2, bp4], [r3, bp3], [r3, bp4]
+  [r4, bp3], [r4, bp4], [r5, bp3], [r5, bp4], [r6, bp3], [r6, bp4], [r7, bp3], [r7, bp4]
+  [r0, bp5], [r0, bp6], [r1, bp5], [r1, bp6], [r2, bp5], [r2, bp6], [r3, bp5], [r3, bp6]
+  [r4, bp5], [r4, bp6], [r5, bp5], [r5, bp6], [r6, bp5], [r6, bp6], [r7, bp5], [r7, bp6]
+  [r0, bp7], [r0, bp8], [r1, bp7], [r1, bp8], [r2, bp7], [r2, bp8], [r3, bp7], [r3, bp8]
+  [r4, bp7], [r4, bp8], [r5, bp7], [r5, bp8], [r6, bp7], [r6, bp8], [r7, bp7], [r7, bp8]
+
+  Short Description:
+
+  Bitplanes 1 and 2 are stored first, intertwined row by row.  Bitplanes 3 and 4 are stored 
+  next intertwined row by row.  Then Bitplanes 5 and 6 intertwined row by row.  Finally, 
+  Bitplanes 7 and 8 are stored intertwined row by row.
+
+_______________________________________________________________________________________________
+
+
+8. Mode 7 SNES
+  Colors Per Tile - 0-255
+  Space used - 8 bits per pixel.  64 bytes for a 8x8 tile.
+
+  Note: This is a tiled, linear bitmap format.
+  Each pair represents 1 byte.
+  Format:
+
+  [p0 r0: bp!], [p1 r0: bp!], [p2 r0: bp!], [p3 r0: bp!]
+  [p4 r0: bp!], [p5 r0: bp!], [p6 r0: bp!], [p7 r0: bp!]
+  [p0 r1: bp!], [p1 r1: bp!], [p2 r1: bp!], [p3 r1: bp!]
+  [p4 r1: bp!], [p5 r1: bp!], [p6 r1: bp!], [p7 r1: bp!]
+  ...
+  [p0 r7: bp!], [p1 r7: bp!], [p2 r7: bp!], [p3 r7: bp!]
+  [p4 r7: bp!], [p5 r7: bp!], [p6 r7: bp!], [p7 r7: bp!]
+
+  Short Description:
+
+  Each pixel has it's bitplanes stored right after another, so each byte directly references
+  a palette color without needing to "combine" the bitplanes.
+
+_______________________________________________________________________________________________
+
+
+9. 2BPP Neo Geo Pocket Color
+  Colors Per Tile - 0-3
+  Space Used - 2 bits per pixel.  16 bytes per 8x8 tile.
+
+  Note: This is a tiled, linear bitmap format.
+  Each group represents one byte
+  Format:
+
+  [p4-7 r0: bp*], [p0-3 r0: bp*], [p4-7 r1: bp*], [p0-3 r1: bp*]
+  [p4-7 r2: bp*], [p0-3 r2: bp*], [p4-7 r3: bp*], [p0-3 r3: bp*]
+  [p4-7 r4: bp*], [p0-3 r4: bp*], [p4-7 r5: bp*], [p0-3 r5: bp*]
+  [p4-7 r6: bp*], [p0-3 r6: bp*], [p4-7 r7: bp*], [p0-3 r7: bp*]
+
+  Short Description:
+
+  To simplify, this is merely a mirror image of the 2BPP Virtual Boy format.  Another 
+  explanation would be to say that it's in Little Endian instead of Big Endian.  
+
+  This is a linear format, so each pixel has it's bitplanes stored consecutively and then 
+  moves to the next pixel's bitplanes, stored consecutively.  Probably the easiest example 
+  possible of a linear bitplane format.  This format is the same as the Virtual Boy 2BPP 
+  format, except that they are congruent mirror images of each other.
+
+_______________________________________________________________________________________________
+
+
+10. 2BPP Virtual Boy
+  Colors Per Tile - 0-3
+  Space Used - 2 bits per pixel.  16 bytes per 8x8 tile.
+
+  Note: This is a tiled, bitmap format.
+  Each represents one byte
+  Format:
+
+  [p0-3 r0: bp*], [p4-7 r0: bp*], [p0-3 r1: bp*], [p4-7 r1: bp*]
+  [p0-3 r2: bp*], [p4-7 r2: bp*], [p0-3 r3: bp*], [p4-7 r3: bp*]
+  [p0-3 r4: bp*], [p4-7 r4: bp*], [p0-3 r5: bp*], [p4-7 r5: bp*]
+  [p0-3 r6: bp*], [p4-7 r6: bp*], [p0-3 r7: bp*], [p4-7 r7: bp*]
+
+  Short Description:
+
+  To simplify, this is merely a mirror image of the 2BPP NGPC format.  This is probably the 
+  easiest example of a linear bitplane format.  It is stored pixel by pixel and row by row.  
+  This format is the same as the Virtual Boy 2BPP format, except that they are congruent 
+  mirror images of each other.
+
+_______________________________________________________________________________________________
+
+
+11. 4BPP Game Gear/Sega Master System/Wonderswan Color
+  Colors Per Tile - 0-15
+  Space Used - 4 bits per pixel.  32 bytes per 8x8 tile.
+
+  Note: This is a tiled, linear bitmap format.
+  Each pair represents one byte
+  Format:
+
+  [r0, bp1], [r0, bp2], [r0, bp3], [r0, bp4], [r1, bp1], [r1, bp2], [r1, bp3], [r1, bp4]
+  [r2, bp1], [r2, bp2], [r2, bp3], [r2, bp4], [r3, bp1], [r3, bp2], [r3, bp3], [r3, bp4]
+  [r4, bp1], [r4, bp2], [r4, bp3], [r4, bp4], [r5, bp1], [r5, bp2], [r5, bp3], [r5, bp4]
+  [r6, bp1], [r6, bp2], [r6, bp3], [r6, bp4], [r7, bp1], [r7, bp2], [r7, bp3], [r7, bp4]
+
+  Short Description:
+
+  Bitplanes 1, 2, 3, and 4 are intertwined and stored row by row.
+
+_______________________________________________________________________________________________
+
+
+12. 4BPP Genesis/x68k
+  Colors Per Tile - 0-15
+  Space Used - 4 bits per pixel.  32 bytes per 8x8 tile.
+
+  Note: This is a tiled, big Endian, linear format.
+  Each pair represents one byte
+  Format:
+
+  [p1-2 r0: bp*], [p2-3 r0: bp*], [p4-5 r1: bp*], [p6-7 r1: bp*]
+  [p1-2 r2: bp*], [p2-3 r2: bp*], [p4-5 r3: bp*], [p6-7 r3: bp*]
+  [p1-2 r4: bp*], [p2-3 r4: bp*], [p4-5 r5: bp*], [p6-7 r5: bp*]
+  [p1-2 r6: bp*], [p2-3 r6: bp*], [p4-5 r7: bp*], [p6-7 r7: bp*]
+
+  Short Description:
+
+  Bitplanes 1, 2, 3, and 4 are intertwined and stored pixel by pixel.
+
+_______________________________________________________________________________________________
+
+
+13. Thanks Section
+
+  (wraith) - For showing me a more compact way of explaining how graphics are stored, which I 
+           expanded on a bit.  As well as SNES 3BPP information and other things.
+  Neil_    - His basic SNES graphics document taught me a bit more about bitmapped graphics.
+  prez     - His NES graphics document taught me the basics of bitmapped graphics.

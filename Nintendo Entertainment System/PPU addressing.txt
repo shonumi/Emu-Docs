@@ -1,0 +1,208 @@
+************************************************
+*NES PPU addressing/scrolling operation details*
+************************************************
+Brad Taylor (big_time_software@hotmail.com)
+
+first release	october 25, 2002
+
+Note: if you are using a windows program like notepad to view this document 
+in, you must change the font over to "terminal" style, to display text mode 
+characters used in this document properly.
+
+
+This document is a visual & written representation of how every aspect of 
+PPU scrolling and addressing works. It is designed to be simple to 
+understand, while providing as much detail on the subject as possibe.
+
+The reason why I've created this document is because there is *no* currently 
+available public document that describes PPU scrolling/addressing to this 
+detail (only Loopy's scrolling document comes close).
+
+A couple of years ago, after reading Loopy's document, and closely examining 
+the PPU patent documentation (US.#4,949,298), I created visual block 
+diagrams for myself to aid in the understanding of PPU scrolling & 
+addressing. However, even after the release of Loopy's doc, and observing 
+how many people still have questions, I decided to create an electronic 
+version of the diagrams I've already had for 2 years now.
+
+This document is dedicated to Loopy, who posted the first draft of his 
+ground-breaking scrolling document to the NESdev mailing list on April 13, 
+1999. Even now, over 3 years after it's release, it is still considered to 
+contain the most accurate PPU scrolling information available on the 
+internet. Many thanks to him and others who have contributed information 
+towards figuring out how PPU addressing & logic works.
+
+
+******************************************
+*PPU scrolling & addressing in a nutshell*
+******************************************
+The upcoming chart is a 2-dimensional matrix representing how address/data 
+entering/leaving the PPU relates to it's internal counters and registers.
+
+The top row of the diagram reprents data entering the PPU, and how internal 
+PPU registers are directly effected by it. The left column here describes 
+the means of how the data enters the PPU (either by programming PPU 
+registers, or when the PPU fetches data off the VRAM data bus), and the 
+right column shows how the bits of the written data is mapped to the 
+internal PPU registers (the bits of these registers are then reprogrammed 
+with value of the specified data bit). Numbers 0..7 are used here to 
+represent the data bits written (numbers bits not displayed here means that 
+this data is unused), and "-" is used to indicate that a binary value of 0 
+is to be written.
+
+The middle row and right column of the diagram represents a model of the 
+PPU's internal counters and latches directly related to 
+scrolling/addressing. The top row of the blocks represent the 
+latches/registers. If a bottom row to the blocks exist, these are counters 
+that when loaded, load with the value of the latches directly atop them. The 
+operation of the counters, and when they are loaded, will be described 
+later.
+
+The bottom row of the diagram represents how the status of internal PPU 
+registers/counters effect PPU address lines. The description of the columns 
+here are similar to the first row's. However, the digits appearing in the 
+right column now represent the PPU's physical address lines 0..13 
+(hexidecimal digits are used in the diagram). The absence of address line 
+#'s not appearing here are explained by the notes written next to the access 
+type description in the left column. Finally, address bits that map to PPU 
+registers which have counters below them get their signal only from the 
+counter part of the device, never the latch (top) part.
+
+
++-----------------------------+
+|register/counter nomenclature|
++-----------------------------+
+NT:	name table
+AT:	attribute/color table
+PT:	pattern table
+FV:	fine vertical scroll latch/counter
+FH:	fine horizontal scroll latch
+VT:	vertical tile index latch/counter
+HT:	horizontal tile index latch/counter
+V:	vertical name table selection latch/counter
+H:	horizontal name table selection latch/counter
+S:	playfield pattern table selection latch
+PAR:	picture address register (as named in patent document)
+AR:	tile attribute (palette select) value latch
+/1:	first  write to 2005 or 2006 since reading 2002
+/2:	second write to 2005 or 2006 since reading 2002
+
+
+ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º2000           ³      1  0                     4               º
+º2005/1         ³                   76543  210                  º
+º2005/2         ³ 210        76543                              º
+º2006/1         ³ -54  3  2  10                                 º
+º2006/2         ³              765  43210                       º
+ºNT read        ³                                  76543210     º
+ºAT read (4)    ³                                            10 º
+ÇÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¶
+º               ³ÉÍÍÍ»ÉÍ»ÉÍ»ÉÍÍÍÍÍ»ÉÍÍÍÍÍ»ÉÍÍÍ»ÉÍ»ÉÍÍÍÍÍÍÍÍ»ÉÍÍ»º
+ºPPU registers  ³º FVººVººHºº   VTºº   HTºº FHººSºº     PARººARºº
+ºPPU counters   ³ÇÄÄÄ¶ÇÄ¶ÇÄ¶ÇÄÄÄÄÄ¶ÇÄÄÄÄÄ¶ÈÍÍÍ¼ÈÍ¼ÈÍÍÍÍÍÍÍÍ¼ÈÍÍ¼º
+º               ³ÈÍÍÍ¼ÈÍ¼ÈÍ¼ÈÍÍÍÍÍ¼ÈÍÍÍÍÍ¼                      º
+ÇÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¶
+º2007 access    ³  DC  B  A  98765  43210                       º
+ºNT read (1)    ³      B  A  98765  43210                       º
+ºAT read (1,2,4)³      B  A  543c   210b                        º
+ºPT read (3)    ³ 210                           C  BA987654     º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+
+
+notes
+-----
+1: address lines DC = 10.
+
+2: address lines 9876 = 1111.
+
+3: address line D = 0. address line 3 relates to the pattern table fetch
+occuring (the PPU always makes them in pairs).
+
+4. The PPU has an internal 4-position, 2-bit shifter, which it uses for 
+obtaining the 2-bit palette select data during an attribute table byte 
+fetch. To represent how this data is shifted in the diagram, letters a..c 
+are used in the diagram to represent the right-shift position amount to 
+apply to the data read from the attribute data (a is always 0). This is why 
+you only see bits 0 and 1 used off the read attribute data in the diagram.
+
+
++-----------------+
+|counter operation|
++-----------------+
+During picture rendering, or VRAM access via 2007, the scroll counters (FV, 
+V, H, VT & HT) increment. The fashion in which they increment is determined 
+by the type of VRAM access the PPU is doing.
+
+
+VRAM access via 2007
+--------------------
+If the VRAM address increment bit (2000.2) is clear (inc. amt. = 1), all the 
+scroll counters are daisy-chained (in the order of HT, VT, H, V, FV) so that 
+the carry out of each counter controls the next counter's clock rate. The 
+result is that all 5 counters function as a single 15-bit one. Any access to 
+2007 clocks the HT counter here.
+
+If the VRAM address increment bit is set (inc. amt. = 32), the only 
+difference is that the HT counter is no longer being clocked, and the VT 
+counter is now being clocked by access to 2007.
+
+
+VRAM access during rendering
+----------------------------
+Because of how name table data is organized, the counters cannot operate in 
+the same fashion as they do during 2007 access. During the time screen data 
+is to be rendered (when 2001.3 or 2001.4 is 1, and scanline range (relative 
+to VINT) is 20..260), 2 counters are established in the PPU (to fetch name, 
+attribute, and pattern table data), and are clocked as will be described.
+
+The first one, the horizontal scroll counter, consists of 6 bits, and is 
+made up by daisy-chaining the HT counter to the H counter. The HT counter is 
+then clocked every 8 pixel dot clocks (or every 8/3 CPU clock cycles).
+
+The second counter, the vertical scroll, is 9 bits, and is made up by 
+daisy-chaining FV to VT, and VT to V. FV is clocked by the PPU's horizontal 
+blanking impulse, and therefore will increment every scanline. VT operates 
+here as a divide-by-30 counter, and will only generate a carry condition 
+when the count increments from 29 to 30 (the counter will also reset). 
+Diving by 30 is neccessary to prevent attribute data in the name tables from 
+being used as tile index data.
+
+
++------------------------+
+|counter loading/updating|
++------------------------+
+There are 2 conditions that update all 5 PPU scroll counters with the 
+contents of the latches adjacent to them. The first is after a write to 
+2006/2. The second, is at the beginning of scanline 20, when the PPU starts 
+rendering data for the first time in a frame (this update won't happen if 
+all rendering is disabled via 2001.3 and 2001.4).
+
+There is one condition that updates the H & HT counters, and that is at the 
+end of the horizontal blanking period of a scanline. Again, image rendering 
+must be occuring for this update to be effective.
+
+
+**************************************************
+*establishing full split screen scrolls mid-frame*
+**************************************************
+although it is not possible to update FV to any desired value mid-screen 
+exclusively via 2006 (since the MSB is zero'd out from the write), it is 
+possible to mix writes to 2005 & 2006 together, so that it is possible. By 
+resetting the 2005/2006 pointer flip-flop (by reading $2002), writing bytes 
+to the below registers in this sequence, will allow all scroll counters to 
+be updated with ANY desired value, including FV. Note that only relivant 
+updates are mentioned, since data in the scroll latches is overwritten many 
+times in the example below.
+
+reg	update
+---	------
+2006:	nametable toggle bits (V, H).
+2005:	FV & bits 3,4 of VT.
+2005:	FH. This is effective immediately.
+2006:	HT & bits 0,1,2 of VT.
+
+It is on the last write to 2006 that all values previously written will be 
+loaded into the scroll counters.
+
+
+EOF

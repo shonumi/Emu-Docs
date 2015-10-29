@@ -1,0 +1,4 @@
+What was the timing issue? I fixed 3 major
+ones: sprites are evaluated on PPU clock #256,
+and not at every 4 pixels like the NTSC 2C02
+technical document describes.

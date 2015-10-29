@@ -1,0 +1,275 @@
+          6502 Opcodes and Quasi-Opcodes.
+ 
+          The following table lists all of the available opcodes on the 65xx line of 
+          micro-processors (such as the 6510 on the C=64 and the 8502 on the C=128)
+ 
+        Mnemonic   Hex Value Description                Addressing Mode  Bytes/Time   Std
+        ---------------------------------------------------------------------------------
+        ADC        $71       A <- (A) + M + C           ((Ind),Y)        2/5'1        *
+        ADC        $6D       A <- (A) + M + C           (Absolute)       3/4          *
+        ADC        $7D       A <- (A) + M + C           (Absolute,X)     3/4'1        *
+        ADC        $79       A <- (A) + M + C           (Absolute,Y)     3/4'1        *
+        ADC        $69       A <- (A) + M + C           (Immediate)      2/2          *
+        ADC        $61       A <- (A) + M + C           (Ind,X)          2/6          *
+        ADC        $65       A <- (A) + M + C           (Z-Page)         2/3          *
+        ADC        $75       A <- (A) + M + C           (Z-Page,X)       2/4          *
+        ANC        $0B       A <- A /\ M, C=~A7         (Immediate)      1/2
+        ANC        $2B       A <- A /\ M, C <- ~A7      (Immediate)      1/2
+        AND        $31       A <- (A) /\ M              ((Ind),Y)        2/5'1        *
+        AND        $2D       A <- (A) /\ M              (Absolute)       3/4          *
+        AND        $3D       A <- (A) /\ M              (Absolute,X)     3/4'1        *
+        AND        $39       A <- (A) /\ M              (Absolute,Y)     3/4'1        *
+        AND        $29       A <- (A) /\ M              (Immediate)      2/2          *
+        AND        $21       A <- (A) /\ M              (Ind,X)          2/6          *
+        AND        $25       A <- (A) /\ M              (Z-Page)         2/3          *
+        AND        $35       A <- (A) /\ M              (Z-Page,X)       2/4          *
+        ANE        $8B       M <-[(A)\/$EE] /\ (X)/\(   (Immediate)      2/2^4
+        ARR        $6B       A <- [(A /\ M) >> 1]       (Immediate)      1/2'5
+        ASL        $0E       C <- A7, A <- (A) << 1     (Absolute)       3/6          *
+        ASL        $1E       C <- A7, A <- (A) << 1     (Absolute,X)     3/7          *
+        ASL        $0A       C <- A7, A <- (A) << 1     (Accumalator)    1/2          *
+        ASL        $06       C <- A7, A <- (A) << 1     (Z-Page)         2/5          *
+        ASL        $16       C <- A7, A <- (A) << 1     (Z-Page,X)       2/6          *
+        ASR        $4B       A <- [(A /\ M) >> 1]       (Immediate)      1/2
+        BCC        $90       if C=0, PC = PC + offset   (Relative)       2/2'2        *
+        BCS        $B0       if C=1, PC = PC + offset   (Relative)       2/2'2        *
+        BEQ        $F0       if Z=1, PC = PC + offset   (Relative)       2/2'2        *
+        BIT        $2C       Z <- ~(A /\ M) N<-M7 V<-   (Absolute)       3/4          *
+        BIT        $24       Z <- ~(A /\ M) N<-M7 V<-   (Z-Page)         2/3          *
+        BMI        $30       if N=1, PC = PC + offset   (Relative)       2/2'2        *
+        BNE        $D0       if Z=0, PC = PC + offset   (Relative)       2/2'2        *
+        BPL        $10       if N=0, PC = PC + offset   (Relative)       2/2'2        *
+        BRK        $00       Stack <- PC, PC <- ($fff   (Immediate)      1/7          *
+        BVC        $50       if V=0, PC = PC + offset   (Relative)       2/2'2        *
+        BVS        $70       if V=1, PC = PC + offset   (Relative)       2/2'2        *
+        CLC        $18       C <- 0                     (Implied)        1/2          *
+        CLD        $D8       D <- 0                     (Implied)        1/2          *
+        CLI        $58       I <- 0                     (Implied)        1/2          *
+        CLV        $B8       V <- 0                     (Implied)        1/2          *
+        CMP        $D1       (A - M) -> NZC             ((Ind),Y)        2/5'1        *
+        CMP        $CD       (A - M) -> NZC             (Absolute)       3/4          *
+        CMP        $DD       (A - M) -> NZC             (Absolute,X)     3/4'1        *
+        CMP        $D9       (A - M) -> NZC             (Absolute,Y)     3/4'1        *
+        CMP        $C9       (A - M) -> NZC             (Immediate)      2/2          *
+        CMP        $C1       (A - M) -> NZC             (Ind,X)          2/6          *
+        CMP        $C5       (A - M) -> NZC             (Z-Page)         2/3          *
+        CMP        $D5       (A - M) -> NZC             (Z-Page,X)       2/4          *
+        CPX        $EC       (X - M) -> NZC             (Absolute)       3/4          *
+        CPX        $E0       (X - M) -> NZC             (Immediate)      2/2          *
+        CPX        $E4       (X - M) -> NZC             (Z-Page)         2/3          *
+        CPY        $CC       (Y - M) -> NZC             (Absolute)       3/4          *
+        CPY        $C0       (Y - M) -> NZC             (Immediate)      2/2          *
+        CPY        $C4       (Y - M) -> NZC             (Z-Page)         2/3          *
+        DCP        $D3       M <- (M)-1, (A-M) -> NZC   ((Ind),Y)        2/8
+        DCP        $CF       M <- (M)-1, (A-M) -> NZC   (Absolute)       3/6
+        DCP        $DF       M <- (M)-1, (A-M) -> NZC   (Absolute,X)     3/7
+        DCP        $DB       M <- (M)-1, (A-M) -> NZC   (Absolute,Y)     3/7
+        DCP        $C3       M <- (M)-1, (A-M) -> NZC   (Ind,X)          2/8
+        DCP        $C7       M <- (M)-1, (A-M) -> NZC   (Z-Page)         2/5
+        DCP        $D7       M <- (M)-1, (A-M) -> NZC   (Z-Page,X)       2/6
+        DEC        $CE       M <- (M) - 1               (Absolute)       3/6          *
+        DEC        $DE       M <- (M) - 1               (Absolute,X)     3/7          *
+        DEC        $C6       M <- (M) - 1               (Z-Page)         2/5          *
+        DEC        $D6       M <- (M) - 1               (Z-Page,X)       2/6          *
+        DEX        $CA       X <- (X) - 1               (Implied)        1/2          *
+        DEY        $88       Y <- (Y) - 1               (Implied)        1/2          *
+        EOR        $51       A <- (A) \-/ M             ((Ind),Y)        2/5'1        *
+        EOR        $4D       A <- (A) \-/ M             (Absolute)       3/4          *
+        EOR        $5D       A <- (A) \-/ M             (Absolute,X)     3/4'1        *
+        EOR        $59       A <- (A) \-/ M             (Absolute,Y)     3/4'1        *
+        EOR        $49       A <- (A) \-/ M             (Immediate)      2/2          *
+        EOR        $41       A <- (A) \-/ M             (Ind,X)          2/6          *
+        EOR        $45       A <- (A) \-/ M             (Z-Page)         2/3          *
+        EOR        $55       A <- (A) \-/ M             (Z-Page,X)       2/4          *
+        INC        $EE       M <- (M) + 1               (Absolute)       3/6          *
+        INC        $FE       M <- (M) + 1               (Absolute,X)     3/7          *
+        INC        $E6       M <- (M) + 1               (Z-Page)         2/5          *
+        INC        $F6       M <- (M) + 1               (Z-Page,X)       2/6          *
+        INX        $E8       X <- (X) +1                (Implied)        1/2          *
+        INY        $C8       Y <- (Y) + 1               (Implied)        1/2          *
+        ISB        $F3       M <- (M) - 1,A <- (A)-M-   ((Ind),Y)        2/8
+        ISB        $EF       M <- (M) - 1,A <- (A)-M-   (Absolute)       3/6
+        ISB        $FF       M <- (M) - 1,A <- (A)-M-   (Absolute,X)     3/7
+        ISB        $FB       M <- (M) - 1,A <- (A)-M-   (Absolute,Y)     3/7
+        ISB        $E3       M <- (M) - 1,A <- (A)-M-   (Ind,X)          3/8'1
+        ISB        $E7       M <- (M) - 1,A <- (A)-M-   (Z-Page)         2/5
+        ISB        $F7       M <- (M) - 1,A <- (A)-M-   (Z-Page,X)       2/6
+        JAM        $02       [locks up machine]         (Implied)        1/-
+        JAM        $12       [locks up machine]         (Implied)        1/-
+        JAM        $22       [locks up machine]         (Implied)        1/-
+        JAM        $32       [locks up machine]         (Implied)        1/-
+        JAM        $42       [locks up machine]         (Implied)        1/-
+        JAM        $52       [locks up machine]         (Implied)        1/-
+        JAM        $62       [locks up machine]         (Implied)        1/-
+        JAM        $72       [locks up machine]         (Implied)        1/-
+        JAM        $92       [locks up machine]         (Implied)        1/-
+        JAM        $B2       [locks up machine]         (Implied)        1/-
+        JAM        $D2       [locks up machine]         (Implied)        1/-
+        JAM        $F2       [locks up machine]         (Implied)        1/-
+        JMP        $4C       PC <- Address              (Absolute)       3/3          *
+        JMP        $6C       PC <- Address              (Indirect)       3/5          *
+        JSR        $20       Stack <- PC, PC <- Addre   (Absolute)       3/6          *
+        LAE        $BB       X,S,A <- (S /\ M)          (Absolute,Y)     3/4'1
+        LAX        $B3       A <- M, X <- M             ((Ind),Y)        2/5'1
+        LAX        $AF       A <- M, X <- M             (Absolute)       3/4
+        LAX        $BF       A <- M, X <- M             (Absolute,Y)     3/4'1
+        LAX        $A3       A <- M, X <- M             (Ind,X)          2/6
+        LAX        $A7       A <- M, X <- M             (Z-Page)         2/3
+        LAX        $B7       A <- M, X <- M             (Z-Page,Y)       2/4
+        LDA        $B1       A <- M                     ((Ind),Y)        2/5'1        *
+        LDA        $AD       A <- M                     (Absolute)       3/4          *
+        LDA        $BD       A <- M                     (Absolute,X)     3/4'1        *
+        LDA        $B9       A <- M                     (Absolute,Y)     3/4'1        *
+        LDA        $A9       A <- M                     (Immediate)      2/2          *
+        LDA        $A1       A <- M                     (Ind,X)          2/6          *
+        LDA        $A5       A <- M                     (Z-Page)         2/3          *
+        LDA        $B5       A <- M                     (Z-Page,X)       2/4          *
+        LDX        $AE       X <- M                     (Absolute)       3/4          *
+        LDX        $BE       X <- M                     (Absolute,Y)     3/4'1        *
+        LDX        $A2       X <- M                     (Immediate)      2/2          *
+        LDX        $A6       X <- M                     (Z-Page)         2/3          *
+        LDX        $B6       X <- M                     (Z-Page,Y)       2/4          *
+        LDY        $AC       Y <- M                     (Absolute)       3/4          *
+        LDY        $BC       Y <- M                     (Absolute,X)     3/4'1        *
+        LDY        $A0       Y <- M                     (Immediate)      2/2          *
+        LDY        $A4       Y <- M                     (Z-Page)         2/3          *
+        LDY        $B4       Y <- M                     (Z-Page,X)       2/4          *
+        LSR        $4E       C <- A0, A <- (A) >> 1     (Absolute)       3/6          *
+        LSR        $46       C <- A0, A <- (A) >> 1     (Absolute,X)     3/7          *
+        LSR        $4A       C <- A0, A <- (A) >> 1     (Accumalator)    1/2          *
+        LSR        $56       C <- A0, A <- (A) >> 1     (Z-Page,X)       2/6          *
+        LXA        $AB       X04 <- (X04) /\ M04        (Immediate)      1/2
+        NOP        $0C       [no operation]             (Absolute)       3/4
+        NOP        $1C       [no operation]             (Absolute,X)     2/4'1
+        NOP        $3C       [no operation]             (Absolute,X)     3/4'1
+        NOP        $5C       [no operation]             (Absolute,X)     3/4'1
+        NOP        $7C       [no operation]             (Absolute,X)     3/4'1
+        NOP        $DC       [no operation]             (Absolute,X)     3/4'1
+        NOP        $FC       [no operation]             (Absolute,X)     3/4'1
+        NOP        $80       [no operation]             (Immediate)      2/2
+        NOP        $82       [no operation]             (Immediate)      2/2
+        NOP        $89       [no operation]             (Immediate)      2/2
+        NOP        $C2       [no operation]             (Immediate)      2/2
+        NOP        $E2       [no operation]             (Immediate)      2/2
+        NOP        $EA       [no operation]             (Implied)        1/2          *
+        NOP        $1A       [no operation]             (Implied)        1/2
+        NOP        $3A       [no operation]             (Implied)        1/2
+        NOP        $5A       [no operation]             (Implied)        1/2
+        NOP        $7A       [no operation]             (Implied)        1/2
+        NOP        $DA       [no operation]             (Implied)        1/2
+        NOP        $FA       [no operation]             (Implied)        1/2
+        NOP        $04       [no operation]             (Z-Page)         2/3
+        NOP        $44       [no operation]             (Z-Page)         2/3
+        NOP        $64       [no operation]             (Z-Page)         2/3
+        NOP        $14       [no operation]             (Z-Page,X)       2/4
+        NOP        $34       [no operation]             (Z-Page,X)       2/4
+        NOP        $54       [no operation]             (Z-Page,X)       2/4
+        NOP        $74       [no operation]             (Z-Page,X)       2/4
+        NOP        $D4       [no operation]             (Z-Page,X)       2/4
+        NOP        $F4       [no operation]             (Z-Page,X)       2/4
+        ORA        $11       A <- (A) V M               ((Ind),Y)        2/5'1        *
+        ORA        $0D       A <- (A) V M               (Absolute)       3/4          *
+        ORA        $1D       A <- (A) V M               (Absolute,X)     3/4'1        *
+        ORA        $19       A <- (A) V M               (Absolute,Y)     3/4'1        *
+        ORA        $09       A <- (A) V M               (Immediate)      2/2          *
+        ORA        $01       A <- (A) V M               (Ind,X)          6/2          *
+        ORA        $05       A <- (A) V M               (Z-Page)         2/3          *
+        ORA        $15       A <- (A) V M               (Z-Page,X)       2/4          *
+        PHA        $48       Stack <- (A)               (Implied)        1/3          *
+        PHP        $08       Stack <- (P)               (Implied)        1/3          *
+        PLA        $68       A <- (Stack)               (Implied)        1/4          *
+        PLP        $28       A <- (Stack)               (Implied)        1/4          *
+        RLA        $33       M <- (M << 1) /\ (A)       ((Ind),Y)        2/8'5
+        RLA        $2F       M <- (M << 1) /\ (A)       (Absolute)       3/6'5
+        RLA        $3F       M <- (M << 1) /\ (A)       (Absolute,X)     3/7'5
+        RLA        $3B       M <- (M << 1) /\ (A)       (Absolute,Y)     3/7'5
+        RLA        $23       M <- (M << 1) /\ (A)       (Ind,X)          2/8
+        RLA        $27       M <- (M << 1) /\ (A)       (Z-Page)         2/5'5
+        RLA        $37       M <- (M << 1) /\ (A)       (Z-Page,X)       2/6'5
+        ROL        $2E       C <- A7 & A <- A << 1 +    (Absolute)       3/6          *
+        ROL        $3E       C <- A7 & A <- A << 1 +    (Absolute,X)     3/7          *
+        ROL        $2A       C <- A7 & A <- A << 1 +    (Accumalator)    1/2          *
+        ROL        $26       C <- A7 & A <- A << 1 +    (Z-Page)         2/5          *
+        ROL        $36       C <- A7 & A <- A << 1 +    (Z-Page,X)       2/6          *
+        ROR        $6E       C<-A0 & A<- (A7=C + A>>1   (Absolute)       3/6          *
+        ROR        $7E       C<-A0 & A<- (A7=C + A>>1   (Absolute,X)     3/7          *
+        ROR        $6A       C<-A0 & A<- (A7=C + A>>1   (Accumalator)    1/2          *
+        ROR        $66       C<-A0 & A<- (A7=C + A>>1   (Z-Page)         2/5          *
+        ROR        $76       C<-A0 & A<- (A7=C + A>>1   (Z-Page,X)       2/6          *
+        RRA        $73       M <- (M >> 1) + (A) + C    ((Ind),Y)        2/8'5
+        RRA        $6F       M <- (M >> 1) + (A) + C    (Absolute)       3/6'5
+        RRA        $7F       M <- (M >> 1) + (A) + C    (Absolute,X)     3/7'5
+        RRA        $7B       M <- (M >> 1) + (A) + C    (Absolute,Y)     3/7'5
+        RRA        $63       M <- (M >> 1) + (A) + C    (Ind,X)          2/8'5
+        RRA        $67       M <- (M >> 1) + (A) + C    (Z-Page)         2/5'5
+        RRA        $77       M <- (M >> 1) + (A) + C    (Z-Page,X)       2/6'5
+        RTI        $40       P <- (Stack), PC <-(Stac   (Implied)        1/6          *
+        RTS        $60       PC <- (Stack)              (Implied)        1/6          *
+        SAX        $8F       M <- (A) /\ (X)            (Absolute)       3/4
+        SAX        $83       M <- (A) /\ (X)            (Ind,X)          2/6
+        SAX        $87       M <- (A) /\ (X)            (Z-Page)         2/3
+        SAX        $97       M <- (A) /\ (X)            (Z-Page,Y)       2/4
+        SBC        $F1       A <- (A) - M - ~C          ((Ind),Y)        2/5'1        *
+        SBC        $ED       A <- (A) - M - ~C          (Absolute)       3/4          *
+        SBC        $FD       A <- (A) - M - ~C          (Absolute,X)     3/4'1        *
+        SBC        $F9       A <- (A) - M - ~C          (Absolute,Y)     3/4'1        *
+        SBC        $E9       A <- (A) - M - ~C          (Immediate)      2/2          *
+        SBC        $EB       A <- (A) - M - ~C          (Immediate)      1/2
+        SBC        $E1       A <- (A) - M - ~C          (Ind,X)          2/6          *
+        SBC        $E5       A <- (A) - M - ~C          (Z-Page)         2/3          *
+        SBC        $F5       A <- (A) - M - ~C          (Z-Page,X)       2/4          *
+        SBX        $CB       X <- (X)/\(A) - M          (Immediate)      2/2
+        SEC        $38       C <- 1                     (Implied)        1/2          *
+        SED        $F8       D <- 1                     (Implied)        1/2          *
+        SEI        $78       I <- 1                     (Implied)        1/2          *
+        SHA        $93       M <- (A) /\ (X) /\ (PCH+   (Absolute,X)     3/6'3
+        SHA        $9F       M <- (A) /\ (X) /\ (PCH+   (Absolute,Y)     3/5'3
+        SHS        $9B       X <- (A) /\ (X), S <- (X   (Absolute,Y)     3/5
+        SHX        $9E       M <- (X) /\ (PCH+1)        (Absolute,X)     3/5'3
+        SHY        $9C       M <- (Y) /\ (PCH+1)        (Absolute,Y)     3/5'3
+        SLO        $13       M <- (M >. 1) + A + C      ((Ind),Y)        2/8'5
+        SLO        $0F       M <- (M >> 1) + A + C      (Absolute)       3/6
+        SLO        $1F       M <- (M >> 1) + A + C      (Absolute,X)     3/7
+        SLO        $1B       M <- (M >> 1) + A + C      (Absolute,Y)     3/7
+        SLO        $03       M <- (M >> 1) + A + C      (Ind,X)          2/8
+        SLO        $07       M <- (M >> 1) + A + C      (Z-Page)         2/5
+        SLO        $17       M <- (M >> 1) + A + C      (Z-Page,X)       2/6
+        SRE        $53       M <- (M >> 1) \-/ A        ((Ind),Y)        2/8
+        SRE        $4F       M <- (M >> 1) \-/ A        (Absolute)       3/6
+        SRE        $5F       M <- (M >> 1) \-/ A        (Absolute,X)     3/7
+        SRE        $5B       M <- (M >> 1) \-/ A        (Absolute,Y)     3/7
+        SRE        $43       M <- (M >> 1) \-/ A        (Ind,X)          2/8
+        SRE        $47       M <- (M >> 1) \-/ A        (Z-Page)         2/5
+        SRE        $57       M <- (M >> 1) \-/ A        (Z-Page,X)       2/6
+        STA        $91       M <- (A)                   ((Ind),Y)        2/6          *
+        STA        $8D       M <- (A)                   (Absolute)       3/4          *
+        STA        $9D       M <- (A)                   (Absolute,X)     3/5          *
+        STA        $99       M <- (A)                   (Absolute,Y)     3/5          *
+        STA        $81       M <- (A)                   (Ind,X)          2/6          *
+        STA        $85       M <- (A)                   (Z-Page)         2/3          *
+        STA        $95       M <- (A)                   (Z-Page,X)       2/4          *
+        STX        $8E       M <- (X)                   (Absolute)       3/4          *
+        STX        $86       M <- (X)                   (Z-Page)         2/3          *
+        STX        $96       M <- (X)                   (Z-Page,Y)       2/4          *
+        STY        $8C       M <- (Y)                   (Absolute)       3/4          *
+        STY        $84       M <- (Y)                   (Z-Page)         2/3          *
+        STY        $94       M <- (Y)                   (Z-Page,X)       2/4          *
+        TAX        $AA       X <- (A)                   (Implied)        1/2          *
+        TAY        $A8       Y <- (A)                   (Implied)        1/2          *
+        TSX        $BA       X <- (S)                   (Implied)        1/2          *
+        TXA        $8A       A <- (X)                   (Implied)        1/2          *
+        TXS        $9A       S <- (X)                   (Implied)        1/2          *
+        TYA        $98       A <- (Y)                   (Implied)        1/2          *
+
+        '1 - Add one if address crosses a page boundry.
+        '2 - Add 1 if branch succeeds, or 2 if into another page.
+        '3 - If page boundry crossed then PCH+1 is just PCH
+        '4 - Sources disputed on exact operation, or sometimes does not work.
+        '5 - Full eight bit rotation (with carry)
+ 
+        Sources:
+          Programming the 6502, Rodney Zaks, (c) 1983 Sybex
+          Paul Ojala, Post to Comp.Sys.Cbm (po87553@cs.tut.fi / albert@cc.tut.fi)
+          D John Mckenna, Post to Comp.Sys.Cbm (gudjm@uniwa.uwa.oz.au)
+ 
+          Compiled by Craig Taylor (duck@pembvax1.pembroke.edu)

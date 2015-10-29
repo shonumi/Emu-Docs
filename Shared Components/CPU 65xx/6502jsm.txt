@@ -1,0 +1,842 @@
+6502 Instruction Summary 
+
+Originally by RTK, on 23-Jul-97
+Redone by CricketNE, last update: 01-March-2000
+Please read the README.TXT that comes with this archive
+as there is some important info in it.
+
+
+   Summary format:
+   --------------
+
+   Mnemonic  -  Instruction name
+
+   Operation -  Processor status flags affected
+
+
+Just as a quick mental note:
+# means immediate addressing
+$ means a hexadecimal value
+() means some form of indirect addressing
+
+Lets begin shall we?
+======================================================================
+
+   ADC  -  Add to Accumulator with Carry
+
+						Flags Affected:
+						---------------
+      A+M+C -> A,C                              N, Z, C, V
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      ADC        #aa                   69
+      ADC        aa                    65
+      ADC        aa,X                  75
+      ADC        aaaa                  6D
+      ADC        aaaa,X                7D
+
+======================================================================
+
+
+   AND  -  AND Memory with Accumulator
+						
+						Flags Affected:
+						---------------
+      A and M -> A                              N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      AND        #aa                   29
+      AND        aa                    25
+      AND        aa,X                  35
+      AND        aaaa                  2D
+      AND        aaaa,X                3D
+      AND        aaaa,Y                39
+      AND        (aa,X)                21
+      AND        (aa),Y                31
+
+======================================================================
+
+   ASL  -  Arithmatic Shift Left
+   
+						Flags Affected:
+						---------------
+	   +-+-+-+-+-+-+-+-+                    N, C, Z
+      C <- |7|6|5|4|3|2|1|0| <- 0   
+	   +-+-+-+-+-+-+-+-+
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      ASL        A                     0A
+      ASL        aa                    06
+      ASL        aa,X                  16
+      ASL        aaaa                  0E
+      ASL        aaaa,X                1E
+
+======================================================================
+
+   BCC  -  Branch on Carry Clear
+   
+						Flags Affected:
+						---------------
+      Branch On C=0                             No Flags
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BCC        aa                    90
+
+======================================================================
+
+   BCS  -  Branch on Carry Set
+   
+						Flags Affected:
+						---------------
+      Branch On C=1                             No Flags
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BCS        aa                    B0
+
+======================================================================
+
+   BEQ  -  Branch Zero Set
+   
+						Flags Affected:
+						---------------
+      Branch On Z=1                             No Flags
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BEQ        aa                    F0
+
+======================================================================
+
+   BIT  -  Test Bits in Memory with Accumulator
+   
+
+      A and M, M7 -> N, M6 -> V          N=M7, V=M6, Z=1 if A and M = 0
+      neither A nor M are altered
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BIT        aa                    24
+      BIT        aaaa                  2C
+
+======================================================================
+
+   BMI  -  Branch on Result Minus
+   
+						Flags Affected:
+						---------------
+      Branch On N=1                             No Flags
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BMI        aa                    30
+
+======================================================================
+
+   BNE  -  Branch on Z reset
+   
+						Flags Affected:
+						---------------
+      Branch On Z=0                             No Flags
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BNE        aa                    D0
+
+======================================================================
+
+   BPL  -  Branch on Result Plus (or Positive)
+   
+						Flags Affected:
+						---------------
+      Branch On N=0                             No Flags
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BPL        aa                    10
+
+======================================================================
+
+   BRK  -  Force a Break
+   
+						Flags Affected:
+						---------------
+      forced interrupt                          B=1, I=1
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BRK                              00
+
+======================================================================
+
+   BVC  -  Branch on Overflow Clear
+   
+						Flags Affected:
+						---------------
+      Branch On V=0                             No Flags
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BVC        aa                    50
+
+======================================================================
+
+   BVS  -  Branch on Overflow Set
+   
+						Flags Affected:
+						---------------
+      Branch On V=1                             No Flags
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      BVS        aa                    70
+
+======================================================================
+
+   CLC  -  Clear Carry Flag
+   
+						Flags Affected:
+						---------------
+      0 -> C                                    C=0
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      CLC                              18
+
+======================================================================
+
+   CLD  -  Clear Decimal Mode
+   
+						Flags Affected:
+						---------------
+      0 -> D                                    D=0
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      CLD                              D8
+
+======================================================================
+ 
+  CLI  -  Clear Interrupt Disable
+   
+						Flags Affected:
+						---------------
+      0 -> I                                    I=0
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      CLI                              58
+
+======================================================================
+
+   CLV  -  Clear Overflow Flag
+   
+						Flags Affected:
+						---------------
+      0 -> V                                    V=0
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      CLV                              B8
+
+======================================================================
+
+N.B. CMP, CPX, and CPY all set flags according to:
+
+    A, X, or Y < Memory  --->  N=1, Z=0, C=0
+    A, X, or Y = Memory  --->  N=0, Z=1, C=1
+    A, X, or Y > Memory  --->  N=0, Z=0, C=1
+
+   CMP  -  Compare Memory and Accumulator
+   
+						Flags Affected:
+						---------------
+      A compared with M                         N, Z, C
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      CMP        #aa                   C9
+      CMP        aa                    C5
+      CMP        aa,X                  D5
+      CMP        aaaa                  CD
+      CMP        aaaa,X                DD
+      CMP        aaaa,Y                D9
+      CMP        (aa,X)                C1
+      CMP        (aa),Y                D1
+
+
+   CPX  -  Compare Memory and X register
+
+						Flags Affected:
+						---------------
+      X compared with M                         N, Z, C
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      CPX        #aa                   E0
+      CPX        aa                    E4
+      CPX        aaaa                  EC
+
+
+   CPY  -  Compare Memory and Y register
+   
+						Flags Affected:
+						---------------
+      Y compare with M                          N, Z, C
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      CPY        #aa                   C0
+      CPY        aa                    C4
+      CPY        aaaa                  CC
+
+======================================================================
+
+   DEC  -  Decrement Memory by One
+   
+						Flags Affected:
+						---------------
+      M - 1 -> M                                N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      DEC        aa                    C6
+      DEC        aa,X                  D6
+      DEC        aaaa                  CE
+      DEC        aaaa,X                DE
+
+======================================================================
+
+   DEX  -  Decrement X
+   
+						Flags Affected:
+						---------------
+      X - 1 -> X                                N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      DEX                              CA
+
+======================================================================
+
+   DEY  -  Decrement Y
+   
+						Flags Affected:
+						---------------
+      Y - 1 -> Y                                N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      DEY                              88
+
+
+======================================================================
+
+   EOR  -  Exclusive-OR Memory with Accumulator
+   
+						Flags Affected:
+						---------------
+      A xor M -> A                              N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      EOR        #aa                   49
+      EOR        $aa                   45
+      EOR        $aa,X                 55
+      EOR        $aaaa                 4D
+      EOR        $aaaa,X               5D
+      EOR        $aaaa,Y               59
+      EOR        ($aa,X)               41
+      EOR        ($aa),Y               51
+
+======================================================================
+
+   INC  -  Increment Memory by one
+   
+						Flags Affected:
+						---------------
+      M + 1 -> M                                N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      INC        $aa                    E6
+      INC        $aa,X                  F6
+      INC        $aaaa                  EE
+      INC        $aaaa,X                FE
+
+======================================================================
+
+   INX  -  Increment X by one
+   
+						Flags Affected:
+						---------------
+      X + 1 -> X                                N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      INX                              E8
+
+======================================================================
+
+   INY  -  Increment Y by one
+   
+						Flags Affected:
+						---------------
+      Y + 1 -> Y                                N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      INY                              C8
+
+======================================================================
+
+   JMP  -  Jump
+   
+						Flags Affected:
+						---------------
+						No Flags
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      JMP        $aaaa                 4C
+      JMP        ($aaaa)               6C
+
+======================================================================
+
+   JSR  -  Jump to subroutine
+   
+						Flags Affected:
+						---------------
+						No Flags
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      JSR        $aaaa                 20
+
+======================================================================
+
+   LDA  -  Load Accumulator with memory
+   
+						Flags Affected:
+						---------------
+      M -> A                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      LDA        #aa                   A9
+      LDA        $aa                   A5
+      LDA        $aa,X                 B5
+      LDA        $aaaa                 AD
+      LDA        $aaaa,X               BD
+      LDA        $aaaa,Y               B9
+      LDA        ($aa,X)               A1
+      LDA        ($aa),Y               B1
+
+======================================================================
+
+   LDX  -  Load X with Memory
+   
+						Flags Affected:
+						---------------
+      M -> X                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      LDX        #aa                   A2
+      LDX        $aa                   A6
+      LDX        $aa,Y                 B6
+      LDX        $aaaa                 AE
+      LDX        $aaaa,Y               BE
+
+======================================================================
+
+   LDY  -  Load Y with Memory
+   
+						Flags Affected:
+						---------------
+      M -> Y                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      LDY        #aa                   A0
+      LDY        $aa                   A4
+      LDY        $aa,X                 B4
+      LDY        $aaaa                 AC
+      LDY        $aaaa,X               BC
+
+======================================================================
+
+   LSR  -  Logical Shift Right
+   
+						Flags Affected:
+						---------------
+	   +-+-+-+-+-+-+-+-+                    N, C, Z
+      0 -> |7|6|5|4|3|2|1|0| -> C   
+	   +-+-+-+-+-+-+-+-+
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      LSR        A                     4A
+      LSR        $aa                   46
+      LSR        $aa,X                 56
+      LSR        $aaaa                 4E
+      LSR        $aaaa,X               5E
+
+======================================================================
+
+   NOP  -  No Operation
+
+						Flags Affected:
+						---------------
+						No Flags
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      NOP                              EA
+
+======================================================================
+
+   ORA  -  OR Memory with Accumulator
+   
+						Flags Affected:
+						---------------
+      A or M -> A                               N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      ORA        #aa                   09
+      ORA        $aa                   05
+      ORA        $aa,X                 15
+      ORA        $aaaa                 0D
+      ORA        $aaaa,X               1D
+      ORA        $aaaa,Y               19
+      ORA        ($aa,X)               01
+      ORA        ($aa),Y               11
+
+======================================================================
+
+   PHA  -  Push Accumulator on Stack
+   
+						Flags Affected:
+						---------------
+      A -> Stack                                No Flags 
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      PHA                              48
+
+======================================================================
+
+   PHP  -  Push Processor Status on Stack
+   
+						Flags Affected:
+						---------------
+      P -> Stack
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      PHP                              08
+
+======================================================================
+
+   PLA  -  Pull Accumulator from Stack
+   
+						Flags Affected:
+						---------------
+      Stack -> A                                N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      PLA                              68
+
+======================================================================
+
+   PLP  -  Pull Processor Status from Stack
+   
+						Flags Affected:
+						---------------
+      Stack -> P *** WTF? from stack ***
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      PLP                              28
+
+======================================================================
+
+   ROL  -  Rotate Left
+   
+						Flags Affected:
+						---------------
+	   +-+-+-+-+-+-+-+-+                    N, Z, C
+      C <- |7|6|5|4|3|2|1|0| <- C    
+	   +-+-+-+-+-+-+-+-+
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      ROL        A                     2A
+      ROL        $aa                   26
+      ROL        $aa,X                 36
+      ROL        $aaaa                 2E
+      ROL        $aaaa,X               3E
+
+======================================================================
+
+   ROR  -  Rotate Right
+   
+						Flags Affected:
+						---------------
+	   +-+-+-+-+-+-+-+-+                    N, Z, C
+      C -> |7|6|5|4|3|2|1|0| -> C
+	   +-+-+-+-+-+-+-+-+
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      ROR        A                     6A
+      ROR        $aa                   66
+      ROR        $aa,X                 76
+      ROR        $aaaa                 6E
+      ROR        $aaaa,X               7E
+
+======================================================================
+
+   RTI  -  Return from Interrupt
+   
+						Flags Affected:
+						---------------
+						No Flags 
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      RTI                              40
+
+======================================================================
+
+   RTS  -  Return from Subroutine
+   
+						Flags Affected:
+						---------------
+						No Flags
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      RTS                              60
+
+======================================================================
+
+   SBC  -  Subtract from Accumulator with Carry
+   
+						Flags Affected:
+						---------------
+						N, Z, C, V
+      A - M - ~C -> A  (~C is NOT C)
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      SBC        #aa                   E9
+      SBC        $aa                   E5
+      SBC        $aa,X                 F5
+      SBC        $aaaa                 ED
+      SBC        $aaaa,X               FD
+      SBC        $aaaa,Y               F9
+      SBC        ($aa,X)               E1
+      SBC        ($aa),Y               F1
+
+======================================================================
+
+   SEC  -  Set Carry Flag
+   
+						Flags Affected:
+						---------------
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      SEC                              38
+
+======================================================================
+
+   SED  -  Set Decimal Mode
+   
+						Flags Affected:
+						---------------
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      SED                              F8
+
+======================================================================
+
+   SEI  -  Set Interrupt Disable
+   
+						Flags Affected:
+						---------------
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      SEI                              78
+
+======================================================================
+
+   STA  -  Store Accumulator in Memory
+   
+						Flags Affected:
+						---------------
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      STA        $aa                   85
+      STA        $aa,X                 95
+      STA        $aaaa                 8D
+      STA        $aaaa,X               9D
+      STA        $aaaa,Y               99
+      STA        ($aa,X)               81
+      STA        ($aa),Y               91
+
+======================================================================
+
+   STX  -  Store X in Memory
+   
+						Flags Affected:
+						---------------
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      STX        $aa                   86
+      STX        $aa,Y                 96
+      STX        $aaaa                 8E
+
+======================================================================
+
+   STY  -  Store Y in Memory
+   
+						Flags Affected:
+						---------------
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      STY        $aa                   84
+      STY        $aa,X                 94
+      STY        $aaaa                 8C
+
+======================================================================
+
+   TAX  -  Transfer Accumulator to X
+   
+						Flags Affected:
+						---------------
+      A -> X                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      TAX                              AA
+
+======================================================================
+
+   TAY  -  Transfer Accumulator to Y
+   
+						Flags Affected:
+						---------------
+      A -> Y                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      TAY                              A8
+
+======================================================================
+
+   TSX  -  Transfer Stack to X
+   
+						Flags Affected:
+						---------------
+      S -> X                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      TSX                              BA
+
+======================================================================
+
+   TXA  -  Transfer X to Accumulator
+   
+						Flags Affected:
+						---------------
+      X -> A                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      TXA                              8A
+
+======================================================================
+
+   TXS  -  Transfer X to Stack
+   
+						Flags Affected:
+						---------------
+      X -> S                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      TXS                              9A
+
+======================================================================
+
+   TYA  -  Transfer Y to Accumulator
+   
+						Flags Affected:
+						---------------
+      Y -> A                                    N, Z
+
+      Mnemonic   Addressing Mode       Opcode
+      ---------------------------------------
+
+      TYA                              98
+
+  END OF FILE
+

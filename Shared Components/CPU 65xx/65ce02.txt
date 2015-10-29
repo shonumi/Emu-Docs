@@ -1,0 +1,1085 @@
+
+          Commodore Semiconductor Group CSG65CE02 Technical Reference
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is version 0.9 of this document, dated 08 Jan 99.
+The author is Michael Steil <mist@c64.org>, <michael.steil@writeme.com>.
+I give no warranty that the information supplied herein is correct. I 
+appreciate corrections and additional information on the topic described.
+This document may be republished if it is free of charge and not altered
+in any way. Otherwise my written permission is required. If you find the
+information supplied in this document useful for your own software, please
+refer to this document in the credits of your software.
+The latest version of this document can be downloaded via anonymous ftp
+from ftp://ftp.funet.fi/pub/cbm/c65
+
+
+Abstract
+~~~~~~~~
+This document describes the differences between the WDC 65C02 (Rockwell)
+and the CSG65CE02 CPU used in the 4510 micro controller of the
+Commodore C64DX/C65.
+
+Table of Contents
+~~~~~~~~~~~~~~~~~
+1. Introduction
+2. General differences between the 65C02 and the 65CE02
+2.1 Enhancements of the 65SC02
+2.1.1 Bit Operations
+2.1.2 Zero Page Test Relative
+2.1.3 Relative Subroutine Addressing
+2.1.4 Enhanced BIT instruction
+2.2 Enhancements of the 65SC02
+2.2.1 The Z Register
+2.2.2 Direct Page
+2.2.3 16 Bit Read-Modify-Write
+2.2.4 Relative Jump Instructions
+2.2.5 Stack Pointer Relative Addressing Mode
+2.2.6 Diverse new addressing modes and add. mode / instruction combinations
+3. Alphabetical Mnemonic Index
+4. Assumptions/Errors (IMPORTANT!)
+5. References
+
+
+1. Introduction
+   ~~~~~~~~~~~~
+   The CSG65CE02 is a CPU core developed by Commodore Semiconductor Group
+   (formerly known as Commodore MOS) that has been used in the CSG4510
+   micro controller (that combined a CPU and several I/O components) in
+   the Commodore C64DX/C65. Although the Commodore C64DX/C65 has never been
+   released, several hundred test/demo machines appeared on the market in 1994.
+   This document will most probably be of no practical use to programmers,
+   but it may help to understand the new ideas of the designers of the 65CE02,
+   the way of evolution of the 6502 created 15 years earlier by the same
+   company.
+   It may be useful to emulation programmers, if someone should want to write
+   a C65 emulator one day.
+
+   The following chart shows a part of the 65xx CPU evolution timeline:
+
+           NEC      MOS   WDC
+     
+   1975             6502
+                      \
+                       \
+                        \
+   1981[7]              65C02
+                        /  |
+                       /   |
+   ????        ?GTE65SC02? |
+   1984[7]         / |   65816
+                  /  |    /?
+   1986     HuC6280  |   /?
+   1990            65CE02
+
+   Annotations:
+    65C02:   referred to as "Rockwell" in [1] (Rockwell was a popular
+             licensee of the 65C02)
+    65CE02:  the C64 preliminary documentation has been written in January 1991
+
+   In 1975, MOS Semiconductors introduced the 6502. It has been redesigned and
+   enhanced by Western Design Center (WDC) in 1981. It is unknown who designed
+   the 65SC02, an enhanced 65C02 that has been licensed by GTE. WDC developed
+   the 16-bit successor of the 65C02, which did not implement the additional
+   instructions of the 65SC02. But the 65SC02 is the base of both the HuC6280
+   by NEC used in their video game console TG-16 (PC-Engine) and the 65CE02
+   by Commodore MOS (CSG). Some instructions show that the designers of the
+   65CE02 have also been influenced by the 65816. The preliminary
+   "C64DX SYSTEM SPECIFICATION" [1] says that the 65CE02 contained "new
+   instructions, including Rockwell [65C02] and GTE [65SC02] extensions".
+
+   This document only shows up the differences between the 65C02 and the
+   65CE02, and assumes that you are familiar with the 65C02.
+   Information about the 65C02 is easy to find. [2] is a good book on 65C02
+   programming.
+
+   All information contained in this document is heavily based on the
+   information gained from the "Unofficial PC-Engine reference" by Jens Chr.
+   Restemeier [4], "Programming the 65816" by David Eyes [2], the opcode
+   list as shown of the C64DX/C65 built-in monitor [3], and guesswork.
+   There have been few reliable sources, therefore it is quite likely
+   that some of the informationed contained herein may be false. See Chapter 4
+   for more details.
+
+2. General differences between the 65C02 and the 65CE02
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2.1 Enhancements of the 65SC02
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+2.1.1 Bit Operations
+      ~~~~~~~~~~~~~~
+      Both the 6502's and the 65C02's bit operation capabilities were poor.
+      This can be proven by the fact that hardly any bit-oriented compression
+      or decompression programs like Huffman compression exist on 6502/65C02
+      based computers.
+      The 65SC02 therefore introduced these bit-oriented commands:
+
+        BBRi $nn,$nn  iF   Branch on Bit Reset
+        BBSi $nn,$nn 80+iF Branch on Bit Set
+        RMBi $nn      i7   Reset Memory Bit i
+        SMBi $nn     80+i7 Set memory Bit i
+        TRB  $nn      14   Test and Reset Memory Bits Against Accumulator
+             $nnnn    1C
+        TSB  $nn      04   Test and Set Memory Bits Against Accumulator
+             $nnnn    0C
+
+      On a 6502/65C02, these instructions would have to be rewritten with 
+      several instructions each that would have been a lot slower, all in all.
+
+2.1.2 Zero Page Test Relative
+      ~~~~~~~~~~~~~~~~~~~~~~~
+      The BBRi and BBSi instructions introduced another addressing mode
+      called Zero Page Test Relative. It needs two one-byte operands, one for
+      the zero page address that is used for the bit test, and one indicating
+      the signed relative PC offset if the branch is taken.
+      This makes BBRi and BBSi the single instructions with two explicit
+      operands.
+
+2.1.3 Relative Subroutine Addressing
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      With the 65SC02, the BSR (Branch to Subroutine) command was introduced.
+      It allows to write more relocatible code by specifying relative
+      subroutine addresses.
+      This way, the 65SC02 also introduced the 16 Bit Relative addressing mode.
+
+2.1.4 Enhanced BIT instruction
+      ~~~~~~~~~~~~~~~~~~~~~~~~
+      The BIT instruction also allows the Immediate, Zero Page X Indexed and
+      Absolute Indexed on the 65SC02.
+
+2.2 Enhancements of the 65SC02
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+2.2.1 The Z Register
+      ~~~~~~~~~~~~~~
+      The 65CE02 has a third index register: the Z register. The zero page
+      indirect addressing mode has been completely replaced by the zero
+      page indirect, Z indexed addressing mode. As long as the Z register
+      is not used and therefore 0, these commands are fully
+      backwards-compatible.
+
+2.2.2 Direct Page
+      ~~~~~~~~~~~
+      Just like on the 65816, the zero page can be relocated to any page (block)
+      within the 64 KB of memory that are currently "in sight" of the CPU.
+      The B (block) register can be loaded with the contents of the accumulator,
+      and its contents can be written back into the accumulator, too.
+
+2.2.3 16 Bit Read-Modify-Write
+      ~~~~~~~~~~~~~~~~~~~~~~~~
+      Although all registers are still just 8 bits wide, the 65CE02 provides
+      some 16 bit instructions, mainly in Red-Modify-Write instructions:
+                     
+        ASW $nnnn   CB  Arithmetic Shift Left Word
+        DEW $nnnn   C3  Decrement Word
+        INW $nnnn   E3  Increment Word (ERROR IN 64NET.OPC?)
+        PHW #$nnnn  F4  Push Word
+            $nnnn   FC
+        ROW $nnnn   EB  Rotate Right Word
+
+      Note that some of these instructions support the 16-bit rotate/shift
+      instructions of the 65SC02 mentioned above.
+
+2.2.4 Relative Jump Instructions
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Due to of the existence of a relative version of JMP (16 bit BRA)
+      supporting the 65SC02 relative JSR (BSR), it is now possible to
+      write fully relocatible code.
+
+2.2.5 Stack Pointer Relative Addressing Mode
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      The 65CE02 provides a new addressing mode called Stack Pointer Relative
+      Indirect Y Indexed, which looks like this: LDA/STA ($nn,SP),Y
+      The sum of the 8 bit operand and the stack pointer form the indirect
+      address. The effective address is the sum of the Y register and the
+      16 bit value located at the indirect address.
+      Note that this addressing mode is also available on the 65816, but
+      using different opcodes.
+
+2.2.6 Diverse new addressing modes and add. mode / instruction combinations
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      16 bit branches, immediate and indexed bit tests (BIT), indexed indirect
+      jumps as well as indirect and indexed indirect JSR's are possible on
+      the 65CE02.
+
+3. Alphabetical Mnemonic Index
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   All 256 opcodes are valid on the 65CE02.
+
+ADC
+ Add with Carry
+  Operation as of 65C02. Note that Zero Page Indirect has been replaced by
+  Zero Page Indirect Z Indexed.
+
+   ADC #$nn            69   6502
+   ADC $nn             65   6502
+   ADC $nn,X           75   6502
+   ADC $nnnn           6D   6502
+   ADC $nnnn,X         7D   6502
+   ADC $nnnn,Y         79   6502
+   ADC ($nn),Y         71   6502
+   ADC ($nn),Z         72   65C02/65CE02
+   ADC ($nn,X)         61   6502
+
+AND
+ And
+  Operation as of 65C02. Note that Zero Page Indirect has been replaced by
+  Zero Page Indirect Z Indexed.
+
+   AND #$nn            29   6502
+   AND $nn             25   6502
+   AND $nn,X           35   6502
+   AND $nnnn           2D   6502
+   AND $nnnn,X         3D   6502
+   AND $nnnn,Y         39   6502
+   AND ($nn),Y         31   6502
+   AND ($nn),Z         32   65C02/65CE02
+   AND ($nn,X)         21   6502
+
+ASL
+ Arithmetic Shift Left
+  Operation as of 6502.
+
+   ASL A               0A   6502
+   ASL $nn             06   6502
+   ASL $nn,X           16   6502
+   ASL $nnnn           0E   6502
+   ASL $nnnn,X         1E   6502
+
+ASR
+ Arithmetic Shift Right
+  Shifts the contents of the location specified by the operand right one bit.
+  Bit 0 is transferred into the carry flag and bit 7 will keep its original
+  value, thus negative values staying negative.
+  The arithmetic result of the operation is a signed division by two.
+
+            7 6 5 4 3 2 1 0  C
+   before   1 0 1 1 0 0 1 1  ?
+   after    1 1 0 1 1 0 0 1  1
+
+   Flags Affected: n - - - - - z c
+
+                   n Set if most significant bit of result is set; else
+                     cleared.
+                   z Set if result is zero; else cleared.
+                   c Bit zero becomes carry.
+
+   ASR A               43   65CE02
+   ASR $nn             44   65CE02
+   ASR $nn,X           54   65CE02
+
+ASW
+ Arithmetic Shift Left Word
+
+   ASW $nnnn           CB   65CE02
+
+BBRi
+ Branch on Bit Reset [4]
+  Bit i in the zero page address indicated by the first operand is tested.
+  If it is clear, a branch is taken; if it is set, the instruction
+  immediately following the three-byte BBRi instruction is executed.
+  If the branch is taken, a one-byte signed displacement, fetched from the
+  third byte of the instruction, is sign-extended to sixteen bits and added
+  to the program counter. Once the branch address has been calculated, the
+  result is loaded into the program counter, transferring control to that
+  location.
+  The allowable range of the displacement is -128 to +127 (from the
+  instruction immediately following the branch).
+
+   Flags Affected: - - - - - - - -
+
+   BBR0 $zp,$nn        0F   65SC02
+   BBR1 $zp,$nn        1F   65SC02
+   BBR2 $zp,$nn        2F   65SC02
+   BBR3 $zp,$nn        3F   65SC02
+   BBR4 $zp,$nn        4F   65SC02
+   BBR5 $zp,$nn        5F   65SC02
+   BBR6 $zp,$nn        6F   65SC02
+   BBR7 $zp,$nn        7F   65SC02
+
+BBSi
+ Branch on Bit Set [4]
+  Bit i in the zero page address indicated by the first operand is tested.
+  If it is set, a branch is taken; if it is clear, the instruction
+  immediately following the three-byte BBSi instruction is executed.
+  If the branch is taken, a one-byte signed displacement, fetched from the
+  third byte of the instruction, is sign-extended to sixteen bits and added
+  to the program counter. Once the branch address has been calculated, the
+  result is loaded into the program counter, transferring control to that
+  location.
+  The allowable range of the displacement is -128 to +127 (from the
+  instruction immediately following the branch).
+
+   Flags Affected: - - - - - - - -
+
+   BBS0 $nn,$nn        8F   65SC02
+   BBS1 $nn,$nn        9F   65SC02
+   BBS2 $nn,$nn        AF   65SC02
+   BBS3 $nn,$nn        BF   65SC02
+   BBS4 $nn,$nn        CF   65SC02
+   BBS5 $nn,$nn        DF   65SC02
+   BBS6 $nn,$nn        EF   65SC02
+   BBS7 $nn,$nn        FF   65SC02
+   
+BCC
+ Branch on Carry Clear
+  Operation as of 6502.
+  Note that BCC also exists in a 16-Bit Relative addressing mode.
+  If the branch is taken, a two-byte displacement, fetched
+  from the bytes two to three of the instruction, is added to the program
+  counter. Once the branch address has been calculated, the result is loaded
+  into the program counter, transferring control to that location.
+  The allowable range of the displacement is 0 to 65535, thus allowing
+  branches of up to 64 KB in any direction.
+
+   BCC $nn             90   6502
+   BCC $nnnn           93   65CE02
+
+BCS
+ Branch on Carry Set
+  Operation as of 6502.
+  Note that BCS also exists in a 16-Bit Relative addressing mode.
+  See BCC for further details.
+
+   BCS $nn             B0   6502
+   BCS $nnnn           B3   65CE02
+
+BEQ
+ Branch on Equal
+  Operation as of 6502.
+  Note that BEQ also exists in a 16-Bit Relative addressing mode.
+  See BCC for further details.
+
+   BEQ $nn             F0   6502
+   BEQ $nnnn           F3   65CE02
+
+BIT
+
+   BIT #$nn            89   65SC02
+   BIT $nn             24   6502
+   BIT $nn,X           34   65SC02
+   BIT $nnnn           2C   6502
+   BIT $nnnn,X         3C   65SC02
+
+BMI
+ Branch on Minus
+  Operation as of 6502.
+  Note that BMI also exists in a 16-Bit Relative addressing mode.
+  See BCC for further details.
+
+   BMI $nn             30   6502
+   BMI $nnnn           33   65CE02
+
+BNE
+ Branch on Not Equal
+  Operation as of 6502.
+  Note that BNE also exists in a 16-Bit Relative addressing mode.
+  See BCC for further details.
+
+   BNE $nn             D0   6502
+   BNE $nnnn           D3   65CE02
+
+BPL
+ Branch on Plus
+  Operation as of 6502.
+  Note that BPL also exists in a 16-Bit Relative addressing mode.
+  See BCC for further details.
+
+   BPL $nn             10   6502
+   BPL $nnnn           13   65CE02
+
+BRA
+ Branch Always
+  Operation as of 6502.
+  Note that BRA also exists in a 16-Bit Relative addressing mode.
+  See BCC for further details.
+  BRA with a 16 bit operand allows an unlimited relative jump. This way
+  it is possible to write fully relocatible code. See also BSR.
+
+   BRA $nn             80   65C02
+   BRA $nnnn           83   65CE02
+
+BRK
+ Break
+  Operation as of 6502.
+
+   BRK                 00   6502
+
+BSR
+ Branch to Subroutine
+
+   BSR $nnnn           63   65SC02
+
+BVC
+ Branch on
+  Operation as of 6502.
+  Note that BVC also exists in a 16-Bit Relative addressing mode.
+  See BCC for further details.
+
+   BVC $nn             50   6502
+   BVC $nnnn           53   65CE02
+
+BVS
+ Branch on
+  Operation as of 6502.
+  Note that BVS also exists in a 16-Bit Relative addressing mode.
+  See BCC for further details.
+
+   BVS $nn             70   6502
+   BVS $nnnn           73   65CE02
+
+CLC
+ Clear Carry Flag
+  Operation as of 6502.
+
+   CLC                 18   6502
+
+CLD
+ Clear Decimal Flag
+  Operation as of 6502.
+
+   CLD                 D8   6502
+
+CLE
+ Clear ??? Flag             
+
+   CLE                 02   65CE02
+
+CLI
+ Clear Interrupt Disable Flag
+  Operation as of 6502.
+
+   CLI                 58   6502
+
+CLV
+ Clear Overflow Flag
+  Operation as of 6502.
+
+   CLV                 B8   6502
+
+CMP
+ Compare
+  Operation as of 65C02. Note that Zero Page Indirect has been replaced by
+  Zero Page Indirect Z Indexed.
+
+   CMP #$nn            C9   6502
+   CMP $nn             C5   6502
+   CMP $nn,X           D5   6502
+   CMP $nnnn           CD   6502
+   CMP $nnnn,X         DD   6502
+   CMP $nnnn,Y         D9   6502
+   CMP ($nn),Y         D1   6502
+   CMP ($nn),Z         D2   65C02/65CE02
+   CMP ($nn,X)         C1   6502
+
+CPX
+ Compare X Register
+  Operation as of 6502.
+
+   CPX #$nn            E0   6502
+   CPX $nn             E4   6502
+   CPX $nnnn           EC   6502
+
+CPY
+ Compare Y Register
+  Operation as of 6502.
+
+   CPY #$nn            C0   6502
+   CPY $nn             C4   6502
+   CPY $nnnn           CC   6502
+
+CPZ
+ Compare Z Register
+
+   CPZ #$nn            C2   65CE02
+   CPZ $nn             D4   65CE02
+   CPZ $nnnn           DC   65CE02
+
+DEC
+ Decrement
+
+   DEC                 3A   65C02
+   DEC $nn             C6   6502
+   DEC $nn,X           D6   6502
+   DEC $nnnn           CE   6502
+   DEC $nnnn,X         DE   6502
+
+DEW
+ Decrement Word
+
+   DEW $nn             C3   65CE02
+
+DEX
+ Decrement X Register
+
+   DEX                 CA   6502
+
+DEY
+ Decrement Y Register
+
+   DEY                 88   6502
+
+DEZ
+ Decrement Z Register
+
+   DEZ                 3B   65CE02
+
+EOR
+ Exclusive Or
+  Operation as of 65C02. Note that Zero Page Indirect has been replaced by
+  Zero Page Indirect Z Indexed.
+
+   EOR #$nn            49   6502
+   EOR $nn             45   6502
+   EOR $nn,X           55   6502
+   EOR $nnnn           4D   6502
+   EOR $nnnn,X         5D   6502
+   EOR $nnnn,Y         59   6502
+   EOR ($nn),Y         51   6502
+   EOR ($nn),Z         52   65C02/65CE02
+   EOR ($nn,X)         41   6502
+
+INC
+ Increment
+  Operation as of 6502.
+
+   INC                 1A   65C02
+   INC $nn             E6   6502
+   INC $nn,X           F6   6502
+   INC $nnnn           EE   6502
+   INC $nnnn,X         FE   6502
+
+INW
+ Increment Word
+
+   INW $nnnn           E3   65CE02
+
+INX
+ Increment X Register
+  Operation as of 6502.
+
+   INX                 E8   6502
+
+INY
+ Increment Y Register
+  Operation as of 6502.
+
+   INY                 C8   6502
+
+INZ
+ Increment Z Register
+
+   INZ                 1B   65CE02
+
+JMP
+ Jump
+
+   JMP $nnnn           4C   6502
+   JMP ($nnnn)         6C   6502
+   JMP ($nnnn,X)       7C   65C02
+
+JSR
+ Jump to Subroutine
+  Note that the 65816 also has the JSR ($nnnn,X) instruction, but its opcode
+  is $FC.
+
+   JSR $nnnn           20   6502
+   JSR ($nnnn)         22   65CE02
+   JSR ($nnnn,X)       23   65CE02
+
+LDA
+ Load Accumulator
+  Operation as of 65C02. Note that Zero Page Indirect has been replaced by
+  Zero Page Indirect Z Indexed, and there is the a Stack Pointer Relative
+  addressing more.
+
+   LDA #$nn            A9   6502
+   LDA $nn             A5   6502
+   LDA $nn,X           B5   6502
+   LDA $nnnn           AD   6502
+   LDA $nnnn,X         BD   6502
+   LDA $nnnn,Y         B9   6502
+   LDA ($nn),Y         B1   6502
+   LDA ($nn),Z         B2   65C02/65CE02
+   LDA ($nn,SP),Y      E2   65CE02
+   LDA ($nn,X)         A1   6502
+                            
+LDX
+ Load X Register
+  Operation as of 6502.
+
+   LDX #$nn            A2   6502
+   LDX $nn             A6   6502
+   LDX $nn,Y           B6   6502
+   LDX $nnnn           AE   6502
+   LDX $nnnn,Y         BE   6502
+
+LDY
+ Load Y Register
+  Operation as of 6502.
+
+   LDY #$nn            A0   6502
+   LDY $nn             A4   6502
+   LDY $nn,X           B4   6502
+   LDY $nnnn           AC   6502
+   LDY $nnnn,X         BC   6502
+
+LDZ
+ Load Z Register
+
+   LDZ #$nn            A3   65CE02
+   LDZ $nnnn           AB   65CE02
+   LDZ $nnnn,X         BB   65CE02
+
+LSR
+ Logical Shift Right
+  Operation as of 6502.
+
+   LSR $nn             46   6502
+   LSR $nn,X           56   6502
+   LSR $nnnn           4E   6502
+   LSR $nnnn,X         5E   6502
+   LSR A               4A   6502
+
+MAP
+ ???
+  It is unknown what this instruction does.
+
+   MAP                 5C   65CE02
+
+NEG
+ Negate Accumulator
+
+   NEG                 42   65CE02
+
+NOP
+ No Operation
+  Operation as of 6502.
+
+   NOP                 EA   6502
+
+ORA
+ Or Accumulator
+  Operation as of 65C02. Note that Zero Page Indirect has been replaced by
+  Zero Page Indirect Z Indexed.
+
+   ORA #$nn            09   6502
+   ORA $nn             05   6502
+   ORA $nn,X           15   6502
+   ORA $nnnn           0D   6502
+   ORA $nnnn,X         1D   6502
+   ORA $nnnn,Y         19   6502
+   ORA ($nn),Y         11   6502
+   ORA ($nn),Z         12   65C02/65CE02
+   ORA ($nn,X)         01   6502
+
+PHA
+ Push Accumulator
+  Operation as of 6502.
+
+   PHA                 48   6502
+
+PHP
+ Push Processor Status Register
+  Operation as of 6502.
+
+   PHP                 08   6502
+
+PHW
+ Push Word
+
+   PHW #$nnnn          F4   65CE02
+   PHW $nnnn           FC   65CE02
+
+PHX
+ Push X Register
+  Operation as of 65C02.
+
+   PHX                 DA   65C02
+
+PHY
+ Push Y Register
+  Operation as of 65C02.
+
+   PHY                 5A   65C02
+
+PHZ
+ Push Z Register
+
+   PHZ                 DB   65CE02
+
+PLA
+ Pull Accumulator
+  Operation as of 6502.
+
+   PLA                 68   6502
+
+PLP
+ Pull Processor Status Register
+  Operation as of 6502.
+
+   PLP                 28   6502
+
+PLX
+ Pull X Register
+  Operation as of 65C02.
+
+   PLX                 FA   65C02
+
+PLY
+ Pull Y Register
+  Operation as of 65C02.
+
+   PLY                 7A   65C02
+
+PLZ
+ Pull Z register
+
+   PLZ                 FB   65CE02
+
+RMB
+ Reset Memory Bit i [4]
+  Clear the specified bit in the zero page memory location specified in the
+  operand. The bit to clear is specified by a number concatenated to the end
+  of the mnemonic, resulting in 8 distinct opcodes.
+
+   RMB0 $nn            07   65SC02
+   RMB1 $nn            17   65SC02
+   RMB2 $nn            27   65SC02
+   RMB3 $nn            37   65SC02
+   RMB4 $nn            47   65SC02
+   RMB5 $nn            57   65SC02
+   RMB6 $nn            67   65SC02
+   RMB7 $nn            77   65SC02
+
+ROL
+ Rotate Left
+  Operation as of 6502.
+
+   ROL $nn             26   6502
+   ROL $nn,X           36   6502
+   ROL $nnnn           2E   6502
+   ROL $nnnn,X         3E   6502
+   ROL A               2A   6502
+
+ROR
+ Rotate Right
+  Operation as of 6502.
+
+   ROR $nn             66   6502
+   ROR $nn,X           76   6502
+   ROR $nnnn           6E   6502
+   ROR $nnnn,X         7E   6502
+   ROR A               6A   6502
+
+ROW
+ Rotate Right Word
+
+   ROW $nnnn           EB   65CE02
+
+RTI
+ Return from Interrupt
+  Operation as of 6502.
+
+   RTI                 40   6502
+
+RTS
+ Return from Subroutine
+  Operation as of 6502. Note the new addressing mode. It is unknown how it
+  works.
+
+   RTS                 60   6502
+   RTS #$nn            62   65CE02
+
+SBC
+ Subtract with Carry Flag
+   Operation as of 65C02. Note that Zero Page Indirect has been replaced by
+  Zero Page Indirect Z Indexed.
+
+   SBC #$nn            E9   6502
+   SBC $nn             E5   6502
+   SBC $nn,X           F5   6502
+   SBC $nnnn           ED   6502
+   SBC $nnnn,X         FD   6502
+   SBC $nnnn,Y         F9   6502
+   SBC ($nn),Y         F1   6502
+   SBC ($nn),Z         F2   65C02/65CE02
+   SBC ($nn,X)         E1   6502
+
+SEC
+ Set Carry Flag
+  Operation as of 6502.
+
+   SEC                 38   6502
+
+SED
+ Set Decimal Flag
+  Operation as of 6502.
+
+   SED                 F8   6502
+
+SEE
+ Set ??? Flag
+
+   SEE                 03   65CE02
+
+SEI
+ Set Interrupt Disable Flag
+  Operation as of 6502.
+
+   SEI                 78   6502
+
+SMB
+ Set Memory Bit i [4]
+  Set the specified bit in the zero page memory location specified in the
+  operand. The bit to set is specified by a number concatenated to the end
+  of the mnemonic, resulting in 8 distinct opcodes.
+
+   SMB0 $nn            87   65SC02
+   SMB1 $nn            97   65SC02
+   SMB2 $nn            A7   65SC02
+   SMB3 $nn            B7   65SC02
+   SMB4 $nn            C7   65SC02
+   SMB5 $nn            D7   65SC02
+   SMB6 $nn            E7   65SC02
+   SMB7 $nn            F7   65SC02
+
+STA
+ Store A Register to Memory
+  Operation as of 65C02. Note that Zero Page Indirect has been replaced by
+  Zero Page Indirect Z Indexed, and there is the a Stack Pointer Relative
+  addressing more.
+
+   STA $nn             85   6502
+   STA $nn,X           95   6502
+   STA $nnnn           8D   6502
+   STA $nnnn,X         9D   6502
+   STA $nnnn,Y         99   6502
+   STA ($nn),Y         91   6502
+   STA ($nn),Z         92   65C02/65CE02
+   STA ($nn,SP),Y      82   65CE02
+   STA ($nn,X)         81   6502
+
+STX
+ Store X Register to Memory
+
+   STX $nn             86   6502
+   STX $nn,Y           96   6502
+   STX $nnnn           8E   6502
+   STX $nnnn,Y         9B   65CE02
+
+STY
+ Store Y Register to Memory
+
+   STY $nn             84   6502
+   STY $nn,X           94   6502
+   STY $nnnn           8C   6502
+   STY $nnnn,X         8B   65CE02
+
+STZ
+ Store Z Register to Memory
+  Note that on the 65C02, the STZ instruction does not store the value of
+  zero into memory, but the contents of the Z Register. As long as the Z
+  register is not used and therefore zero, this does not make any difference,
+  though.
+
+   STZ $nn             64   65C02/65CE02
+   STZ $nn,X           74   65C02/65CE02
+   STZ $nnnn           9C   65C02/65CE02
+   STZ $nnnn,X         9E   65C02/65CE02
+
+TAB
+ Transfer Accumulator to B Register
+  compare 65816 TCD/TAD
+
+   TAB                 5B   65CE02
+
+TAX
+ Transfer Accumulator to X Register
+  Operation as of 6502.
+
+   TAX                 AA   6502
+
+TAY
+ Transfer Accumulator to Y Register
+  Operation as of 6502.
+
+   TAY                 A8   6502
+
+TAZ
+ Transfer Accumulator to Z Register
+
+   TAZ                 4B   65CE02
+
+TBA
+ Transfer B Register To Accumulator
+  compare 65816 TDC/TDA
+
+   TBA                 7B   65CE02
+
+TRB
+ Test and Reset Memory Bits Against Accumulator [4]
+  Bitwise logically AND the data located at the effective address specified
+  by the operand with the complement of the contents of the accumulator. The
+  result is stored at the memory location.
+  This way, TRB clears the bits at the memory location corresponding to the
+  bits set in the accumulator.
+  The status register is affected just like it is by the BIT instruction.
+
+   Flags Affected: n v - - - z -
+                   n Takes value of seventh bit of resulting data
+                   v Takes value of sixth bit of resulting data
+                   z Set if result is zero; else cleared.
+
+   TRB $nn             14   65SC02
+   TRB $nnnn           1C   65SC02
+
+TSB
+ Test and Set Memory Bits Against Accumulator [4]
+  Bitwise logically OR the data located at the effective address specified by
+  the operand with the contents of the accumulator. The result is stored at
+  the memory location.
+  This way, TSB sets the bits at the memory location corresponding to the
+  bits set in the accumulator.
+  The status register is affected just like it is by the BIT instruction.
+
+   Flags Affected: n v - - - z -
+                   n Takes value of seventh bit of resulting data
+                   v Takes value of sixth bit of resulting data
+                   z Set if result is zero; else cleared.
+
+   TSB $nn             04   65SC02
+   TSB $nnnn           0C   65SC02
+
+TSX
+ Transfer Stack Pointer to X Register
+  Operation as of 6502.
+
+   TSX                 BA   6502
+
+TSY
+ Transfer Stack Pointer to Y Register
+
+   TSY                 0B   65CE02
+
+TXA
+ Transfer X Register To Accumulator
+  Operation as of 6502.
+
+   TXA                 8A   6502
+
+TXS
+ Transfer X Register to Stack Pointer
+  Operation as of 6502.
+
+   TXS                 9A   6502
+
+TYA
+ Transfer Y Register to Accumulator
+  Operation as of 6502.
+                            
+   TYA                 98   6502
+
+TYS                         
+ Transfer Y Register to Stack Pointer
+
+   TYS                 2B   65CE02
+
+TZA
+ Transfer Z Register to Accumulator
+
+   TZA                 6B   65CE02
+
+
+4. Assumptions/Errors
+   ~~~~~~~~~~~~~~~~~~
+   Since I do not have a 65CE02 CPU, much of this information is based on
+   guesswork.
+   ASW shifts _left_, because the original 6502 "Arithmetic Shift" command
+       shifts left, too, and the Arithmetic Shift Left is the more common
+       way to do an arithmetical shift.
+   ROW must be a rotate right, so that there is a 16 bit command both for
+       rotating/shifting left and right.
+   INW's operand as described in 64NET.OPC is 8 bit and therefore a zeropage
+       address. This is not consequent when compared to the other new RMW
+       commands that have 16 bit addresses as operands; therefore it was assumed
+       that this is a mistake in 64NET.OPC.
+   TAB/TBA commands could mean "Transfer Bank Register" in the sense of the bank
+       index the current data reffered to by memory addressing is stored in.
+       This model would imply that data can be stored in up to 256 banks of
+       64 KB each (that is a total of 16 MB), but code can only be run in bank
+       0, and a cross-bank move of data would mean modifying the B register
+       twice per byte copied (8+ cycles).
+       Since the 65CE02 has been designed by Commodore, it is more likely that
+       they maintained their conventional banking techniques as used in the C64
+       and the C128 with switchable banks of variable size, controlled by a
+       separate IC. Furthermore, the C65 preliminary documentation [1] says that
+       the C64DX/C65 can only address up to 1 MB of memory, and that the memory
+       mapper is not part of the CPU core.
+       On the 65816, the opcodes of TAB and TBA stand for TCD and TDC (or
+       TAD/TDA)[8], that is Transfer [16-bit] Accumulator [C] to Direct Page
+       Register D (and the other way round). The 65CE02 has been designed
+       far after the WDC 65816 had appeared, and because these commands
+       look quite similar, it is quite likely that B stands for the bank the
+       zero page is stored in, thus meaning the 65CE02 would also have direct
+       page functions just like the 65816.
+       (It might have been because of "intellectual property" reasons that
+       they called it differently.)
+       The B could therefore stand for "Block Register", because Commodore
+       sometimes used to call a page of memory (that is 256 bytes) a block.
+       It is therefore assumed that the 65CE02 provides direct page functions.
+   ASR with the opcode of 43, as listed in 64NET.OPC is most probably ASR A
+       (compare to ASL A).
+       Furthermore, the correct operation of ASR hasn't been described anywhere.
+       It is not just the inverse operation of ASL, because LSR alreday does
+       that. Most probably it works like the i8086 SAR (Shift Arithmetically
+       Right) instruction[9], which works just like 6502 LSR, but doesn't change
+       the value of the uppermost bit, thus making a signed division by two
+       possible. Note that the i8086 SAL is also equivalent to 6502 ASL.[9]
+   LDA's opcode B2 should mean LDA ($nn),Z and B1 should mean LDA ($nn),Y.
+       In 64NET.OPC, both opcodes are translated into LDA ($nn),Y.
+   NEG's operation is not described anywhere, but because of its Mnemonic
+       it has been assumed that it operates just like the i8086 NEG instruction.
+   The operation of the MAP, SEE and CLE instructions are unknown, as well as
+   the operation of the RTS instruction with an immediate operand. It might
+   modify the status register or pull additional bytes from the stack before
+   returning (compare i8086 RET).
+   Further research, using the C64DX/C65 ROM, will be necessary.
+
+5. References
+   ~~~~~~~~~~
+[1] C64DX SYSTEM SPECIFICATION [preliminary]/ Fred Bowen, Paul Lassa, Bill
+    Gardei, Victor Andrade. Online publication, dated January 31, 1991,
+    ftp://ftp.funet.fi/pub.cbm/c65/c65-pre2.zip
+[2] Eyes, David: Programming the 65816: including the 6502, 65C02 and 65802 /
+    David Eyes and Ron Lichty
+    New York, NY: Prentice Hall, 1986. ISBN: 0-89303-789-3
+[3] Gardner-Stephen, Paul: 64NET.OPC
+    Support file of the same author's 64NET, probably based on the output
+    of the built-in ML monitor of the C64/C64DX.
+    The document in the version of November 12, 1994 apparently contains
+    some errors.
+[4] Restemeier, Jens Ch.: Unofficial PC-Engine reference.
+    Online publication, dated June 8, 1997
+[5] The VICE Emulator / Simulator For Unix. Programmers' Revenge Manual.
+    Special features in CBM 8-bit emulation and Emulator File Conversions.
+    Online publication, dated May 22, 1996.
+    http://www.tu-chemnitz.de/~fachat/vice/olddoc/Emulation.html
+[6] Bayko, John: Great Microprocessors of the Past and Present (V 11.2.0)
+    Online publication, dated September 1998.
+    http://infopad.eecs.berkeley.edu/CIC/archive/cpu_history.html
+[7] IP Licensing. IP Provider Business Model-Creating A Standard.
+    Online publication.
+    http://www.wdesignc.com/licensing.html
+[8] Valta, Jouko: G65SC802 / G65SC816 Data Sheets.
+    Online publication dated December 4, 1995. (Quoted page dated September
+    12, 1994)
+    ftp://ftp.funet.fi/pub/cbm/documents/chipdata/gte65.zip
+[9] Intel 80386 Programmer's Reference Manual
+    Online publication, dated May 26, 1987
+    386intel.txt
+
+--------------------------------------------------------------------------------
+Help me make this document grow!                  Greetings to RRBY,FTGLJRWUAH,M
+--------------------------------------------------------------------------------
+End of "65CE02 Technical Reference",             (C)Michael Steil <mist@c64.org>
+
